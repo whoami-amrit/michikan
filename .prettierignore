@@ -1,0 +1,11 @@
+.next/
+dist/
+node_modules/
+pnpm-lock.yaml
+.turbo/
+next-env.d.ts
+*.tsbuildinfo
+pnpm-lock.yaml
+.vscode/
+.husky/
+.prettierrc

@@ -1,0 +1,133 @@
+generator client {
+  provider     = "prisma-client"
+  output       = "../generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Resume {
+  id              Int               @id @default(autoincrement())
+  name            String
+  description     String?
+  json            Json
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  user            User              @relation(fields: [userId], references: [id])
+  userId          Int
+  activeResume    ActiveResume?
+  resumeRenderJob ResumeRenderJob[]
+  jdmatchJobs     JDMatchJob[]
+
+  @@index([userId])
+}
+
+// NOTE: for 1 - 1 relationship simply add @unique to the foreign key field
+
+model User {
+  id                 Int               @id @default(autoincrement())
+  email              String            @unique
+  name               String?
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+  resumes            Resume[] // 1 to n relationship with Resume
+  activeResume       ActiveResume?
+  account            Account[] // 1 to 1 relationship with Account
+  session            Session[] // 1 to n relationship with Session
+  activeResumeUserId Int?
+  resumeRenderJob    ResumeRenderJob[]
+  jdmatchJobs        JDMatchJob[]
+}
+
+enum Provider {
+  GOOGLE
+  GITHUB
+  LOCAL
+}
+
+model Account {
+  provider       Provider
+  providerId     String // e.g. Google sub, GitHub id, or email for LOCAL
+  hashedPassword String? // only for LOCAL provider
+  emailVerified  DateTime?
+  user           User      @relation(fields: [userId], references: [id])
+  userId         Int
+
+  // composite primary key
+  @@id([provider, userId])
+  // unique constraint to prevent duplicate identities
+  @@unique([provider, userId])
+  // external auth unique constraint to prevent
+  // same google/github account from being linked to multiple users
+  @@unique([provider, providerId])
+}
+
+model Session {
+  id String @id @default(uuid())
+
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId Int
+
+  tokenHash String @unique // refresh token
+
+  expiresAt DateTime @default(dbgenerated("now() + INTERVAL '24 hours'"))
+  createdAt DateTime @default(now())
+
+  ip        String
+  userAgent String
+}
+
+model ActiveResume {
+  resume   Resume @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+  resumeId Int    @unique
+  userId   Int    @id
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+enum JobStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  FAILED
+}
+
+enum RenderFormat {
+  PDF
+}
+
+model ResumeRenderJob {
+  id Int @id @default(autoincrement())
+
+  resumeId Int
+  resume   Resume @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+  userId   Int
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  type       RenderFormat
+  status     JobStatus
+  sourceHash String
+
+  storageKey String?
+  error      String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model JDMatchJob {
+  id Int @id @default(autoincrement())
+
+  resumeId Int
+  resume   Resume @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+  userId   Int
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  status JobStatus
+
+  responseJson Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

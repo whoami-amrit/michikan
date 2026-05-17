@@ -1,0 +1,19 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "lib": ["esnext"],
+    "outDir": "./dist",
+    "baseUrl": "./",
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "removeComments": true,
+    "types": ["jest", "node", "./src/common/types/express.d.ts"],
+    "paths": {
+      "@db/*": ["generated/prisma/*"],
+      "@common/types/*": ["src/common/types/*"],
+      "@common/*": ["src/common/*"]
+    }
+  }
+}
