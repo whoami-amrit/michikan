@@ -1,6 +1,3 @@
-import { JobStatus } from '@db/client';
+import { ICreateJobResponse } from '@common/types/create-job.response';
 
-export interface IRenderResumeResponse {
-  jobId: number;
-  status: JobStatus;
-}
+export interface IRenderResumeResponse extends ICreateJobResponse {}

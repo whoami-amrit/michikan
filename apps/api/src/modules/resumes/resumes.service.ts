@@ -1,8 +1,8 @@
 import { createHash } from 'node:crypto';
 
 import { RENDER_PDF_JOB_NAME, RENDER_QUEUE_NAME } from '@common/constants';
+import { ICreateJobResponse } from '@common/types/create-job.response';
 import { IRenderPdfJobData } from '@common/types/render-pdf-job.interface';
-// import { IRenderResumeResponse } from './responses/render-resume.response';
 import { IResumeJson } from '@common/types/resume.interface';
 import { Resume } from '@db/client';
 import { InjectQueue } from '@nestjs/bullmq';
@@ -13,7 +13,6 @@ import { S3Service } from 'src/infra/storage/s3.service';
 
 import { CreateResumeRequestDto } from './dto/create-resume.dto';
 import { UpdateResumeRequestDto } from './dto/update-resume.dto';
-import { IRenderResumeResponse } from './responses/render-resume.response';
 import { IRenderStatusResponse } from './responses/render-status.response';
 
 @Injectable()
@@ -66,7 +65,7 @@ export class ResumeService {
     });
   }
 
-  async renderPdf(resumeId: number, userId: number): Promise<IRenderResumeResponse> {
+  async renderPdf(resumeId: number, userId: number): Promise<ICreateJobResponse> {
     const resume = await this.prisma.resume.findUnique({
       where: { id: resumeId, userId },
     });

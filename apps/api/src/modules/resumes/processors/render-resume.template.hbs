@@ -1,0 +1,116 @@
+\documentclass[11pt]{article}
+\usepackage[letterpaper,
+top=0.4in,
+bottom=0.4in,
+left=0.4in,
+right=0.4in]{geometry}
+
+\usepackage{helvet}
+\renewcommand{\familydefault}{\sfdefault}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{enumitem}
+\usepackage[hidelinks]{hyperref}
+\usepackage{titlesec}
+\raggedright
+\pagestyle{empty}
+
+\input{glyphtounicode}
+\pdfgentounicode=1
+
+\titleformat{\section}{\bfseries\large}{}{0pt}{}[\vspace{1pt}\titlerule\vspace{-6.5pt}]
+
+\renewcommand\labelitemi{$\vcenter{\hbox{\small$\bullet$}}$}
+\setlist[itemize]{itemsep=-2pt, leftmargin=12pt, topsep=7pt}
+
+\begin{document}
+
+% Name
+\centerline{\Huge {{json.personalInfo.name}} }
+
+\vspace{5pt}
+
+% Contact Information
+\centerline{
+  \href{mailto:{{json.personalInfo.contact.email}} }{ {{json.personalInfo.contact.email}} }
+  {{#if json.personalInfo.contact.githubUrl}}| \href{ {{json.personalInfo.contact.githubUrl}} }{github.com/{{json.personalInfo.contact.githubUsername}} }{{/if}}
+  {{#if json.personalInfo.contact.linkedinUrl}}| \href{ {{json.personalInfo.contact.linkedinUrl}} }{linkedin.com/{{json.personalInfo.contact.linkedinPath}} }{{/if}}
+  {{#if json.personalInfo.contact.phone}}| {{json.personalInfo.contact.phone}}{{/if}}
+}
+
+\vspace{-10pt}
+
+% Summary Section
+{{#if json.personalInfo.summary}}
+\section*{Summary}
+{{json.personalInfo.summary}}
+
+\vspace{-6.5pt}
+{{/if}}
+
+% Skills Section
+{{#if json.skills}}
+\section*{Skills}
+{{#if json.skills.languages}}
+\textbf{Languages:} {{commaJoin json.skills.languages}} \\
+{{/if}}
+{{#if json.skills.frontend}}
+\textbf{Front-end:} {{commaJoin json.skills.frontend}} \\
+{{/if}}
+{{#if json.skills.backend}}
+\textbf{Backend \& APIs:} {{commaJoin json.skills.backend}} \\
+{{/if}}
+{{#if json.skills.databases}}
+\textbf{Databases:} {{commaJoin json.skills.databases}} \\
+{{/if}}
+{{#if json.skills.cloudDevops}}
+\textbf{Cloud \& DevOps:} {{commaJoin json.skills.cloudDevops}} \\
+{{/if}}
+{{#if json.skills.tools}}
+\textbf{Tools:} {{commaJoin json.skills.tools}}
+{{/if}}
+
+\vspace{-6.5pt}
+{{/if}}
+
+% Experience Section
+{{#if json.experience}}
+\section*{Experience}
+{{#each json.experience}}
+\textbf{ {{this.title}},} {{this.company}} -- {{this.location}} \hfill {{this.startDate}}{{#if this.isCurrentRole}} -- Present{{else}} -- {{this.endDate}}{{/if}} \\
+\vspace{-9pt}
+\begin{itemize}
+{{#each this.highlights}}
+    \item {{this}}
+{{/each}}
+\end{itemize}
+
+{{/each}}
+\vspace{-18.5pt}
+{{/if}}
+
+% Projects & Open Source Section
+{{#if json.projects}}
+\section*{Projects \& Open Source Contributions}
+{{#each json.projects}}
+\textbf{ {{this.title}} }{{#if this.startDate}} \hfill {{this.startDate}}{{#if this.endDate}} -- {{this.endDate}}{{/if}}{{/if}} \\
+\vspace{-9pt}
+\begin{itemize}
+{{#each this.highlights}}
+    \item {{this}}
+{{/each}}
+\end{itemize}
+
+{{/each}}
+\vspace{-18.5pt}
+{{/if}}
+
+% Education Section
+{{#if json.education}}
+\section*{Education}
+{{#each json.education}}
+\textbf{ {{this.institution}} } -- {{this.degree}}{{#if this.field}} in {{this.field}}{{/if}} \hfill {{this.graduationDate}} \\
+{{/each}}
+{{/if}}
+
+\end{document}

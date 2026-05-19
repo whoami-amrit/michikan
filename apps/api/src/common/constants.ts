@@ -8,6 +8,9 @@ export const SKIP_AUTH_TAG = 'isPublic';
 export const RENDER_QUEUE_NAME = 'resumes';
 export const RENDER_PDF_JOB_NAME = 'render-pdf';
 
+export const JD_EVALUATION_QUEUE_NAME = 'evaluations';
+export const JD_EVALUATION_JOB_NAME = 'jd-evaluation';
+
 export const COMMON_BULL_QUEUE_OPTIONS: Omit<RegisterQueueOptions, 'name'> = {
   defaultJobOptions: {
     removeOnComplete: { count: 100, age: 24 * 3600 },
