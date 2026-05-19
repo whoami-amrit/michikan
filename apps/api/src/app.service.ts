@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
 
-import { PrismaService } from '../../infra/database/prisma.service';
-import { BullMQService } from '../../infra/queue/bullmq.service';
-import { S3Service } from '../../infra/storage/s3.service';
-import { IHeathCheckResponse } from './responses/health.response';
+import { IHeathCheckResponse } from './common/types/health.response';
+import { PrismaService } from './infra/database/prisma.service';
+import { BullMQService } from './infra/queue/bullmq.service';
+import { S3Service } from './infra/storage/s3.service';
 
 @Injectable()
 export class AppService {
