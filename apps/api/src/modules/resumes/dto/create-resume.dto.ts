@@ -4,8 +4,8 @@ import { z } from 'zod';
 
 const schema = z.object({
   json: ResumeJsonSchema,
-  name: z.string().min(1, 'Resume name is required'),
-  description: z.string().optional(),
+  name: z.string().min(1, 'Resume name is required').max(50),
+  description: z.string().max(200).optional(),
 });
 
 export class CreateResumeRequestDto extends createZodDto(schema) {}

@@ -4,7 +4,7 @@
   "description": "Monorepo for michikan web app",
   "scripts": {
     "build": "turbo run build",
-    "dev": "turbo run dev",
+    "dev": "turbo run dev dev:worker",
     "lint": "turbo run lint",
     "lint:root": "eslint . --max-warnings=0",
     "format": "prettier --write .",

@@ -1,7 +1,7 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "outDir": "dist/api"
+    "outDir": "dist/worker"
   },
   "exclude": ["node_modules", "test", "dist", "**/*spec.ts"]
 }

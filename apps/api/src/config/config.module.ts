@@ -17,4 +17,4 @@ import valkeyConfig from './valkey.config';
     }),
   ],
 })
-export class AppConfigModule {}
+export class AppConfigModule { }

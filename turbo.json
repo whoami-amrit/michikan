@@ -12,6 +12,10 @@
       "persistent": true,
       "cache": false
     },
+    "dev:worker": {
+      "persistent": true,
+      "cache": false
+    },
     "lint": {
       "dependsOn": ["build"]
     },

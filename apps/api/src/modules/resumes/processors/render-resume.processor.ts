@@ -34,7 +34,7 @@ export class RenderResumeProcessor extends WorkerHost {
     mkdirSync(this.renderOutputPath, { recursive: true });
 
     const resumeTemplate = readFileSync(
-      path.join(__dirname, 'render-resume.template.hbs'),
+      path.join(__dirname, '..', '..', '..', '..', 'assets', 'render-resume.template.hbs'),
       'utf-8',
     );
 

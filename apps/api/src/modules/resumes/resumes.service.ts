@@ -6,7 +6,7 @@ import { IRenderPdfJobData } from '@common/types/render-pdf-job.interface';
 import { IResumeJson } from '@common/types/resume.interface';
 import { Resume } from '@db/client';
 import { InjectQueue } from '@nestjs/bullmq';
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { Queue } from 'bullmq';
 import { PrismaService } from 'src/infra/database/prisma.service';
 import { S3Service } from 'src/infra/storage/s3.service';
@@ -107,6 +107,10 @@ export class ResumeService {
 
     if (!renderJob) {
       throw new NotFoundException('Render job not found');
+    }
+
+    if (renderJob.status === 'FAILED') {
+      throw new BadRequestException(`Render job failed: ${renderJob.error}`);
     }
 
     return {
