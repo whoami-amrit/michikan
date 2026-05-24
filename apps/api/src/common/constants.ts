@@ -1,4 +1,4 @@
-import { RegisterQueueOptions } from '@nestjs/bullmq/dist/interfaces/register-queue-options.interface';
+import { RegisterQueueOptions } from '@nestjs/bullmq';
 
 export const ACCESS_TOKEN_USER_DATA_KEY = 'user';
 export const ACCESS_TOKEN_COOKIE_KEY = 'access_token';

@@ -1,7 +1,7 @@
 import { IHealthCheck } from '@common/types/health-check.interface';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Injectable } from '@nestjs/common';
-import { Queue } from 'bullmq/dist/esm/classes/queue';
+import { Queue } from 'bullmq';
 
 import { HEALTH_CHECK_QUEUE } from './constants';
 

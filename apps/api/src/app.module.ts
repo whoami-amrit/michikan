@@ -11,6 +11,7 @@ import { AppService } from './app.service';
 import appConfig from './config/app.config';
 import { AppConfigModule } from './config/config.module';
 import { DatabaseModule } from './infra/database/database.module';
+import { LoggerModule } from './infra/logger/logger.module';
 import { QueueModule } from './infra/queue/queue.module';
 import { StorageModule } from './infra/storage/storage.module';
 import { AuthModule } from './modules/auth/auth.module';
@@ -20,6 +21,7 @@ import { UsersModule } from './modules/users/users.module';
 @Module({
   imports: [
     AppConfigModule,
+    LoggerModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [appConfig.KEY],
