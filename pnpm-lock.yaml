@@ -8,6 +8,9 @@ importers:
 
   .:
     devDependencies:
+      '@dotenv-run/cli':
+        specifier: ^1.3.6
+        version: 1.3.6
       '@eslint/js':
         specifier: ^9.39.4
         version: 9.39.4
@@ -107,9 +110,6 @@ importers:
       bullmq:
         specifier: ^5.76.6
         version: 5.76.9
-      dotenv:
-        specifier: ^17.4.2
-        version: 17.4.2
       google-auth-library:
         specifier: ^10.6.2
         version: 10.6.2
@@ -595,6 +595,13 @@ packages:
   '@discoveryjs/json-ext@1.1.0':
     resolution: {integrity: sha512-Xc3VhU02wqZ1HvHRJUwL09HkZSTvidqY5Ya0NXBSYOxAp+Ln9dcJr9fySI+CkONzP3PekQo9WdzCv0PGER/mOA==}
     engines: {node: '>=14.17.0'}
+
+  '@dotenv-run/cli@1.3.6':
+    resolution: {integrity: sha512-1zwFYVJhG/EYI1qaPbdlt4y2hVA7OvWWC8mKVVyMPsVgHhYmmxe+/zKrYAyXiu0HkOAKHzgHcXISckxFNQ+Xkg==}
+    hasBin: true
+
+  '@dotenv-run/core@1.3.8':
+    resolution: {integrity: sha512-vspjLjI+V2Rjhxf2vxfbuJWfgxLUauQc4K0MhX7y0+Xr31XLT3XPdgK9IEuew6SVBduO0UCcehy0o9F5Xn7r8A==}
 
   '@electric-sql/pglite-socket@0.1.1':
     resolution: {integrity: sha512-p2hoXw3Z3LQHwTeikdZNsFBOvXGqKY2hk51BBw+8NKND8eoH+8LFOtW9Z8CQKmTJ2qqGYu82ipqiyFZOTTXNfw==}
@@ -2773,6 +2780,10 @@ packages:
   doctrine@2.1.0:
     resolution: {integrity: sha512-35mSku4ZXK0vfCuHEDAwt55dg2jNajHZ1odvF+8SSr82EsZY4QmXfuWso8oEd8zRhVObSN18aM0CjSdoBX7zIw==}
     engines: {node: '>=0.10.0'}
+
+  dotenv-expand@10.0.0:
+    resolution: {integrity: sha512-GopVGCpVS1UKH75VKHGuQFqS1Gusej0z4FyQkPdwjil2gNIv+LNsqBlboOzpJFZKVT95GkCyWJbBSdFEFUWI2A==}
+    engines: {node: '>=12'}
 
   dotenv-expand@12.0.3:
     resolution: {integrity: sha512-uc47g4b+4k/M/SeaW1y4OApx+mtLWl92l5LMPP0GNXctZqELk+YGgOPIIC5elYmUH4OuoK3JLhuRUYegeySiFA==}
@@ -6160,6 +6171,20 @@ snapshots:
 
   '@discoveryjs/json-ext@1.1.0': {}
 
+  '@dotenv-run/cli@1.3.6':
+    dependencies:
+      '@dotenv-run/core': 1.3.8
+      chalk: 4.1.2
+      cross-spawn: 7.0.6
+      minimist: 1.2.8
+
+  '@dotenv-run/core@1.3.8':
+    dependencies:
+      chalk: 4.1.2
+      dotenv: 16.6.1
+      dotenv-expand: 10.0.0
+      find-up: 5.0.0
+
   '@electric-sql/pglite-socket@0.1.1(@electric-sql/pglite@0.4.1)':
     dependencies:
       '@electric-sql/pglite': 0.4.1
@@ -8426,6 +8451,8 @@ snapshots:
   doctrine@2.1.0:
     dependencies:
       esutils: 2.0.3
+
+  dotenv-expand@10.0.0: {}
 
   dotenv-expand@12.0.3:
     dependencies:
