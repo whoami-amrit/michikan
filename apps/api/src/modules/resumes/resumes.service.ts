@@ -74,12 +74,21 @@ export class ResumeService {
       throw new NotFoundException('Resume not found');
     }
 
+    const previousSuccessJob = await this.checkPreviousSuccessRenderJob(resume, userId);
+
+    if (previousSuccessJob) {
+      return {
+        jobId: previousSuccessJob.id,
+        status: previousSuccessJob.status,
+      };
+    }
+
     const resumeRenderJob = await this.prisma.$transaction(async (prisma) => {
       const resumeRenderJob = await prisma.resumeRenderJob.create({
         data: {
           type: 'PDF',
           status: 'PENDING',
-          sourceHash: createHash('sha256').update(JSON.stringify(resume.json)).digest('hex'),
+          sourceHash: this.createHashOfResumeJson(resume),
           resumeId,
           userId,
         },
@@ -97,6 +106,24 @@ export class ResumeService {
       jobId: resumeRenderJob.id,
       status: resumeRenderJob.status,
     };
+  }
+
+  private createHashOfResumeJson(resume: Resume): string {
+    return createHash('sha256').update(JSON.stringify(resume.json)).digest('hex');
+  }
+
+  private async checkPreviousSuccessRenderJob(resume: Resume, userId: number) {
+    const latestSourceHash = this.createHashOfResumeJson(resume);
+
+    const previousJob = await this.prisma.resumeRenderJob.findFirst({
+      where: {
+        resumeId: resume.id,
+        userId,
+        status: 'COMPLETED',
+      },
+    });
+
+    return previousJob?.sourceHash === latestSourceHash ? previousJob : null;
   }
 
   async getRenderStatus(jobId: number, userId: number): Promise<IRenderStatusResponse> {
