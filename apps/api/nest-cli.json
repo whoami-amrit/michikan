@@ -11,7 +11,7 @@
     },
     "worker": {
       "sourceRoot": "src",
-      "entryFile": "worker.main.ts",
+      "entryFile": "src/worker.main.js",
       "compilerOptions": {
         "deleteOutDir": true,
         "assets": [

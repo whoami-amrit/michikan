@@ -20,7 +20,7 @@ import { RenderErrorEnum, RenderErrors } from './render-resume.errors';
 @Processor(RENDER_QUEUE_NAME)
 export class RenderResumeProcessor extends WorkerHost {
   private readonly template: TemplateDelegate;
-  private readonly renderOutputPath = process.env.RENDER_OUTPUT_PATH || '/tmp/michi-renders';
+  private readonly renderOutputPath = process.env.RENDER_OUTPUT_PATH || '/tmp/michikan-renders';
   private readonly TEX_FILE_NAME = 'resume.tex';
   private readonly PDF_FILE_NAME = 'resume.pdf';
 
