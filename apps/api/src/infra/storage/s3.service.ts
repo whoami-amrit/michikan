@@ -1,44 +1,35 @@
 import { GetObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { GetCallerIdentityCommand, STSClient } from '@aws-sdk/client-sts';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-import { IHealthCheck } from '@common/types/health-check.interface';
-import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
+import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import type { ConfigType } from '@nestjs/config';
 import { ReadStream } from 'fs';
 import awsConfig from 'src/config/aws.config';
 
 @Injectable()
 export class S3Service implements OnModuleInit {
+  private readonly logger = new Logger(S3Service.name);
+
   constructor(
     private readonly s3Client: S3Client,
     @Inject(awsConfig.KEY)
     private readonly config: ConfigType<typeof awsConfig>,
   ) {}
 
-  async healthCheck(): Promise<IHealthCheck> {
+  async onModuleInit() {
+    await this.healthCheck();
+    this.logger.log('Successfully connected to S3');
+  }
+
+  async healthCheck(): Promise<void> {
     try {
       const sts = new STSClient({ region: this.config.s3Region });
       await sts.send(new GetCallerIdentityCommand({}));
-      return {
-        status: 'up',
-      };
     } catch (error) {
-      // TODO: log better
-      console.error('S3 health check failed:', error);
+      this.logger.error('S3 health check failed', error instanceof Error ? error.stack : { error });
 
-      return {
-        status: 'down',
-        error: 'S3 health check failed',
-      };
+      throw error;
     }
-  }
-
-  async onModuleInit() {
-    const { status } = await this.healthCheck();
-    if (status === 'down') {
-      throw new Error('Failed to initialize S3 service');
-    }
-    // TODO: log success and failure
   }
 
   async uploadFile(key: string, fileStream: ReadStream): Promise<{ bucket: string; key: string }> {

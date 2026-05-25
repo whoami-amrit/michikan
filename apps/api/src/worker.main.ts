@@ -9,4 +9,7 @@ async function bootstrap() {
   app.useLogger(app.get(Logger));
   await app.init();
 }
-bootstrap();
+bootstrap().catch((err) => {
+  console.error('Error starting worker application:', err);
+  process.exit(1);
+});

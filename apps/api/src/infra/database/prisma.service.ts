@@ -1,4 +1,3 @@
-import { IHealthCheck } from '@common/types/health-check.interface';
 import { PrismaClient } from '@db/client';
 import { Inject, Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import type { ConfigType } from '@nestjs/config';
@@ -19,30 +18,25 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
 
   async onModuleInit() {
     await this.$connect();
+
+    await this.healthCheck();
+    this.logger.log('Successfully connected to Prisma/PostgreSQL');
   }
 
   async onModuleDestroy() {
     await this.$disconnect();
   }
 
-  async healthCheck(): Promise<IHealthCheck> {
-    this.logger.debug('Performing database health check...');
-
+  async healthCheck(): Promise<void> {
     try {
       await this.$queryRaw`SELECT 1`;
-
-      this.logger.debug('Database health check passed.');
-
-      return {
-        status: 'up',
-      };
     } catch (error) {
-      // TODO: log better
-      this.logger.error(error);
-      return {
-        status: 'down',
-        error: 'Database health check failed',
-      };
+      this.logger.error(
+        'Prisma/PostgreSQL health check failed',
+        error instanceof Error ? error.stack : { error },
+      );
+
+      throw error;
     }
   }
 }

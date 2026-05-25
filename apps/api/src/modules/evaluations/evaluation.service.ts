@@ -1,4 +1,4 @@
-import { JD_EVALUATION_QUEUE_NAME } from '@common/constants';
+import { JD_EVALUATION_JOB_NAME, JD_EVALUATION_QUEUE_NAME } from '@common/constants';
 import { ICreateJobResponse } from '@common/types/create-job.response';
 import { IJdEvaluationJobData } from '@common/types/jd-evaluation-job.interface';
 import { IResumeJson } from '@common/types/resume.interface';
@@ -35,7 +35,7 @@ export class EvaluationService {
         },
       });
 
-      await this.jdMatchQueue.add('jd-match', {
+      await this.jdMatchQueue.add(JD_EVALUATION_JOB_NAME, {
         jobDescription: jd,
         jobId: jobRecord.id,
         resumeJson: activeResume.json as IResumeJson,

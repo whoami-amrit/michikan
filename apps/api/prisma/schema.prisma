@@ -125,6 +125,7 @@ model JDMatchJob {
   user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   status JobStatus
+  error  String?
 
   responseJson Json?
 

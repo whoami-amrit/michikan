@@ -3,7 +3,7 @@ import { RENDER_PDF_JOB_NAME, RENDER_QUEUE_NAME } from '@common/constants';
 import { IRenderPdfJobData } from '@common/types/render-pdf-job.interface';
 import { Prisma } from '@db/client';
 import { Processor, WorkerHost } from '@nestjs/bullmq';
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { Job, UnrecoverableError } from 'bullmq';
 import { spawn } from 'child_process';
 import { mkdirSync, readFileSync } from 'fs';
@@ -19,6 +19,7 @@ import { RenderErrorEnum, RenderErrors } from './render-resume.errors';
 @Injectable()
 @Processor(RENDER_QUEUE_NAME)
 export class RenderResumeProcessor extends WorkerHost {
+  private readonly logger = new Logger(RenderResumeProcessor.name);
   private readonly template: TemplateDelegate;
   private readonly renderOutputPath = process.env.RENDER_OUTPUT_PATH || '/tmp/michikan-renders';
   private readonly TEX_FILE_NAME = 'resume.tex';
@@ -29,16 +30,26 @@ export class RenderResumeProcessor extends WorkerHost {
     private readonly s3Service: S3Service,
   ) {
     super();
+
     this.registerHandlebarsHelpers();
 
-    mkdirSync(this.renderOutputPath, { recursive: true });
+    try {
+      mkdirSync(this.renderOutputPath, { recursive: true });
 
-    const resumeTemplate = readFileSync(
-      path.join(__dirname, '..', '..', '..', '..', 'assets', 'render-resume.template.hbs'),
-      'utf-8',
-    );
+      // todo: need to improve the path logic
+      const resumeTemplate = readFileSync(
+        path.join(__dirname, '..', '..', '..', '..', 'assets', 'render-resume.template.hbs'),
+        'utf-8',
+      );
 
-    this.template = HandleBars.compile(resumeTemplate);
+      this.template = HandleBars.compile(resumeTemplate);
+    } catch (error) {
+      this.logger.error(
+        'Failed to initialize resume render template',
+        error instanceof Error ? error.stack : { error },
+      );
+      throw new UnrecoverableError('Failed to initialize resume render template');
+    }
   }
 
   private registerHandlebarsHelpers() {
@@ -56,6 +67,10 @@ export class RenderResumeProcessor extends WorkerHost {
         await this.renderPdf(data);
         break;
       default:
+        this.logger.warn('Received job with unknown name: ' + name);
+
+        this.updateJobStatus(data.jobId, { status: 'FAILED', error: 'Unknown job name' });
+
         throw new UnrecoverableError('Unknown job name');
     }
   }
@@ -76,7 +91,7 @@ export class RenderResumeProcessor extends WorkerHost {
 
       await this.updateJobStatus(jobId, { status: 'COMPLETED', storageKey });
 
-      await this.cleanupLocalPdf(pdfFilePath);
+      await this.cleanupLocalJobDir(jobDir);
     } catch (error) {
       if (error instanceof RenderErrors) {
         await this.updateJobStatus(jobId, { status: 'FAILED', error: String(error) });
@@ -104,8 +119,8 @@ export class RenderResumeProcessor extends WorkerHost {
         texFilePath: path.join(jobDir, this.TEX_FILE_NAME),
         pdfFilePath: path.join(jobDir, this.PDF_FILE_NAME),
       };
-    } catch {
-      throw new RenderErrors(RenderErrorEnum.FAILED_CREATE_DIRECTORY);
+    } catch (error) {
+      throw new RenderErrors(RenderErrorEnum.FAILED_CREATE_DIRECTORY, error as Error);
     }
   }
 
@@ -113,17 +128,17 @@ export class RenderResumeProcessor extends WorkerHost {
     try {
       const latexSource = this.template({ json });
       await fs.writeFile(texFilePath, latexSource, 'utf-8');
+      this.logger.debug(`Successfully wrote LaTeX source to file: ${texFilePath}`);
     } catch (error) {
-      console.error('LaTeX rendering error:', error);
-      throw new RenderErrors(RenderErrorEnum.FAILED_RENDER_LATEX);
+      throw new RenderErrors(RenderErrorEnum.FAILED_RENDER_LATEX, error as Error);
     }
   }
 
   private async verifyPdfExists(pdfFilePath: string): Promise<void> {
     try {
       await fs.access(pdfFilePath);
-    } catch {
-      throw new RenderErrors(RenderErrorEnum.PDF_OUTPUT_NOT_FOUND);
+    } catch (error) {
+      throw new RenderErrors(RenderErrorEnum.PDF_OUTPUT_NOT_FOUND, error as Error);
     }
   }
 
@@ -135,25 +150,29 @@ export class RenderResumeProcessor extends WorkerHost {
     try {
       await this.s3Service.uploadFile(s3Key, readStream);
 
+      this.logger.debug(`Successfully uploaded rendered PDF to S3 with key: ${s3Key}`);
+
       return s3Key;
     } catch (error) {
+      let errorType = RenderErrorEnum.S3_UPLOAD_FAILED;
+
       if (error instanceof AccessDenied) {
-        throw new RenderErrors(RenderErrorEnum.S3_CREDENTIALS_INVALID, error);
+        errorType = RenderErrorEnum.S3_CREDENTIALS_INVALID;
       }
 
       if (error instanceof NoSuchBucket) {
-        throw new RenderErrors(RenderErrorEnum.S3_BUCKET_NOT_FOUND);
+        errorType = RenderErrorEnum.S3_BUCKET_NOT_FOUND;
       }
 
-      throw new RenderErrors(RenderErrorEnum.S3_UPLOAD_FAILED, error as Error);
+      throw new RenderErrors(errorType, error as Error);
     }
   }
 
-  private async cleanupLocalPdf(pdfFilePath: string): Promise<void> {
+  private async cleanupLocalJobDir(jobDir: string): Promise<void> {
     try {
-      await fs.unlink(pdfFilePath);
+      await fs.rm(jobDir, { recursive: true });
     } catch (err) {
-      console.warn(`Warning: Failed to delete local PDF: ${err}`);
+      this.logger.warn(`Warning: Failed to delete local job directory: ${err}`);
     }
   }
 
@@ -188,14 +207,14 @@ export class RenderResumeProcessor extends WorkerHost {
         clearTimeout(timer);
 
         if (timedOut) {
-          reject(new RenderErrors(RenderErrorEnum.PDF_COMPILATION_TIMEOUT));
+          reject(new RenderErrors(RenderErrorEnum.PDF_COMPILATION_TIMEOUT, undefined));
           return;
         }
 
         if (code === 0) {
           resolve();
         } else {
-          reject(new RenderErrors(RenderErrorEnum.PDF_COMPILATION_FAILED));
+          reject(new RenderErrors(RenderErrorEnum.PDF_COMPILATION_FAILED, undefined));
         }
       });
 
@@ -203,10 +222,10 @@ export class RenderResumeProcessor extends WorkerHost {
         clearTimeout(timer);
 
         if ('code' in err && err.code === 'ENOENT') {
-          reject(new RenderErrors(RenderErrorEnum.PDFLATEX_NOT_FOUND));
+          reject(new RenderErrors(RenderErrorEnum.PDFLATEX_NOT_FOUND, err));
         }
 
-        reject(new RenderErrors(RenderErrorEnum.PDF_COMPILATION_FAILED, err));
+        reject(new RenderErrors(RenderErrorEnum.PDF_COMPILATION_FAILED, err as Error));
       });
     });
   }

@@ -1,28 +1,30 @@
-import { IHealthCheck } from '@common/types/health-check.interface';
+import { RENDER_QUEUE_NAME } from '@common/constants';
 import { InjectQueue } from '@nestjs/bullmq';
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { Queue } from 'bullmq';
 
-import { HEALTH_CHECK_QUEUE } from './constants';
-
 @Injectable()
-export class BullMQService {
-  constructor(@InjectQueue(HEALTH_CHECK_QUEUE) private readonly healthQueue: Queue) {}
+export class BullMqService implements OnModuleInit {
+  private readonly logger = new Logger(BullMqService.name);
 
-  async healthCheck(): Promise<IHealthCheck> {
+  constructor(@InjectQueue(RENDER_QUEUE_NAME) private readonly renderQueue: Queue) {}
+
+  async onModuleInit() {
+    await this.healthCheck();
+    this.logger.log('Successfully connected to BullMQ');
+  }
+
+  async healthCheck(): Promise<void> {
     try {
-      const client = await this.healthQueue.client;
-      const response = await client.ping();
-
-      if (response === 'PONG') {
-        return { status: 'up' };
-      }
-
-      throw new Error('Unexpected response from key-val storage: ' + response);
+      const client = await this.renderQueue.client;
+      await client.ping();
     } catch (error) {
-      // TODO: log better
-      console.error('BullMQ health check failed:', error);
-      return { status: 'down', error: 'Bull health check failed' };
+      this.logger.error(
+        'BullMq health check failed',
+        error instanceof Error ? error.stack : { error },
+      );
+
+      throw error;
     }
   }
 }

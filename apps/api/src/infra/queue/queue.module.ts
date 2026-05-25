@@ -1,10 +1,10 @@
+import { RENDER_QUEUE_NAME } from '@common/constants';
 import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigType } from '@nestjs/config';
 import valkeyConfig from 'src/config/valkey.config';
 
-import { BullMQService } from './bullmq.service';
-import { HEALTH_CHECK_QUEUE } from './constants';
+import { BullMqService } from './bullmq.service';
 
 @Module({
   imports: [
@@ -20,10 +20,10 @@ import { HEALTH_CHECK_QUEUE } from './constants';
     }),
 
     BullModule.registerQueue({
-      name: HEALTH_CHECK_QUEUE,
+      name: RENDER_QUEUE_NAME,
     }),
   ],
-  providers: [BullMQService],
-  exports: [BullModule, BullMQService],
+  providers: [BullMqService],
+  exports: [BullModule, BullMqService],
 })
 export class QueueModule {}

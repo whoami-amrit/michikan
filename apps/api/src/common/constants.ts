@@ -15,5 +15,10 @@ export const COMMON_BULL_QUEUE_OPTIONS: Omit<RegisterQueueOptions, 'name'> = {
   defaultJobOptions: {
     removeOnComplete: { count: 100, age: 24 * 3600 },
     removeOnFail: { count: 100, age: 7 * 24 * 3600 }, // save for a week for debugging
+    attempts: 3,
+    backoff: {
+      type: 'exponential',
+      delay: 2000, // 2 seconds between initial retry, increasing
+    },
   },
 };

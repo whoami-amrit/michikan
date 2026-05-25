@@ -1,44 +1,55 @@
 import { Injectable } from '@nestjs/common';
 
-import { IHeathCheckResponse } from './common/types/health.response';
 import { PrismaService } from './infra/database/prisma.service';
-import { BullMQService } from './infra/queue/bullmq.service';
+import { BullMqService } from './infra/queue/bullmq.service';
 import { S3Service } from './infra/storage/s3.service';
+import { IHealthCheckResponse, IServiceHealthCheckResult } from './types';
 
 @Injectable()
 export class AppService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly bullMQService: BullMQService,
+    private readonly bullMQService: BullMqService,
     private readonly s3Service: S3Service,
   ) {}
 
-  async checkHealth(): Promise<IHeathCheckResponse> {
-    const healthChecks = await Promise.all([
+  async checkHealth(): Promise<IHealthCheckResponse> {
+    const settledResults = await Promise.allSettled([
       this.prisma.healthCheck(),
       this.bullMQService.healthCheck(),
       this.s3Service.healthCheck(),
     ]);
 
-    const [dbHealth, queueHealth, storageHealth] = healthChecks;
+    const healthCheckResults = settledResults.map<IServiceHealthCheckResult>((result) => {
+      if (result.status === 'fulfilled') {
+        return { status: 'up' };
+      }
 
-    const baseResponse = {
+      return {
+        status: 'down',
+        error: result.reason instanceof Error ? result.reason.message : String(result.reason),
+      };
+    });
+
+    const [dbHealth, queueHealth, storageHealth] = healthCheckResults;
+
+    const services = {
       db: dbHealth,
       queue: queueHealth,
       storage: storageHealth,
     };
 
-    if (healthChecks.every(({ status }) => status === 'up')) {
-      return { status: 'up', ...baseResponse };
+    if (healthCheckResults.every(({ status }) => status === 'up')) {
+      return { status: 'up', ...services };
     }
 
-    if (healthChecks.every(({ status }) => status === 'down')) {
-      return { status: 'down', ...baseResponse };
+    if (healthCheckResults.every(({ status }) => status === 'down')) {
+      return { status: 'down', ...services };
     }
 
     return {
       status: 'partial',
-      ...baseResponse,
+      ...services,
     };
   }
 }

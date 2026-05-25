@@ -2,7 +2,7 @@ import { JD_EVALUATION_JOB_NAME, JD_EVALUATION_QUEUE_NAME } from '@common/consta
 import { IJdEvaluationJobData } from '@common/types/jd-evaluation-job.interface';
 import { GoogleGenAI, ThinkingLevel } from '@google/genai';
 import { Processor, WorkerHost } from '@nestjs/bullmq';
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { Job, UnrecoverableError } from 'bullmq';
 import { readFileSync } from 'fs';
 import type { TemplateDelegate } from 'handlebars';
@@ -35,6 +35,7 @@ export const ResumeMatchOutputSchema = z.object({
 @Injectable()
 @Processor(JD_EVALUATION_QUEUE_NAME)
 export class JdEvaluationProcessor extends WorkerHost {
+  private readonly logger = new Logger(JdEvaluationProcessor.name);
   private readonly template: TemplateDelegate;
 
   constructor(
@@ -42,14 +43,19 @@ export class JdEvaluationProcessor extends WorkerHost {
     private readonly prismaService: PrismaService,
   ) {
     super();
+
     try {
       const templateSource = readFileSync(
+        // fixme: need to better handle this path resolution
         path.join(__dirname, 'jd-evaluation.template.hbs'),
         'utf-8',
       );
       this.template = Handlebars.compile(templateSource);
     } catch (error) {
-      console.error(error);
+      this.logger.error(
+        'Failed to initialize jd match template',
+        error instanceof Error ? error.stack : { error },
+      );
       throw new UnrecoverableError('Failed to initialize jd match template');
     }
   }
@@ -62,6 +68,11 @@ export class JdEvaluationProcessor extends WorkerHost {
         await this.handleJDMatch(data);
         break;
       default:
+        this.logger.warn('Received JD evaluation job with unknown name: ' + name);
+        await this.prismaService.jDMatchJob.update({
+          where: { id: data.jobId },
+          data: { status: 'FAILED', error: 'Unknown job name' },
+        });
         throw new UnrecoverableError('Unknown job name');
     }
   }
@@ -78,7 +89,7 @@ export class JdEvaluationProcessor extends WorkerHost {
         data: { status: 'IN_PROGRESS' },
       });
 
-      console.log(prompt);
+      this.logger.debug({ prompt });
 
       const response = await this.googleGenAI.models.generateContent({
         model: 'gemini-3-flash-preview',
@@ -104,11 +115,13 @@ export class JdEvaluationProcessor extends WorkerHost {
         },
       });
     } catch (error) {
-      console.error(error);
+      this.logger.error('Failed to evaluate JD', error instanceof Error ? error.stack : { error });
+
       await this.prismaService.jDMatchJob.update({
         where: { id: jobId },
         data: { status: 'FAILED' },
       });
+
       throw error;
     }
   }

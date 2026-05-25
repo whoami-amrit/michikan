@@ -26,6 +26,17 @@ import appConfig from 'src/config/app.config';
             'res.headers["set-cookie"]',
             'res.body.password',
           ],
+          transport:
+            config.logLevel === 'debug'
+              ? {
+                  target: 'pino-pretty',
+                  options: {
+                    colorize: true,
+                    translateTime: 'yyyy-mm-dd HH:MM:ss.l o',
+                    ignore: 'pid,hostname',
+                  },
+                }
+              : undefined,
         },
         forRoutes: ['*path'], // NOTE: nestjs 11 uses path-to-regexp which changed wildcard patterns
         exclude: [{ method: RequestMethod.GET, path: '*path/health' }],
