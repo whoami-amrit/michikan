@@ -18,18 +18,12 @@ export class S3Service implements OnModuleInit {
 
   async onModuleInit() {
     await this.healthCheck();
-    this.logger.log('Successfully connected to S3');
+    this.logger.debug('Successfully connected to S3');
   }
 
   async healthCheck(): Promise<void> {
-    try {
-      const sts = new STSClient({ region: this.config.s3Region });
-      await sts.send(new GetCallerIdentityCommand({}));
-    } catch (error) {
-      this.logger.error('S3 health check failed', error instanceof Error ? error.stack : { error });
-
-      throw error;
-    }
+    const sts = new STSClient({ region: this.config.s3Region });
+    await sts.send(new GetCallerIdentityCommand({}));
   }
 
   async uploadFile(key: string, fileStream: ReadStream): Promise<{ bucket: string; key: string }> {

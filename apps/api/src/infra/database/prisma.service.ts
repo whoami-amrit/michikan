@@ -20,7 +20,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
     await this.$connect();
 
     await this.healthCheck();
-    this.logger.log('Successfully connected to Prisma/PostgreSQL');
+    this.logger.debug('Successfully connected to Prisma/PostgreSQL');
   }
 
   async onModuleDestroy() {
@@ -28,15 +28,6 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
   }
 
   async healthCheck(): Promise<void> {
-    try {
-      await this.$queryRaw`SELECT 1`;
-    } catch (error) {
-      this.logger.error(
-        'Prisma/PostgreSQL health check failed',
-        error instanceof Error ? error.stack : { error },
-      );
-
-      throw error;
-    }
+    await this.$queryRaw`SELECT 1`;
   }
 }

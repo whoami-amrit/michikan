@@ -1,5 +1,5 @@
 import { CurrentUser } from '@common/decorators/current-user.decorator';
-import type { IJwtPayload } from '@common/types/jwt-payload.interface';
+import type { IJwtAccessPayload } from '@common/types/jwt-payload.interface';
 import { Body, Controller, Get, Param, ParseIntPipe, Post } from '@nestjs/common';
 import { createZodDto } from 'nestjs-zod';
 import z from 'zod';
@@ -19,13 +19,16 @@ export class EvaluationController {
   @Post()
   evaluateJDRelevance(
     @Body() evaluateJDRelevanceBody: EvaluateJDRelevanceBodyDto,
-    @CurrentUser() user: IJwtPayload,
+    @CurrentUser() user: IJwtAccessPayload,
   ) {
-    return this.evalService.createJDMatchJob(user.userId, evaluateJDRelevanceBody.jd);
+    return this.evalService.createJDMatchJob(user.sub, evaluateJDRelevanceBody.jd);
   }
 
   @Get('jobs/:id/status')
-  getJDMatchJobStatus(@CurrentUser() user: IJwtPayload, @Param('id', ParseIntPipe) id: number) {
-    return this.evalService.getJDMatchJobStatus(user.userId, id);
+  getJDMatchJobStatus(
+    @CurrentUser() user: IJwtAccessPayload,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return this.evalService.getJDMatchJobStatus(user.sub, id);
   }
 }

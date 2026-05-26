@@ -1,18 +1,14 @@
-import type { Prisma } from '@db/client';
+import type { Prisma, Session, User } from '@db/client';
 import { Provider } from '@db/client';
-import {
-  ConflictException,
-  Injectable,
-  InternalServerErrorException,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
+import type { ConfigType } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import bcrypt from 'bcrypt';
 import type { Request, Response } from 'express';
+import appConfig from 'src/config/app.config';
 import { PrismaService } from 'src/infra/database/prisma.service';
 
-import { IJwtPayload } from '../../common/types/jwt-payload.interface';
-import { UsersService } from '../users/users.service';
+import { IJwtAccessPayload } from '../../common/types/jwt-payload.interface';
 import {
   ACCESS_TOKEN_COOKIE_NAME,
   ACCESS_TOKEN_TTL_MS,
@@ -29,7 +25,8 @@ export class AuthService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
-    private readonly usersService: UsersService,
+    @Inject(appConfig.KEY)
+    private readonly config: ConfigType<typeof appConfig>,
   ) {}
 
   async register(
@@ -39,22 +36,26 @@ export class AuthService {
   ): Promise<Prisma.UserModel> {
     const { email, password, name } = createUserDto;
 
-    const existingUser = await this.usersService.findByEmail(email);
-
-    if (existingUser) {
-      throw new ConflictException('An account with this email already exists');
-    }
-
     const hashedPassword = await bcrypt.hash(password, BCRYPT_SALT_ROUNDS);
-    const user = await this.prisma.$transaction(async (txClient) => {
-      const createdUser = await this.usersService.create({ name, email }, txClient);
 
-      await this.createLocalAccount(email, hashedPassword, createdUser.id, txClient);
-
-      return createdUser;
+    const user = await this.prisma.user.create({
+      data: {
+        name,
+        email,
+        account: {
+          create: {
+            provider: Provider.LOCAL,
+            providerId: email,
+            hashedPassword,
+          },
+        },
+      },
+      include: {
+        account: true,
+      },
     });
 
-    await this.createSessionAndIssueTokens(user, req, res);
+    await this.getTokensAndUpsertSession(user, crypto.randomUUID(), req, res);
 
     return user;
   }
@@ -74,7 +75,7 @@ export class AuthService {
       throw new UnauthorizedException('Invalid email or password');
     }
 
-    await this.createSessionAndIssueTokens(account.user, req, res);
+    await this.getTokensAndUpsertSession(account.user, crypto.randomUUID(), req, res);
   }
 
   async refresh(req: Request, res: Response): Promise<void> {
@@ -85,9 +86,9 @@ export class AuthService {
     }
 
     const payload = await this.verifyRefreshToken(refreshToken);
-    const session = await this.findSessionById(payload.sessionId, true);
+    const session = await this.findSessionById(payload.sid, true);
 
-    if (!session || session.userId !== payload.userId) {
+    if (!session || session.userId !== payload.sub) {
       throw new UnauthorizedException('Refresh session is invalid or expired');
     }
 
@@ -103,7 +104,7 @@ export class AuthService {
       throw new UnauthorizedException('Refresh token is invalid or expired');
     }
 
-    await this.rotateSessionTokens(session.user, session.id, req, res);
+    await this.getTokensAndUpsertSession(session.user, session.id, req, res);
   }
 
   async createLocalAccount(
@@ -199,77 +200,52 @@ export class AuthService {
     });
   }
 
-  private async createSessionAndIssueTokens(user: Prisma.UserModel, req: Request, res: Response) {
-    const sessionId = crypto.randomUUID();
-    const ip = this.getRequestIp(req);
-    const userAgent = this.getUserAgent(req);
-    const { accessToken, refreshTokenHash, refreshToken } =
-      await this.getAccessAndHashedRefreshTokens(user, sessionId);
+  private async getTokens(user: Prisma.UserModel, sessionId: string) {
+    const accessToken = await this.getSignedAccessToken<IJwtAccessPayload>('access', {
+      sub: user.id,
+      plan: 'free',
+    });
 
-    await this.createSession({
-      id: sessionId,
-      userId: user.id,
-      ip,
-      userAgent,
-      tokenHash: refreshTokenHash,
+    const refreshToken = await this.getSignedAccessToken<IJwtRefreshPayload>('refresh', {
+      sub: user.id,
+      sid: sessionId,
+    });
+    const refreshTokenHash = await bcrypt.hash(refreshToken, BCRYPT_SALT_ROUNDS);
+
+    return { accessToken, refreshToken, refreshTokenHash };
+  }
+
+  private async getTokensAndUpsertSession(
+    user: User,
+    sessionId: string,
+    req: Request,
+    res: Response,
+  ) {
+    const { accessToken, refreshToken, refreshTokenHash } = await this.getTokens(user, sessionId);
+
+    await this.prisma.session.upsert({
+      where: { id: sessionId },
+      update: {
+        ...this.extractSessionMetadata(req),
+        tokenHash: refreshTokenHash,
+      },
+      create: {
+        id: sessionId,
+        userId: user.id,
+        ...this.extractSessionMetadata(req),
+        tokenHash: refreshTokenHash,
+      },
     });
 
     this.setAuthCookies(res, accessToken, refreshToken);
   }
 
-  private async getAccessAndHashedRefreshTokens(user: Prisma.UserModel, sessionId: string) {
-    const accessToken = await this.signAccessToken(user);
-    const refreshToken = await this.signRefreshToken(user, sessionId);
-    const refreshTokenHash = await this.encryptRefreshToken(refreshToken);
-
-    return { accessToken, refreshToken, refreshTokenHash };
-  }
-
-  private async encryptRefreshToken(token: string) {
-    return bcrypt.hash(token, BCRYPT_SALT_ROUNDS);
-  }
-
-  private async rotateSessionTokens(
-    user: Prisma.UserModel,
-    sessionId: string,
-    req: Request,
-    res: Response,
-  ) {
-    const { accessToken, refreshToken, refreshTokenHash } =
-      await this.getAccessAndHashedRefreshTokens(user, sessionId);
-
-    await this.updateSession(
-      sessionId,
-      refreshTokenHash,
-      this.getRequestIp(req),
-      this.getUserAgent(req),
-    );
-
-    this.setAuthCookies(res, accessToken, refreshToken);
-  }
-
-  private async signAccessToken(user: Prisma.UserModel) {
-    return this.jwtService.signAsync<IJwtPayload>(
+  private async getSignedAccessToken<T extends object>(type: 'access' | 'refresh', payload: T) {
+    return this.jwtService.signAsync(
+      { ...payload, type },
       {
-        userId: user.id,
-        plan: 'free', // TODO: include actual plan info if needed
-      },
-      {
-        secret: this.requireJwtSecret(),
-        expiresIn: '10m',
-      },
-    );
-  }
-
-  private async signRefreshToken(user: Prisma.UserModel, sessionId: string) {
-    return this.jwtService.signAsync<IJwtRefreshPayload>(
-      {
-        userId: user.id,
-        sessionId,
-      },
-      {
-        secret: this.requireJwtSecret(),
-        expiresIn: '24h',
+        secret: this.config.jwtSecret,
+        expiresIn: `${type === 'access' ? ACCESS_TOKEN_TTL_MS : REFRESH_TOKEN_TTL_MS}Ms`,
       },
     );
   }
@@ -277,7 +253,7 @@ export class AuthService {
   private async verifyRefreshToken(token: string) {
     try {
       return await this.jwtService.verifyAsync<IJwtRefreshPayload>(token, {
-        secret: this.requireJwtSecret(),
+        secret: this.config.jwtSecret,
       });
     } catch {
       throw new UnauthorizedException('Refresh token is invalid or expired');
@@ -303,21 +279,10 @@ export class AuthService {
     });
   }
 
-  private getRequestIp(req: Request) {
-    return req.ip || req.socket.remoteAddress || 'unknown';
-  }
-
-  private getUserAgent(req: Request) {
-    return req.headers['user-agent'] || 'unknown';
-  }
-
-  private requireJwtSecret() {
-    const secret = process.env.JWT_SECRET;
-
-    if (!secret) {
-      throw new InternalServerErrorException('JWT secret is not configured');
-    }
-
-    return secret;
+  private extractSessionMetadata(req: Request): Pick<Session, 'ip' | 'userAgent'> {
+    return {
+      ip: req.ip || req.socket.remoteAddress || 'unknown',
+      userAgent: req.headers['user-agent'] || 'unknown',
+    };
   }
 }

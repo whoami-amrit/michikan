@@ -1,6 +1,6 @@
 // auth.guard.ts
 import { SKIP_AUTH_TAG } from '@common/constants';
-import { IJwtPayload } from '@common/types/jwt-payload.interface';
+import { IJwtAccessPayload } from '@common/types/jwt-payload.interface';
 import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
@@ -31,7 +31,7 @@ export class AuthGuard implements CanActivate {
     }
 
     try {
-      req.user = this.jwt.verify<IJwtPayload>(token);
+      req.user = this.jwt.verify<IJwtAccessPayload>(token);
       return true;
     } catch {
       throw new UnauthorizedException();

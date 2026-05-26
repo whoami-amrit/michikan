@@ -1,4 +1,4 @@
 export interface IJwtRefreshPayload {
-  userId: number;
-  sessionId: string;
+  sub: number;
+  sid: string;
 }

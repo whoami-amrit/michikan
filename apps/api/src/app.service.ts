@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 
 import { PrismaService } from './infra/database/prisma.service';
 import { BullMqService } from './infra/queue/bullmq.service';
@@ -7,6 +7,8 @@ import { IHealthCheckResponse, IServiceHealthCheckResult } from './types';
 
 @Injectable()
 export class AppService {
+  private readonly logger = new Logger(AppService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly bullMQService: BullMqService,
@@ -27,7 +29,7 @@ export class AppService {
 
       return {
         status: 'down',
-        error: result.reason instanceof Error ? result.reason.message : String(result.reason),
+        error: result.reason,
       };
     });
 
@@ -42,6 +44,8 @@ export class AppService {
     if (healthCheckResults.every(({ status }) => status === 'up')) {
       return { status: 'up', ...services };
     }
+
+    this.logger.error(services);
 
     if (healthCheckResults.every(({ status }) => status === 'down')) {
       return { status: 'down', ...services };

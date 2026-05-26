@@ -1,5 +1,5 @@
 import { CurrentUser } from '@common/decorators/current-user.decorator';
-import type { IJwtPayload } from '@common/types/jwt-payload.interface';
+import type { IJwtAccessPayload } from '@common/types/jwt-payload.interface';
 import {
   Body,
   Controller,
@@ -20,7 +20,7 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Get('me')
-  async getUserData(@CurrentUser() { userId }: IJwtPayload): Promise<IUserResponse> {
+  async getUserData(@CurrentUser() { sub: userId }: IJwtAccessPayload): Promise<IUserResponse> {
     const user = await this.usersService.findById(userId);
 
     if (!user) {

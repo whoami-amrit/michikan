@@ -11,20 +11,11 @@ export class BullMqService implements OnModuleInit {
 
   async onModuleInit() {
     await this.healthCheck();
-    this.logger.log('Successfully connected to BullMQ');
+    this.logger.debug('Successfully connected to BullMQ');
   }
 
   async healthCheck(): Promise<void> {
-    try {
-      const client = await this.renderQueue.client;
-      await client.ping();
-    } catch (error) {
-      this.logger.error(
-        'BullMq health check failed',
-        error instanceof Error ? error.stack : { error },
-      );
-
-      throw error;
-    }
+    const client = await this.renderQueue.client;
+    await client.ping();
   }
 }

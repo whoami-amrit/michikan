@@ -1,4 +1,4 @@
-export interface IJwtPayload {
-  userId: number;
+export interface IJwtAccessPayload {
+  sub: number;
   plan: 'free' | 'pro';
 }

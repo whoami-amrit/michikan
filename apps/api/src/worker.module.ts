@@ -7,7 +7,6 @@ import { QueueModule } from './infra/queue/queue.module';
 import { StorageModule } from './infra/storage/storage.module';
 import { RenderResumeProcessor } from './modules/resumes/processors/render-resume.processor';
 
-// apps/api/src/worker.module.ts
 @Module({
   imports: [AppConfigModule, LoggerModule, QueueModule, DatabaseModule, StorageModule],
   providers: [RenderResumeProcessor],

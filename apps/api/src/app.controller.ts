@@ -4,7 +4,8 @@ import { Controller, Get } from '@nestjs/common';
 import { AppService } from './app.service';
 import { IHealthCheckResponse } from './types';
 
-// fixme: should I skip auth here?
+// this endpoint will be hidden behind the load balancer
+// therefore making it a public endpoint
 @SkipAuth()
 @Controller()
 export class AppController {
