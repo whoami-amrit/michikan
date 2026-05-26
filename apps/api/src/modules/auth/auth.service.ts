@@ -1,6 +1,6 @@
-import type { Prisma, Session, User } from '@db/client';
+import type { Session, User } from '@db/client';
 import { Provider } from '@db/client';
-import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
+import { Inject, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import type { ConfigType } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import bcrypt from 'bcrypt';
@@ -22,6 +22,8 @@ import { IJwtRefreshPayload } from './types';
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
@@ -29,11 +31,7 @@ export class AuthService {
     private readonly config: ConfigType<typeof appConfig>,
   ) {}
 
-  async register(
-    createUserDto: RegisterRequestDto,
-    req: Request,
-    res: Response,
-  ): Promise<Prisma.UserModel> {
+  async register(createUserDto: RegisterRequestDto, req: Request, res: Response): Promise<User> {
     const { email, password, name } = createUserDto;
 
     const hashedPassword = await bcrypt.hash(password, BCRYPT_SALT_ROUNDS);
@@ -50,12 +48,9 @@ export class AuthService {
           },
         },
       },
-      include: {
-        account: true,
-      },
     });
 
-    await this.getTokensAndUpsertSession(user, crypto.randomUUID(), req, res);
+    await this.getTokensAndUpsertSession(user.id, crypto.randomUUID(), req, res);
 
     return user;
   }
@@ -63,7 +58,14 @@ export class AuthService {
   async login(loginDto: LoginRequestDto, req: Request, res: Response): Promise<void> {
     const { email, password } = loginDto;
 
-    const account = await this.findLocalAccountByEmail(email, true);
+    const account = await this.prisma.account.findUnique({
+      where: {
+        provider_providerId: {
+          provider: Provider.LOCAL,
+          providerId: email,
+        },
+      },
+    });
 
     if (!account || !account.hashedPassword) {
       throw new UnauthorizedException('Invalid email or password');
@@ -75,169 +77,91 @@ export class AuthService {
       throw new UnauthorizedException('Invalid email or password');
     }
 
-    await this.getTokensAndUpsertSession(account.user, crypto.randomUUID(), req, res);
+    await this.getTokensAndUpsertSession(account.userId, crypto.randomUUID(), req, res);
   }
 
   async refresh(req: Request, res: Response): Promise<void> {
     const refreshToken = req.cookies[REFRESH_TOKEN_COOKIE_NAME] as string;
-
     if (!refreshToken) {
-      throw new UnauthorizedException('Refresh token is required');
+      throw new UnauthorizedException('You need to login once again');
     }
 
-    const payload = await this.verifyRefreshToken(refreshToken);
-    const session = await this.findSessionById(payload.sid, true);
+    const payload = await this.verifyToken(refreshToken, req);
 
+    const session = await this.prisma.session.findUnique({
+      where: { id: payload.sid },
+    });
     if (!session || session.userId !== payload.sub) {
       throw new UnauthorizedException('Refresh session is invalid or expired');
     }
-
     if (session.expiresAt.getTime() <= Date.now()) {
-      await this.deleteSessionById(session.id);
+      this.logger.log(`Refresh token expired for session ${session.id} of user ${session.userId}`);
+      await this.prisma.session.delete({
+        where: { id: session.id },
+      });
 
       throw new UnauthorizedException('Refresh session has expired');
     }
 
     const refreshTokenMatches = await bcrypt.compare(refreshToken, session.tokenHash);
-
     if (!refreshTokenMatches) {
+      const metadata = this.extractSessionMetadata(req);
+      this.logger.warn(
+        `Refresh token verified but did not match; sent from IP ${metadata.ip} with user-agent ${metadata.userAgent}`,
+      );
+
       throw new UnauthorizedException('Refresh token is invalid or expired');
     }
 
-    await this.getTokensAndUpsertSession(session.user, session.id, req, res);
-  }
-
-  async createLocalAccount(
-    email: string,
-    hashedPassword: string,
-    userId: number,
-    txClient?: Prisma.TransactionClient,
-  ) {
-    return (txClient ?? this.prisma).account.create({
-      data: {
-        provider: Provider.LOCAL,
-        providerId: email,
-        hashedPassword,
-        user: {
-          connect: {
-            id: userId,
-          },
-        },
-      },
-    });
-  }
-
-  async findLocalAccountByEmail(email: string, includeUser = false) {
-    return this.prisma.account.findUnique({
-      where: {
-        provider_providerId: {
-          provider: Provider.LOCAL,
-          providerId: email,
-        },
-      },
-      include: {
-        user: includeUser,
-      },
-    });
-  }
-
-  async createSession(
-    {
-      id,
-      userId,
-      ip,
-      userAgent,
-      tokenHash,
-    }: Prisma.SessionUncheckedCreateInput & Record<'userId', number>,
-    txClient?: Prisma.TransactionClient,
-  ) {
-    return (txClient ?? this.prisma).session.create({
-      data: {
-        id,
-        tokenHash,
-        expiresAt: new Date(Date.now() + REFRESH_TOKEN_TTL_MS),
-        ip,
-        userAgent,
-        user: {
-          connect: {
-            id: userId,
-          },
-        },
-      },
-    });
-  }
-
-  async findSessionById(sessionId: string, includeUser = false) {
-    return this.prisma.session.findUnique({
-      where: { id: sessionId },
-      include: {
-        user: includeUser,
-      },
-    });
-  }
-
-  async updateSession(sessionId: string, tokenHash: string, ip: string, userAgent: string) {
-    return this.prisma.session.update({
-      where: { id: sessionId },
-      data: {
-        tokenHash,
-        expiresAt: new Date(Date.now() + REFRESH_TOKEN_TTL_MS),
-        ip,
-        userAgent,
-      },
-    });
-  }
-
-  async deleteSessionById(sessionId: string) {
-    return this.prisma.session.delete({
-      where: { id: sessionId },
-    });
-  }
-
-  async deleteAllSessionsByUserId(userId: number) {
-    return this.prisma.session.deleteMany({
-      where: { userId },
-    });
-  }
-
-  private async getTokens(user: Prisma.UserModel, sessionId: string) {
-    const accessToken = await this.getSignedAccessToken<IJwtAccessPayload>('access', {
-      sub: user.id,
-      plan: 'free',
-    });
-
-    const refreshToken = await this.getSignedAccessToken<IJwtRefreshPayload>('refresh', {
-      sub: user.id,
-      sid: sessionId,
-    });
-    const refreshTokenHash = await bcrypt.hash(refreshToken, BCRYPT_SALT_ROUNDS);
-
-    return { accessToken, refreshToken, refreshTokenHash };
+    await this.getTokensAndUpsertSession(session.userId, session.id, req, res);
   }
 
   private async getTokensAndUpsertSession(
-    user: User,
+    userId: User['id'],
     sessionId: string,
     req: Request,
     res: Response,
   ) {
-    const { accessToken, refreshToken, refreshTokenHash } = await this.getTokens(user, sessionId);
+    const {
+      accessToken,
+      refreshToken,
+      refreshTokenHash: tokenHash,
+    } = await this.getTokens(userId, sessionId);
+
+    const expiresAt = new Date(Date.now() + REFRESH_TOKEN_TTL_MS);
 
     await this.prisma.session.upsert({
       where: { id: sessionId },
       update: {
         ...this.extractSessionMetadata(req),
-        tokenHash: refreshTokenHash,
+        tokenHash,
+        expiresAt,
       },
       create: {
         id: sessionId,
-        userId: user.id,
+        userId,
         ...this.extractSessionMetadata(req),
-        tokenHash: refreshTokenHash,
+        tokenHash,
+        expiresAt,
       },
     });
 
     this.setAuthCookies(res, accessToken, refreshToken);
+  }
+
+  private async getTokens(userId: User['id'], sessionId: string) {
+    const accessToken = await this.getSignedAccessToken<IJwtAccessPayload>('access', {
+      sub: userId,
+      plan: 'free',
+    });
+
+    const refreshToken = await this.getSignedAccessToken<IJwtRefreshPayload>('refresh', {
+      sub: userId,
+      sid: sessionId,
+    });
+    const refreshTokenHash = await bcrypt.hash(refreshToken, BCRYPT_SALT_ROUNDS);
+
+    return { accessToken, refreshToken, refreshTokenHash };
   }
 
   private async getSignedAccessToken<T extends object>(type: 'access' | 'refresh', payload: T) {
@@ -250,12 +174,17 @@ export class AuthService {
     );
   }
 
-  private async verifyRefreshToken(token: string) {
+  private async verifyToken(token: string, req: Request) {
     try {
       return await this.jwtService.verifyAsync<IJwtRefreshPayload>(token, {
         secret: this.config.jwtSecret,
       });
     } catch {
+      const metadata = this.extractSessionMetadata(req);
+      this.logger.warn(
+        `Invalid refresh token provided from IP ${metadata.ip} with user-agent ${metadata.userAgent}`,
+      );
+
       throw new UnauthorizedException('Refresh token is invalid or expired');
     }
   }
@@ -265,7 +194,7 @@ export class AuthService {
       httpOnly: true,
       sameSite: 'lax' as const,
       secure: true,
-      path: '/',
+      path: '/api/v1',
     };
 
     res.cookie(ACCESS_TOKEN_COOKIE_NAME, accessToken, {
