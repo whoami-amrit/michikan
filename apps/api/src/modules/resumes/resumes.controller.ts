@@ -1,7 +1,6 @@
 import { CurrentUser } from '@common/decorators/current-user.decorator';
 import type { IJwtAccessPayload } from '@common/types/jwt-payload.interface';
 import {
-  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -14,7 +13,6 @@ import {
 } from '@nestjs/common';
 
 import { CreateResumeRequestDto } from './dto/create-resume.dto';
-import { ResumeDownloadDto } from './dto/download-resume.dto';
 import { UpdateActiveResumeRequestDto } from './dto/new-active-resume.dto';
 import { UpdateResumeRequestDto } from './dto/update-resume.dto';
 import { ResumeService } from './resumes.service';
@@ -28,18 +26,21 @@ export class ResumeController {
     return this.resumeService.getActiveResume(user.sub);
   }
 
+  @Patch('active')
+  @HttpCode(204)
+  async setActiveResumeForUser(
+    @CurrentUser() user: IJwtAccessPayload,
+    @Body() { resumeId }: UpdateActiveResumeRequestDto,
+  ) {
+    await this.resumeService.setActiveResume(user.sub, resumeId);
+  }
+
   @Post(':id/render')
   async getRenderedResume(
     @Param('id', ParseIntPipe) id: number,
-    @Body() resumeDownloadDto: ResumeDownloadDto,
     @CurrentUser() user: IJwtAccessPayload,
   ) {
-    switch (resumeDownloadDto.type) {
-      case 'pdf':
-        return await this.resumeService.renderPdf(id, user.sub);
-      default:
-        throw new BadRequestException('Unsupported resume download type');
-    }
+    return await this.resumeService.renderPdf(id, user.sub);
   }
 
   @Get('jobs/:id/status')
@@ -48,15 +49,6 @@ export class ResumeController {
     @CurrentUser() user: IJwtAccessPayload,
   ) {
     return await this.resumeService.getRenderStatus(id, user.sub);
-  }
-
-  @Patch('active')
-  @HttpCode(204)
-  async setActiveResumeForUser(
-    @CurrentUser() user: IJwtAccessPayload,
-    @Body() { resumeId }: UpdateActiveResumeRequestDto,
-  ) {
-    await this.resumeService.setActiveResume(user.sub, resumeId);
   }
 
   @Get()
