@@ -1,4 +1,4 @@
-import { JD_EVALUATION_QUEUE_NAME } from '@common/constants';
+import { COMMON_BULL_QUEUE_OPTIONS, JD_EVALUATION_QUEUE_NAME } from '@common/constants';
 import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
 
@@ -11,10 +11,7 @@ import { EvaluationService } from './evaluation.service';
     ResumeModule,
     BullModule.registerQueue({
       name: JD_EVALUATION_QUEUE_NAME,
-      defaultJobOptions: {
-        removeOnComplete: { count: 100, age: 24 * 3600 },
-        removeOnFail: { count: 100, age: 7 * 24 * 3600 }, // save for a week for debugging
-      },
+      ...COMMON_BULL_QUEUE_OPTIONS,
     }),
   ],
   controllers: [EvaluationController],
