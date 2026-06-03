@@ -7,6 +7,6 @@ const schema = z.object({
   name: z.string().max(255, 'Name must not exceed 255 characters').optional(),
 });
 
-export class RegisterRequestDto extends createZodDto(schema) {}
+export class RegisterDto extends createZodDto(schema) {}
 
 export default schema;

@@ -6,6 +6,6 @@ const schema = z.object({
   password: z.string().min(8, 'Password must be at least 8 characters'),
 });
 
-export class LoginRequestDto extends createZodDto(schema) {}
+export class LoginDto extends createZodDto(schema) {}
 
 export default schema;

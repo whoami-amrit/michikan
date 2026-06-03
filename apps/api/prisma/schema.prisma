@@ -8,6 +8,29 @@ datasource db {
   provider = "postgresql"
 }
 
+enum JobStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  FAILED
+}
+
+enum JobApplicationStatus {
+  NOT_APPLIED
+  APPLIED
+  NOT_SHORTLISTED
+  SHORTLISTED
+  INTERVIEW_ONGOING
+  REJECTED
+  ACCEPTED
+}
+
+enum Provider {
+  GOOGLE
+  GITHUB
+  LOCAL
+}
+
 model Resume {
   id               Int               @id @default(autoincrement())
   name             String
@@ -17,9 +40,8 @@ model Resume {
   updatedAt        DateTime          @updatedAt
   user             User              @relation(fields: [userId], references: [id])
   userId           Int
-  activeResume     ActiveResume?
   resumeRenderJobs ResumeRenderJob[]
-  jdmatchJobs      JDMatchJob[]
+  jobApplications  JobApplication[]
 
   @@index([userId])
 }
@@ -33,18 +55,12 @@ model User {
   createdAt          DateTime          @default(now())
   updatedAt          DateTime          @updatedAt
   resumes            Resume[] // 1 to n relationship with Resume
-  activeResume       ActiveResume?
   accounts           Account[] // 1 to 1 relationship with Account
   sessions           Session[] // 1 to n relationship with Session
   activeResumeUserId Int?
   resumeRenderJobs   ResumeRenderJob[]
-  jdmatchJobs        JDMatchJob[]
-}
-
-enum Provider {
-  GOOGLE
-  GITHUB
-  LOCAL
+  jobApplications    JobApplication[]
+  noClutter          Boolean           @default(true)
 }
 
 model Account {
@@ -80,20 +96,6 @@ model Session {
   userAgent String
 }
 
-model ActiveResume {
-  resume   Resume @relation(fields: [resumeId], references: [id], onDelete: Cascade)
-  resumeId Int    @unique
-  userId   Int    @id
-  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
-enum JobStatus {
-  PENDING
-  IN_PROGRESS
-  COMPLETED
-  FAILED
-}
-
 model ResumeRenderJob {
   id Int @id @default(autoincrement())
 
@@ -112,19 +114,41 @@ model ResumeRenderJob {
   updatedAt DateTime @updatedAt
 }
 
-model JDMatchJob {
+model AnalysisJob {
   id Int @id @default(autoincrement())
 
-  resumeId Int
-  resume   Resume @relation(fields: [resumeId], references: [id], onDelete: Cascade)
-  userId   Int
-  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jobApplicationId Int
+  jobApplication   JobApplication @relation(fields: [jobApplicationId], references: [id], onDelete: Cascade)
 
-  status JobStatus
-  error  String?
+  status JobStatus @default(PENDING)
 
-  responseJson Json?
+  error    String?
+  analysis Json?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model JobApplication {
+  id Int @id @default(autoincrement())
+
+  resumeId Int?
+  resume   Resume? @relation(fields: [resumeId], references: [id], onDelete: SetNull)
+
+  userId Int
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  analysisJobs AnalysisJob[]
+
+  status JobApplicationStatus @default(NOT_APPLIED)
+
+  // unsaved will get removed after 30 days unless user wants to retain them
+  saved Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  jobDescription String
+
+  title String?
 }

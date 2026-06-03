@@ -1,8 +1,16 @@
 import { CurrentUser } from '@common/decorators/current-user.decorator';
 import type { IJwtAccessPayload } from '@common/types/jwt-payload.interface';
-import { Body, Controller, Get, HttpCode, NotFoundException, Patch } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  NotFoundException,
+  Patch,
+} from '@nestjs/common';
 
-import { UpdateUserRequestDto } from './dto/update-user.request';
+import { UpdateUserDto } from './dto/update.dto';
 import { IUserResponse } from './responses/user.response';
 import { UsersService } from './users.service';
 
@@ -27,11 +35,8 @@ export class UsersController {
   }
 
   @Patch('me')
-  @HttpCode(204)
-  updateUser(
-    @CurrentUser() { sub: userId }: IJwtAccessPayload,
-    @Body() data: UpdateUserRequestDto,
-  ) {
+  @HttpCode(HttpStatus.NO_CONTENT)
+  updateUser(@CurrentUser() { sub: userId }: IJwtAccessPayload, @Body() data: UpdateUserDto) {
     return this.usersService.updateUserById(userId, data);
   }
 }

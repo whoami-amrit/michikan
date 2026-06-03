@@ -8,6 +8,6 @@ const schema = z.object({
   description: z.string().max(200).optional(),
 });
 
-export class CreateResumeRequestDto extends createZodDto(schema) {}
+export class CreateResumeDto extends createZodDto(schema) {}
 
 export default schema;

@@ -1,6 +1,5 @@
 import { AccessDenied, NoSuchBucket } from '@aws-sdk/client-s3';
 import { RENDER_PDF_JOB_NAME, RENDER_QUEUE_NAME } from '@common/constants';
-import { IRenderPdfJobData } from '@common/types/render-pdf-job.interface';
 import { Prisma } from '@db/client';
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Injectable, Logger } from '@nestjs/common';
@@ -14,6 +13,7 @@ import path from 'path';
 import { PrismaService } from 'src/infra/database/prisma.service';
 import { S3Service } from 'src/infra/storage/s3.service';
 
+import { IRenderPdfJob } from '../types';
 import { RenderErrorEnum, RenderErrors } from './render-resume.errors';
 
 @Injectable()
@@ -36,9 +36,8 @@ export class RenderResumeProcessor extends WorkerHost {
     try {
       mkdirSync(this.renderOutputPath, { recursive: true });
 
-      // todo: need to improve the path logic
       const resumeTemplate = readFileSync(
-        path.join(__dirname, '..', '..', '..', '..', 'assets', 'render-resume.template.hbs'),
+        path.join(process.cwd(), 'src', 'assets', 'render-resume.template.hbs'),
         'utf-8',
       );
 
@@ -61,7 +60,7 @@ export class RenderResumeProcessor extends WorkerHost {
     });
   }
 
-  async process({ name, data }: Job<IRenderPdfJobData>) {
+  async process({ name, data }: Job<IRenderPdfJob>) {
     switch (name) {
       case RENDER_PDF_JOB_NAME:
         await this.renderPdf(data);
@@ -75,13 +74,21 @@ export class RenderResumeProcessor extends WorkerHost {
     }
   }
 
-  private async renderPdf({ json, jobId }: IRenderPdfJobData) {
+  private async renderPdf({ jobId }: IRenderPdfJob) {
     try {
       await this.updateJobStatus(jobId, { status: 'IN_PROGRESS' });
 
       const { jobDir, texFilePath, pdfFilePath } = await this.initTempJobDirectory(jobId);
 
-      await this.writeLatexToFile(texFilePath, json);
+      const job = await this.prisma.resumeRenderJob.findUnique({
+        where: { id: jobId },
+        include: {
+          resume: true,
+        },
+      });
+
+      // already checked job existence in updateJobStatus
+      await this.writeLatexToFile(texFilePath, job!.resume.json);
 
       await this.compilePdfLatex(jobDir);
 

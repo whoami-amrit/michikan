@@ -2,8 +2,6 @@ import { createHash } from 'node:crypto';
 
 import { RENDER_PDF_JOB_NAME, RENDER_QUEUE_NAME } from '@common/constants';
 import { ICreateJobResponse } from '@common/types/create-job.response';
-import { IRenderPdfJobData } from '@common/types/render-pdf-job.interface';
-import { IResumeJson } from '@common/types/resume.interface';
 import { Resume } from '@db/client';
 import { InjectQueue } from '@nestjs/bullmq';
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
@@ -11,20 +9,21 @@ import { Queue } from 'bullmq';
 import { PrismaService } from 'src/infra/database/prisma.service';
 import { S3Service } from 'src/infra/storage/s3.service';
 
-import { CreateResumeRequestDto } from './dto/create-resume.dto';
-import { UpdateResumeRequestDto } from './dto/update-resume.dto';
+import { CreateResumeDto } from './dto/create.dto';
+import { UpdateResumeDto } from './dto/update.dto';
 import { IRenderStatusResponse } from './responses/render-status.response';
+import { IRenderPdfJob } from './types';
 
 @Injectable()
 export class ResumeService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly s3Service: S3Service,
-    @InjectQueue(RENDER_QUEUE_NAME) private readonly renderQueue: Queue<IRenderPdfJobData>,
+    @InjectQueue(RENDER_QUEUE_NAME) private readonly renderQueue: Queue<IRenderPdfJob>,
   ) {}
 
-  async create(userId: number, createResumeDto: CreateResumeRequestDto): Promise<Resume> {
-    const resume = await this.prisma.resume.create({
+  create(userId: number, createResumeDto: CreateResumeDto): Promise<Resume> {
+    return this.prisma.resume.create({
       data: {
         json: createResumeDto.json,
         name: createResumeDto.name,
@@ -32,21 +31,9 @@ export class ResumeService {
         userId,
       },
     });
-
-    const currentActiveResume = await this.getActiveResume(userId);
-
-    if (!currentActiveResume) {
-      await this.setActiveResume(userId, resume.id);
-    }
-
-    return resume;
   }
 
-  update(
-    resumeId: number,
-    userId: number,
-    updateResumeDto: UpdateResumeRequestDto,
-  ): Promise<Resume> {
+  update(resumeId: number, userId: number, updateResumeDto: UpdateResumeDto): Promise<Resume> {
     return this.prisma.resume.update({
       where: { id: resumeId, userId },
       data: updateResumeDto,
@@ -59,7 +46,13 @@ export class ResumeService {
     });
   }
 
-  getAllForUser(userId: number): Promise<Resume[]> {
+  get(userId: number, resumeId?: number) {
+    if (resumeId) {
+      return this.prisma.resume.findUnique({
+        where: { id: resumeId, userId },
+      });
+    }
+
     return this.prisma.resume.findMany({
       where: { userId },
     });
@@ -86,7 +79,6 @@ export class ResumeService {
     const resumeRenderJob = await this.prisma.$transaction(async (prisma) => {
       const resumeRenderJob = await prisma.resumeRenderJob.create({
         data: {
-          type: 'PDF',
           status: 'PENDING',
           sourceHash: this.createHashOfResumeJson(resume),
           resumeId,
@@ -96,7 +88,6 @@ export class ResumeService {
 
       await this.renderQueue.add(RENDER_PDF_JOB_NAME, {
         jobId: resumeRenderJob.id,
-        json: resume.json as IResumeJson,
       });
 
       return resumeRenderJob;
@@ -146,28 +137,5 @@ export class ResumeService {
         ? await this.s3Service.getObjectSignedUrl(renderJob.storageKey, 'filename')
         : null,
     };
-  }
-
-  async setActiveResume(userId: number, resumeId: number) {
-    // Upsert the active resume for the user
-    await this.prisma.activeResume.upsert({
-      where: { userId },
-      update: { resumeId },
-      create: {
-        userId,
-        resumeId,
-      },
-    });
-  }
-
-  async getActiveResume(userId: number) {
-    const activeResume = await this.prisma.activeResume.findUnique({
-      where: { userId },
-      include: {
-        resume: true, // Include the related resume data
-      },
-    });
-
-    return activeResume?.resume ?? null; // Return the active resume or null if not set
   }
 }

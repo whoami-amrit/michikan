@@ -1,15 +1,17 @@
-import { JD_EVALUATION_JOB_NAME, JD_EVALUATION_QUEUE_NAME } from '@common/constants';
-import { IJdEvaluationJobData } from '@common/types/jd-evaluation-job.interface';
+import { JD_ANALYSIS_QUEUE_NAME, JD_ANALYZER_JOB_NAME } from '@common/constants';
 import { GoogleGenAI, ThinkingLevel } from '@google/genai';
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Injectable, Logger } from '@nestjs/common';
 import { Job, UnrecoverableError } from 'bullmq';
+import { error } from 'console';
 import { readFileSync } from 'fs';
 import type { TemplateDelegate } from 'handlebars';
 import Handlebars from 'handlebars';
 import path from 'path';
 import { PrismaService } from 'src/infra/database/prisma.service';
 import z from 'zod';
+
+import { IJdAnalysisJob } from '../types';
 
 export const RequirementMatchSchema = z.object({
   requirement: z.string(),
@@ -33,9 +35,9 @@ export const ResumeMatchOutputSchema = z.object({
 });
 
 @Injectable()
-@Processor(JD_EVALUATION_QUEUE_NAME)
-export class JdEvaluationProcessor extends WorkerHost {
-  private readonly logger = new Logger(JdEvaluationProcessor.name);
+@Processor(JD_ANALYSIS_QUEUE_NAME)
+export class JobDescriptionAnalyzerProcessor extends WorkerHost {
+  private readonly logger = new Logger(JobDescriptionAnalyzerProcessor.name);
   private readonly template: TemplateDelegate;
 
   constructor(
@@ -46,8 +48,7 @@ export class JdEvaluationProcessor extends WorkerHost {
 
     try {
       const templateSource = readFileSync(
-        // fixme: need to better handle this path resolution
-        path.join(__dirname, 'jd-evaluation.template.hbs'),
+        path.join(process.cwd(), 'src', 'assets', 'jd-evaluation.template.hbs'),
         'utf-8',
       );
       this.template = Handlebars.compile(templateSource);
@@ -60,32 +61,55 @@ export class JdEvaluationProcessor extends WorkerHost {
     }
   }
 
-  async process(job: Job<IJdEvaluationJobData>) {
+  async process(job: Job<IJdAnalysisJob>) {
     const { name, data } = job;
 
     switch (name) {
-      case JD_EVALUATION_JOB_NAME:
+      case JD_ANALYZER_JOB_NAME:
         await this.handleJDMatch(data);
         break;
       default:
         this.logger.warn('Received JD evaluation job with unknown name: ' + name);
-        await this.prismaService.jDMatchJob.update({
-          where: { id: data.jobId },
+        await this.prismaService.analysisJob.update({
+          where: { id: data.analysisJobId },
           data: { status: 'FAILED', error: 'Unknown job name' },
         });
         throw new UnrecoverableError('Unknown job name');
     }
   }
 
-  private async handleJDMatch({ jobDescription, resumeJson, jobId }: IJdEvaluationJobData) {
+  private async handleJDMatch({ analysisJobId }: IJdAnalysisJob) {
+    const analysisJob = await this.prismaService.analysisJob.findUnique({
+      where: { id: analysisJobId },
+      include: {
+        jobApplication: {
+          include: {
+            resume: true,
+          },
+        },
+      },
+    });
+
+    if (!analysisJob) {
+      const errorString = `Analysis job with ID ${analysisJobId} not found`;
+      this.logger.error(errorString, error instanceof Error ? error.stack : undefined);
+      throw new UnrecoverableError(errorString);
+    }
+
+    if (!analysisJob.jobApplication.resume) {
+      const errorString = `No associated resume for this analysis job ${analysisJobId}`;
+      this.logger.error(errorString, error instanceof Error ? error.stack : undefined);
+      throw new UnrecoverableError(errorString);
+    }
+
     const prompt = this.template({
-      jobDescription,
-      resumeJson: JSON.stringify(resumeJson),
+      jobDescription: analysisJob.jobApplication.jobDescription,
+      resumeJson: JSON.stringify(analysisJob.jobApplication.resume.json),
     });
 
     try {
-      await this.prismaService.jDMatchJob.update({
-        where: { id: jobId },
+      await this.prismaService.analysisJob.update({
+        where: { id: analysisJobId },
         data: { status: 'IN_PROGRESS' },
       });
 
@@ -107,18 +131,18 @@ export class JdEvaluationProcessor extends WorkerHost {
         throw new Error('No response from Google GenAI');
       }
 
-      await this.prismaService.jDMatchJob.update({
-        where: { id: jobId },
+      await this.prismaService.analysisJob.update({
+        where: { id: analysisJobId },
         data: {
           status: 'COMPLETED',
-          responseJson: ResumeMatchOutputSchema.parse(JSON.parse(response.text)),
+          analysis: ResumeMatchOutputSchema.parse(JSON.parse(response.text)),
         },
       });
     } catch (error) {
       this.logger.error('Failed to evaluate JD', error instanceof Error ? error.stack : { error });
 
-      await this.prismaService.jDMatchJob.update({
-        where: { id: jobId },
+      await this.prismaService.analysisJob.update({
+        where: { id: analysisJobId },
         data: { status: 'FAILED' },
       });
 

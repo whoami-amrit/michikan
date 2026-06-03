@@ -6,6 +6,6 @@ const schema = z.object({
   json: ResumeJsonSchema.optional(),
 });
 
-export class UpdateResumeRequestDto extends createZodDto(schema) {}
+export class UpdateResumeDto extends createZodDto(schema) {}
 
 export default schema;

@@ -16,8 +16,8 @@ import {
   REFRESH_TOKEN_COOKIE_NAME,
   REFRESH_TOKEN_TTL_MS,
 } from './constants';
-import { LoginRequestDto } from './dto/login.dto';
-import { RegisterRequestDto } from './dto/register.dto';
+import { LoginDto } from './dto/login.dto';
+import { RegisterDto } from './dto/register.dto';
 import { IJwtRefreshPayload } from './types';
 
 @Injectable()
@@ -31,7 +31,7 @@ export class AuthService {
     private readonly config: ConfigType<typeof appConfig>,
   ) {}
 
-  async register(createUserDto: RegisterRequestDto, req: Request, res: Response): Promise<User> {
+  async register(createUserDto: RegisterDto, req: Request, res: Response): Promise<User> {
     const { email, password, name } = createUserDto;
 
     const hashedPassword = await bcrypt.hash(password, BCRYPT_SALT_ROUNDS);
@@ -40,7 +40,7 @@ export class AuthService {
       data: {
         name,
         email,
-        account: {
+        accounts: {
           create: {
             provider: Provider.LOCAL,
             providerId: email,
@@ -55,7 +55,7 @@ export class AuthService {
     return user;
   }
 
-  async login(loginDto: LoginRequestDto, req: Request, res: Response): Promise<void> {
+  async login(loginDto: LoginDto, req: Request, res: Response): Promise<void> {
     const { email, password } = loginDto;
 
     const account = await this.prisma.account.findUnique({

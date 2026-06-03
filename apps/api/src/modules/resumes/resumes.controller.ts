@@ -6,80 +6,69 @@ import {
   Delete,
   Get,
   HttpCode,
+  HttpStatus,
   Param,
   ParseIntPipe,
   Patch,
   Post,
 } from '@nestjs/common';
 
-import { CreateResumeRequestDto } from './dto/create-resume.dto';
-import { UpdateActiveResumeRequestDto } from './dto/new-active-resume.dto';
-import { UpdateResumeRequestDto } from './dto/update-resume.dto';
+import { CreateResumeDto } from './dto/create.dto';
+import { UpdateResumeDto } from './dto/update.dto';
 import { ResumeService } from './resumes.service';
 
 @Controller('resumes')
 export class ResumeController {
   constructor(private readonly resumeService: ResumeService) {}
 
-  @Get('active')
-  async getActiveResumeForUser(@CurrentUser() user: IJwtAccessPayload) {
-    return this.resumeService.getActiveResume(user.sub);
-  }
-
-  @Patch('active')
-  @HttpCode(204)
-  async setActiveResumeForUser(
-    @CurrentUser() user: IJwtAccessPayload,
-    @Body() { resumeId }: UpdateActiveResumeRequestDto,
-  ) {
-    await this.resumeService.setActiveResume(user.sub, resumeId);
-  }
-
   @Post(':id/render')
+  @HttpCode(HttpStatus.ACCEPTED)
   async getRenderedResume(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', ParseIntPipe) jobId: number,
     @CurrentUser() user: IJwtAccessPayload,
   ) {
-    return await this.resumeService.renderPdf(id, user.sub);
+    return await this.resumeService.renderPdf(jobId, user.sub);
   }
 
   @Get('jobs/:id/status')
   async getRenderStatus(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', ParseIntPipe) resumeId: number,
     @CurrentUser() user: IJwtAccessPayload,
   ) {
-    return await this.resumeService.getRenderStatus(id, user.sub);
+    return await this.resumeService.getRenderStatus(resumeId, user.sub);
   }
 
   @Get()
-  async getAllResumesForUser(@CurrentUser() user: IJwtAccessPayload) {
-    return this.resumeService.getAllForUser(user.sub);
+  getAll(@CurrentUser() user: IJwtAccessPayload) {
+    return this.resumeService.get(user.sub);
+  }
+
+  @Get(':id')
+  getById(@Param('id', ParseIntPipe) resumeId: number, @CurrentUser() user: IJwtAccessPayload) {
+    return this.resumeService.get(user.sub, resumeId);
   }
 
   @Post()
-  @HttpCode(201)
-  async createResume(
-    @Body() createResumeDto: CreateResumeRequestDto,
-    @CurrentUser() user: IJwtAccessPayload,
-  ) {
-    return this.resumeService.create(user.sub, createResumeDto);
+  @HttpCode(HttpStatus.CREATED)
+  create(@Body() body: CreateResumeDto, @CurrentUser() user: IJwtAccessPayload) {
+    return this.resumeService.create(user.sub, body);
   }
 
   @Patch(':id')
-  async updateResume(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() updateResumeDto: UpdateResumeRequestDto,
+  async update(
+    @Param('id', ParseIntPipe) resumeId: number,
+    @Body() body: UpdateResumeDto,
     @CurrentUser() user: IJwtAccessPayload,
   ) {
-    return this.resumeService.update(id, user.sub, updateResumeDto);
+    return this.resumeService.update(resumeId, user.sub, body);
   }
 
   @Delete(':id')
-  @HttpCode(204)
-  async deleteResume(
-    @Param('id', ParseIntPipe) id: number,
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async delete(
+    @Param('id', ParseIntPipe) resumeId: number,
     @CurrentUser() user: IJwtAccessPayload,
   ) {
-    await this.resumeService.delete(id, user.sub);
+    await this.resumeService.delete(resumeId, user.sub);
   }
 }

@@ -6,6 +6,6 @@ const schema = z.object({
   email: z.never('Email cannot be updated'),
 });
 
-export class UpdateUserRequestDto extends createZodDto(schema) {}
+export class UpdateUserDto extends createZodDto(schema) {}
 
 export default schema;
