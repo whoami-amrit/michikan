@@ -1,123 +1,100 @@
-\documentclass[11pt]{article} \usepackage[letterpaper, top=0.4in, bottom=0.4in, left=0.4in,
-right=0.4in]{geometry} \usepackage{helvet} \renewcommand{\familydefault}{\sfdefault}
-\usepackage[T1]{fontenc} \usepackage[utf8]{inputenc} \usepackage{enumitem}
-\usepackage[hidelinks]{hyperref} \usepackage{titlesec} \raggedright \pagestyle{empty}
-\input{glyphtounicode} \pdfgentounicode=1
+\documentclass[11pt]{article}       % set main text size
+\usepackage[letterpaper,                % set paper size to letterpaper. change to a4paper for resumes outside of North America
+top=0.5in,                          % specify top page margin
+bottom=0.5in,                       % specify bottom page margin
+left=0.5in,                         % specify left page margin
+right=0.5in]{geometry}              % specify right page margin
+
+\usepackage{XCharter}               % set font. comment this line out if you want to use the default LaTeX font Computer Modern
+\usepackage[T1]{fontenc}            % output encoding
+\usepackage[utf8]{inputenc}         % input encoding
+\usepackage{enumitem}               % enable lists for bullet points: itemize and \item
+\usepackage[hidelinks]{hyperref}    % format hyperlinks
+\usepackage{titlesec}               % enable section title customization
+\raggedright                        % disable text justification
+\pagestyle{empty}                   % disable page numbering
+
+% ensure PDF output will be all-Unicode and machine-readable
+\input{glyphtounicode}
+\pdfgentounicode=1
+
+% format section headings: bolding, size, white space above and below
 \titleformat{\section}{\bfseries\large}{}{0pt}{}[\vspace{1pt}\titlerule\vspace{-6.5pt}]
-\renewcommand\labelitemi{$\vcenter{\hbox{\small$\bullet$}}$} \setlist[itemize]{itemsep=-2pt,
-leftmargin=12pt, topsep=7pt} \begin{document} % Name \centerline{\Huge
-{{json.personalInfo.name}}
-} \vspace{5pt} % Contact Information \centerline{ \href{mailto:{{json.personalInfo.contact.email}}
-}{
-{{json.personalInfo.contact.email}}
-}
-{{#if json.personalInfo.contact.githubUrl}}| \href{
-  {{json.personalInfo.contact.githubUrl}}
-  }{github.com/{{json.personalInfo.contact.githubUsername}}
-  }{{/if}}
-{{#if json.personalInfo.contact.linkedinUrl}}| \href{
-  {{json.personalInfo.contact.linkedinUrl}}
-  }{linkedin.com/{{json.personalInfo.contact.linkedinPath}}
-  }{{/if}}
-{{#if json.personalInfo.contact.phone}}| {{json.personalInfo.contact.phone}}{{/if}}
-} \vspace{-10pt} % Summary Section
-{{#if json.personalInfo.summary}}
-  \section*{Summary}
-  {{json.personalInfo.summary}}
 
-  \vspace{-6.5pt}
+% format bullet points: size, white space above and below, white space between bullets
+\renewcommand\labelitemi{$\vcenter{\hbox{\small$\bullet$}}$}
+\setlist[itemize]{itemsep=-2pt, leftmargin=12pt, topsep=7pt} %%% Test various topsep values to fix vertical spacing errors
+
+% resume starts here
+\begin{document}
+
+
+{{#with personalInfo}}
+% name
+\centerline{\Huge {{name}} }
+
+\vspace{5pt}
+
+% contact information
+\centerline{\href{mailto:{{contact.email}} }{ {{contact.email}} }{{#if contact.portfolio}} | \href{ {{contact.portfolio.url}} }{ {{contact.portfolio.label}} }{{/if}}{{#if contact.github}} | \href{ {{ contact.github }} }{ {{ getPublicProfileUrlLabel contact.github }} }{{/if}}{{#if contact.linkedin}} | \href{ {{contact.linkedin }} }{ {{ getPublicProfileUrlLabel contact.linkedin }} }{{/if}}{{#if contact.phone}} | {{ contact.phone }}{{/if}} }
+
+\vspace{-10pt}
+
+{{#if summary}}
+% summary section
+\section*{Summary}
+{{{summary}}}
 {{/if}}
+{{/with}}
 
-% Skills Section
-{{#if json.skills}}
-  \section*{Skills}
-  {{#if json.skills.languages}}
-    \textbf{Languages:}
-    {{commaJoin json.skills.languages}}
-    \\
-  {{/if}}
-  {{#if json.skills.frontend}}
-    \textbf{Front-end:}
-    {{commaJoin json.skills.frontend}}
-    \\
-  {{/if}}
-  {{#if json.skills.backend}}
-    \textbf{Backend \& APIs:}
-    {{commaJoin json.skills.backend}}
-    \\
-  {{/if}}
-  {{#if json.skills.databases}}
-    \textbf{Databases:}
-    {{commaJoin json.skills.databases}}
-    \\
-  {{/if}}
-  {{#if json.skills.cloudDevops}}
-    \textbf{Cloud \& DevOps:}
-    {{commaJoin json.skills.cloudDevops}}
-    \\
-  {{/if}}
-  {{#if json.skills.tools}}
-    \textbf{Tools:}
-    {{commaJoin json.skills.tools}}
-  {{/if}}
+\vspace{-18.5pt}
 
-  \vspace{-6.5pt}
-{{/if}}
+% skills section
+\section*{Skills}
+{{#each skills}}
+\textbf{ {{@key}} }: {{commaJoin this}} \\
+{{/each}}
 
-% Experience Section
-{{#if json.experience}}
-  \section*{Experience}
-  {{#each json.experience}}
-    \textbf{
-    {{this.title}},}
-    {{this.company}}
-    --
-    {{this.location}}
-    \hfill
-    {{this.startDate}}{{#if this.isCurrentRole}} -- Present{{else}} -- {{this.endDate}}{{/if}}
-    \\ \vspace{-9pt} \begin{itemize}
-    {{#each this.highlights}}
-      \item
-      {{this}}
-    {{/each}}
-    \end{itemize}
+\vspace{-18.5pt}
 
+% experience section
+\section*{Experience}
+{{#each experience}}
+\textbf{ {{this.title}}, } { {{this.company}} } -- {{ this.location }} \hfill {{formatDate this.startDate }} -- {{#if this.endDate}}{{formatDate this.endDate }}{{else}}Present{{/if}} \\
+\vspace{-9pt}
+\begin{itemize}
+  {{#each this.highlights}}
+  \item {{this}}
   {{/each}}
-  \vspace{-18.5pt}
+\end{itemize}
+{{/each}}
+
+\vspace{-18.5pt}
+
+% projects section
+\section*{Projects}
+{{#each projects}}
+\textbf{ {{this.title}} } {{#if this.url}}\hfill \href{ {{this.url}} }{ {{this.url}} }{{/if}} \\
+{{#if this.description}}
+{{this.description}} \\
+\vspace{-9pt}
 {{/if}}
-
-% Projects & Open Source Section
-{{#if json.projects}}
-  \section*{Projects \& Open Source Contributions}
-  {{#each json.projects}}
-    \textbf{
-    {{this.title}}
-    }{{#if this.startDate}}
-      \hfill
-      {{this.startDate}}{{#if this.endDate}} -- {{this.endDate}}{{/if}}{{/if}}
-    \\ \vspace{-9pt} \begin{itemize}
-    {{#each this.highlights}}
-      \item
-      {{this}}
-    {{/each}}
-    \end{itemize}
-
+{{#if this.technologies}}
+\textbf{Technologies:} {{commaJoin this.technologies}} \\
+{{/if}}
+\begin{itemize}
+  {{#each this.highlights}}
+  \item {{this}}
   {{/each}}
-  \vspace{-18.5pt}
-{{/if}}
+\end{itemize}
+{{/each}}
 
-% Education Section
-{{#if json.education}}
-  \section*{Education}
-  {{#each json.education}}
-    \textbf{
-    {{this.institution}}
-    } --
-    {{this.degree}}{{#if this.field}} in {{this.field}}{{/if}}
-    \hfill
-    {{this.graduationDate}}
-    \\
-  {{/each}}
-{{/if}}
+\vspace{-18.5pt}
+
+% education section
+\section*{Education}
+{{#each education}}
+\textbf{ {{this.institution}} } -- {{this.degree}} in {{this.field}} \hfill {{formatDate this.graduationDate}} \\
+{{/each}}
 
 \end{document}

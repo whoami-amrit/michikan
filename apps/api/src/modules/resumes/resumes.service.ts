@@ -4,7 +4,7 @@ import { RENDER_PDF_JOB_NAME, RENDER_QUEUE_NAME } from '@common/constants';
 import { ICreateJobResponse } from '@common/types/create-job.response';
 import { Resume } from '@db/client';
 import { InjectQueue } from '@nestjs/bullmq';
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { Queue } from 'bullmq';
 import { PrismaService } from 'src/infra/database/prisma.service';
 import { S3Service } from 'src/infra/storage/s3.service';
@@ -127,15 +127,21 @@ export class ResumeService {
       throw new NotFoundException('Render job not found');
     }
 
-    if (renderJob.status === 'FAILED') {
-      throw new BadRequestException(`Render job failed: ${renderJob.error}`);
+    const response: IRenderStatusResponse = {
+      status: renderJob.status,
+    };
+
+    if (renderJob.status === 'FAILED' && renderJob.error) {
+      response.error = renderJob.error;
     }
 
-    return {
-      status: renderJob.status,
-      downloadUrl: renderJob.storageKey
-        ? await this.s3Service.getObjectSignedUrl(renderJob.storageKey, 'filename')
-        : null,
-    };
+    if (renderJob.status === 'COMPLETED' && renderJob.storageKey) {
+      response.downloadUrl = await this.s3Service.getObjectSignedUrl(
+        renderJob.storageKey,
+        'filename',
+      );
+    }
+
+    return response;
   }
 }

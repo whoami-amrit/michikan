@@ -52,11 +52,42 @@ export class RenderResumeProcessor extends WorkerHost {
   }
 
   private registerHandlebarsHelpers() {
-    HandleBars.registerHelper('commaJoin', (arr) => {
+    HandleBars.registerHelper('commaJoin', (arr: string[]) => {
+      this.logger.debug(`Joining array with commas: ${JSON.stringify(arr)}`);
       if (!Array.isArray(arr)) {
         return '';
       }
       return arr.join(', ');
+    });
+
+    HandleBars.registerHelper('formatDate', (date: string) => {
+      if (!date) {
+        return '';
+      }
+      const d = new Date(date);
+      const month = d.toLocaleString('default', { month: 'short' });
+      const year = d.getFullYear();
+      return `${month} ${year}`;
+    });
+
+    HandleBars.registerHelper('getPublicProfileUrlLabel', (url: string) => {
+      this.logger.debug(`Extracting label from URL: ${url}`);
+
+      if (!url) {
+        return '';
+      }
+
+      const { hostname, pathname } = new URL(url);
+
+      if (hostname.match(/.*(github|gitlab).*/)) {
+        return `${hostname.replace('www.', '')}/${pathname.split('/')[1]}`;
+      }
+
+      if (hostname.match(/.*linkedin.*/)) {
+        return `${hostname.replace('www.', '')}/${pathname.split('/')[2]}`;
+      }
+
+      return hostname.replace('www.', '');
     });
   }
 
@@ -133,10 +164,11 @@ export class RenderResumeProcessor extends WorkerHost {
 
   private async writeLatexToFile(texFilePath: string, json: unknown): Promise<void> {
     try {
-      const latexSource = this.template({ json });
+      const latexSource = this.template(json);
       await fs.writeFile(texFilePath, latexSource, 'utf-8');
       this.logger.debug(`Successfully wrote LaTeX source to file: ${texFilePath}`);
     } catch (error) {
+      this.logger.debug(error);
       throw new RenderErrors(RenderErrorEnum.FAILED_RENDER_LATEX, error as Error);
     }
   }

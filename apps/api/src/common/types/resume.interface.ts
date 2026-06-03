@@ -5,6 +5,12 @@ const ContactSchema = z.object({
   email: z.email('Invalid email address'),
   github: z.url('Invalid GitHub URL').optional(),
   linkedin: z.url('Invalid LinkedIn URL').optional(),
+  portfolio: z
+    .object({
+      url: z.url('Invalid portfolio URL'),
+      label: z.string(),
+    })
+    .optional(),
   phone: z
     .string()
     .regex(/^\+?[\d\s\-()]{10,}$/, 'Invalid phone number')
@@ -51,14 +57,7 @@ const ExperienceEntrySchema = z
 const ProjectEntrySchema = z.object({
   title: z.string().min(1, 'Project title is required'),
   description: z.string().optional(),
-  startDate: z
-    .string()
-    .refine((date) => !isNaN(Date.parse(date)), 'Invalid start date')
-    .optional(),
-  endDate: z
-    .string()
-    .refine((date) => !isNaN(Date.parse(date)), 'Invalid end date')
-    .optional(),
+  url: z.url(`Invalid project URL`).optional(),
   highlights: z.array(z.string()).min(1, 'At least one highlight is required'),
   technologies: z.array(z.string()).optional(),
 });

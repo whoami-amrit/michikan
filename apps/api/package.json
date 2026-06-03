@@ -20,6 +20,7 @@
     "prod:worker": "node dist/worker.main",
     "db:generate": "dotenv-run -- prisma generate",
     "db:migrate": "dotenv-run -- prisma migrate dev",
+    "db:reset": "dotenv-run -- prisma migrate reset",
     "test": "dotenv-run -- jest",
     "test:watch": "dotenv-run -- jest --watch",
     "test:cov": "dotenv-run -- jest --coverage",
