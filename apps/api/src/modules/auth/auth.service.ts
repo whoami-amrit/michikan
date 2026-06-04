@@ -7,6 +7,7 @@ import bcrypt from 'bcrypt';
 import type { Request, Response } from 'express';
 import appConfig from 'src/config/app.config';
 import { PrismaService } from 'src/infra/database/prisma.service';
+import { SesService } from 'src/infra/email/ses.service';
 
 import { IJwtAccessPayload } from '../../common/types/jwt-payload.interface';
 import {
@@ -27,6 +28,7 @@ export class AuthService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
+    private readonly SesService: SesService,
     @Inject(appConfig.KEY)
     private readonly config: ConfigType<typeof appConfig>,
   ) {}
@@ -36,6 +38,8 @@ export class AuthService {
 
     const hashedPassword = await bcrypt.hash(password, BCRYPT_SALT_ROUNDS);
 
+    const verificationToken = crypto.randomUUID();
+
     const user = await this.prisma.user.create({
       data: {
         name,
@@ -44,15 +48,36 @@ export class AuthService {
           create: {
             provider: Provider.LOCAL,
             providerId: email,
+            verificationToken,
             hashedPassword,
           },
         },
       },
+      include: {
+        accounts: true,
+      },
     });
+
+    await this.SesService.sendVerificationLink(
+      user.email,
+      `https://michikan.dev/verify-email?token=${verificationToken}&id=${user.accounts[0].userId}`,
+    );
 
     await this.getTokensAndUpsertSession(user.id, crypto.randomUUID(), req, res);
 
     return user;
+  }
+
+  async verifyEmail(userId: User['id'], userEmail: User['email']): Promise<void> {
+    await this.prisma.account.findUnique({
+      where: {
+        provider_providerId: {
+          provider: Provider.LOCAL,
+          providerId: userEmail,
+        },
+        userId,
+      },
+    });
   }
 
   async login(loginDto: LoginDto, req: Request, res: Response): Promise<void> {

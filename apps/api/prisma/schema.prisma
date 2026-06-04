@@ -64,12 +64,13 @@ model User {
 }
 
 model Account {
-  provider       Provider
-  providerId     String // e.g. Google sub, GitHub id, or email for LOCAL
-  hashedPassword String? // only for LOCAL provider
-  emailVerified  DateTime?
-  user           User      @relation(fields: [userId], references: [id])
-  userId         Int
+  provider          Provider
+  providerId        String // e.g. Google sub, GitHub id, or email for LOCAL
+  hashedPassword    String? // only for LOCAL provider
+  emailVerified     DateTime?
+  verificationToken String
+  user              User      @relation(fields: [userId], references: [id])
+  userId            Int
 
   // composite primary key
   @@id([provider, userId])

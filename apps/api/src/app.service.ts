@@ -2,7 +2,6 @@ import { Injectable, Logger } from '@nestjs/common';
 
 import { PrismaService } from './infra/database/prisma.service';
 import { BullMqService } from './infra/queue/bullmq.service';
-import { S3Service } from './infra/storage/s3.service';
 import { IHealthCheckResponse, IServiceHealthCheckResult } from './types';
 
 @Injectable()
@@ -12,14 +11,12 @@ export class AppService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly bullMQService: BullMqService,
-    private readonly s3Service: S3Service,
   ) {}
 
   async checkHealth(): Promise<IHealthCheckResponse> {
     const settledResults = await Promise.allSettled([
       this.prisma.healthCheck(),
       this.bullMQService.healthCheck(),
-      this.s3Service.healthCheck(),
     ]);
 
     const healthCheckResults = settledResults.map<IServiceHealthCheckResult>((result) => {
@@ -33,12 +30,11 @@ export class AppService {
       };
     });
 
-    const [dbHealth, queueHealth, storageHealth] = healthCheckResults;
+    const [dbHealth, queueHealth] = healthCheckResults;
 
     const services = {
       db: dbHealth,
       queue: queueHealth,
-      storage: storageHealth,
     };
 
     if (healthCheckResults.every(({ status }) => status === 'up')) {

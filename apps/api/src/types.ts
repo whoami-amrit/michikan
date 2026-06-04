@@ -8,9 +8,6 @@ export type IServiceHealthCheckResult =
       error: string;
     };
 
-export interface IHealthCheckResponse extends Record<
-  'db' | 'queue' | 'storage',
-  IServiceHealthCheckResult
-> {
+export interface IHealthCheckResponse extends Record<'db' | 'queue', IServiceHealthCheckResult> {
   status: 'up' | 'down' | 'partial';
 }
