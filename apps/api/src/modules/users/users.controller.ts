@@ -1,3 +1,4 @@
+import { AllowUnverified } from '@common/decorators/allow-unverified.decorator';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
 import type { IJwtAccessPayload } from '@common/types/jwt-payload.interface';
 import {
@@ -14,6 +15,7 @@ import { UpdateUserDto } from './dto/update.dto';
 import { IUserResponse } from './responses/user.response';
 import { UsersService } from './users.service';
 
+@AllowUnverified()
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}

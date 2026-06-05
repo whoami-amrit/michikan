@@ -64,13 +64,13 @@ model User {
 }
 
 model Account {
-  provider          Provider
-  providerId        String // e.g. Google sub, GitHub id, or email for LOCAL
-  hashedPassword    String? // only for LOCAL provider
-  emailVerified     DateTime?
-  verificationToken String
-  user              User      @relation(fields: [userId], references: [id])
-  userId            Int
+  provider       Provider
+  providerId     String // e.g. Google sub, GitHub id, or email for LOCAL
+  hashedPassword String? // only for LOCAL provider
+  emailVerified  DateTime?
+  user           User      @relation(fields: [userId], references: [id])
+  userId         Int
+  sessions       Session[]
 
   // composite primary key
   @@id([provider, userId])
@@ -88,6 +88,9 @@ model Session {
   userId Int
 
   tokenHash String @unique // refresh token
+
+  account         Account  @relation(fields: [accountProvider, userId], references: [provider, userId], onDelete: Cascade)
+  accountProvider Provider
 
   expiresAt DateTime
   revokedAt DateTime?

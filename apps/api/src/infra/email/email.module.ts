@@ -1,10 +1,11 @@
 import { SESClient } from '@aws-sdk/client-ses';
-import { Module } from '@nestjs/common';
+import { Global, Module } from '@nestjs/common';
 import { ConfigModule, ConfigType } from '@nestjs/config';
 import awsConfig from 'src/config/aws.config';
 
 import { SesService } from './ses.service';
 
+@Global()
 @Module({
   imports: [ConfigModule],
   providers: [

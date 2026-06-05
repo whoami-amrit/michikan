@@ -1,5 +1,4 @@
-// auth.guard.ts
-import { SKIP_AUTH_TAG } from '@common/constants';
+import { ALLOW_UNVERIFIED_TAG, PUBLIC_ACCESS_TAG } from '@common/constants';
 import { IJwtAccessPayload } from '@common/types/jwt-payload.interface';
 import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
@@ -14,7 +13,7 @@ export class AuthGuard implements CanActivate {
   ) {}
 
   canActivate(ctx: ExecutionContext): boolean {
-    const isPublic = this.reflector.getAllAndOverride<boolean>(SKIP_AUTH_TAG, [
+    const isPublic = this.reflector.getAllAndOverride<boolean>(PUBLIC_ACCESS_TAG, [
       ctx.getHandler(), // route level
       ctx.getClass(), // controller/module level
     ]);
@@ -30,8 +29,18 @@ export class AuthGuard implements CanActivate {
       throw new UnauthorizedException();
     }
 
+    const allowUnverified = this.reflector.getAllAndOverride<boolean>(ALLOW_UNVERIFIED_TAG, [
+      ctx.getHandler(),
+      ctx.getClass(),
+    ]);
+
     try {
       req.user = this.jwt.verify<IJwtAccessPayload>(token);
+
+      if (!allowUnverified && !req.user.verified) {
+        throw new UnauthorizedException('Email verification required');
+      }
+
       return true;
     } catch {
       throw new UnauthorizedException();

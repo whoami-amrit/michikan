@@ -12,14 +12,14 @@ import { SesService } from 'src/infra/email/ses.service';
 import { IJwtAccessPayload } from '../../common/types/jwt-payload.interface';
 import {
   ACCESS_TOKEN_COOKIE_NAME,
-  ACCESS_TOKEN_TTL_MS,
   BCRYPT_SALT_ROUNDS,
   REFRESH_TOKEN_COOKIE_NAME,
-  REFRESH_TOKEN_TTL_MS,
+  TOKEN_VALIDITY_MAP,
+  VERIFY_EMAIL_PATH,
 } from './constants';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
-import { IJwtRefreshPayload } from './types';
+import { IJwtEmailVerifyPayload, IJwtRefreshPayload, JwtTokenType } from './types';
 
 @Injectable()
 export class AuthService {
@@ -37,9 +37,6 @@ export class AuthService {
     const { email, password, name } = createUserDto;
 
     const hashedPassword = await bcrypt.hash(password, BCRYPT_SALT_ROUNDS);
-
-    const verificationToken = crypto.randomUUID();
-
     const user = await this.prisma.user.create({
       data: {
         name,
@@ -48,7 +45,6 @@ export class AuthService {
           create: {
             provider: Provider.LOCAL,
             providerId: email,
-            verificationToken,
             hashedPassword,
           },
         },
@@ -58,24 +54,39 @@ export class AuthService {
       },
     });
 
-    await this.SesService.sendVerificationLink(
-      user.email,
-      `https://michikan.dev/verify-email?token=${verificationToken}&id=${user.accounts[0].userId}`,
-    );
+    const verificationToken = await this.getSignedToken<IJwtEmailVerifyPayload>('email-verify', {
+      sub: user.id,
+      email: user.email,
+    });
+    const verificationLink = `https://${this.config.hostname}/${VERIFY_EMAIL_PATH}?token=${verificationToken}`;
+    this.logger.debug(`Generated email verification link for user ${user.id}: ${verificationLink}`);
+    await this.SesService.sendVerificationLink(user.email, verificationLink);
 
-    await this.getTokensAndUpsertSession(user.id, crypto.randomUUID(), req, res);
+    await this.getTokensAndUpsertSession(
+      user.id,
+      crypto.randomUUID(),
+      false,
+      Provider.LOCAL,
+      req,
+      res,
+    );
 
     return user;
   }
 
-  async verifyEmail(userId: User['id'], userEmail: User['email']): Promise<void> {
-    await this.prisma.account.findUnique({
+  async verifyEmail(verificationToken: string, req: Request): Promise<void> {
+    const tokenPayload = await this.verifyToken<IJwtEmailVerifyPayload>(verificationToken, req);
+
+    await this.prisma.account.update({
       where: {
         provider_providerId: {
           provider: Provider.LOCAL,
-          providerId: userEmail,
+          providerId: tokenPayload.email,
         },
-        userId,
+        userId: tokenPayload.sub,
+      },
+      data: {
+        emailVerified: new Date(),
       },
     });
   }
@@ -102,7 +113,14 @@ export class AuthService {
       throw new UnauthorizedException('Invalid email or password');
     }
 
-    await this.getTokensAndUpsertSession(account.userId, crypto.randomUUID(), req, res);
+    await this.getTokensAndUpsertSession(
+      account.userId,
+      crypto.randomUUID(),
+      !!account.emailVerified,
+      account.provider,
+      req,
+      res,
+    );
   }
 
   async refresh(req: Request, res: Response): Promise<void> {
@@ -111,14 +129,16 @@ export class AuthService {
       throw new UnauthorizedException('You need to login once again');
     }
 
-    const payload = await this.verifyToken(refreshToken, req);
+    const payload = await this.verifyToken<IJwtRefreshPayload>(refreshToken, req);
 
     const session = await this.prisma.session.findUnique({
-      where: { id: payload.sid },
+      where: { id: payload.sid, userId: payload.sub },
+      include: { account: true },
     });
-    if (!session || session.userId !== payload.sub) {
+    if (!session) {
       throw new UnauthorizedException('Refresh session is invalid or expired');
     }
+
     if (session.expiresAt.getTime() <= Date.now()) {
       this.logger.log(`Refresh token expired for session ${session.id} of user ${session.userId}`);
       await this.prisma.session.delete({
@@ -138,12 +158,24 @@ export class AuthService {
       throw new UnauthorizedException('Refresh token is invalid or expired');
     }
 
-    await this.getTokensAndUpsertSession(session.userId, session.id, req, res);
+    const {
+      account: { emailVerified, provider },
+    } = session;
+    await this.getTokensAndUpsertSession(
+      session.userId,
+      session.id,
+      !!emailVerified,
+      provider,
+      req,
+      res,
+    );
   }
 
   private async getTokensAndUpsertSession(
     userId: User['id'],
     sessionId: string,
+    verified: boolean,
+    accountProvider: Provider,
     req: Request,
     res: Response,
   ) {
@@ -151,9 +183,9 @@ export class AuthService {
       accessToken,
       refreshToken,
       refreshTokenHash: tokenHash,
-    } = await this.getTokens(userId, sessionId);
+    } = await this.getTokens(userId, sessionId, verified);
 
-    const expiresAt = new Date(Date.now() + REFRESH_TOKEN_TTL_MS);
+    const expiresAt = new Date(Date.now() + TOKEN_VALIDITY_MAP.refresh);
 
     await this.prisma.session.upsert({
       where: { id: sessionId },
@@ -168,19 +200,21 @@ export class AuthService {
         ...this.extractSessionMetadata(req),
         tokenHash,
         expiresAt,
+        accountProvider,
       },
     });
 
     this.setAuthCookies(res, accessToken, refreshToken);
   }
 
-  private async getTokens(userId: User['id'], sessionId: string) {
-    const accessToken = await this.getSignedAccessToken<IJwtAccessPayload>('access', {
+  private async getTokens(userId: User['id'], sessionId: string, verified: boolean) {
+    const accessToken = await this.getSignedToken<IJwtAccessPayload>('access', {
       sub: userId,
       plan: 'free',
+      verified,
     });
 
-    const refreshToken = await this.getSignedAccessToken<IJwtRefreshPayload>('refresh', {
+    const refreshToken = await this.getSignedToken<IJwtRefreshPayload>('refresh', {
       sub: userId,
       sid: sessionId,
     });
@@ -189,19 +223,19 @@ export class AuthService {
     return { accessToken, refreshToken, refreshTokenHash };
   }
 
-  private async getSignedAccessToken<T extends object>(type: 'access' | 'refresh', payload: T) {
+  private async getSignedToken<T extends object>(type: JwtTokenType, payload: T) {
     return this.jwtService.signAsync(
       { ...payload, type },
       {
         secret: this.config.jwtSecret,
-        expiresIn: `${type === 'access' ? ACCESS_TOKEN_TTL_MS : REFRESH_TOKEN_TTL_MS}Ms`,
+        expiresIn: `${TOKEN_VALIDITY_MAP[type]}Ms`,
       },
     );
   }
 
-  private async verifyToken(token: string, req: Request) {
+  private async verifyToken<T extends object>(token: string, req: Request) {
     try {
-      return await this.jwtService.verifyAsync<IJwtRefreshPayload>(token, {
+      return await this.jwtService.verifyAsync<T>(token, {
         secret: this.config.jwtSecret,
       });
     } catch {
@@ -224,12 +258,12 @@ export class AuthService {
 
     res.cookie(ACCESS_TOKEN_COOKIE_NAME, accessToken, {
       ...cookieBase,
-      maxAge: ACCESS_TOKEN_TTL_MS,
+      maxAge: TOKEN_VALIDITY_MAP.access,
     });
 
     res.cookie(REFRESH_TOKEN_COOKIE_NAME, refreshToken, {
       ...cookieBase,
-      maxAge: REFRESH_TOKEN_TTL_MS,
+      maxAge: TOKEN_VALIDITY_MAP.refresh,
     });
   }
 

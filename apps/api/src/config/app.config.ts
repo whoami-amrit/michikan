@@ -6,6 +6,8 @@ const schema = z.object({
   renderOutputPath: z.string().default('/tmp/michi-renders'),
   logLevel: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace']).default('info'),
   env: z.enum(['development', 'production', 'test']).default('production'),
+  hostname: z.string(),
+  port: z.string(),
 });
 
 export interface IAppConfig extends z.infer<typeof schema> {}
@@ -18,5 +20,10 @@ export default registerAs('app', () => {
     // e.g. if set to 'info', 'debug' and 'trace' logs will be ignored
     logLevel: process.env.LOG_LEVEL,
     env: process.env.ENV,
+    hostname:
+      process.env.HOSTNAME === 'localhost'
+        ? `${process.env.HOSTNAME}:${process.env.API_PORT}`
+        : process.env.HOSTNAME,
+    port: process.env.API_PORT,
   });
 });

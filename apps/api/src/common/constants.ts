@@ -3,7 +3,8 @@ import { RegisterQueueOptions } from '@nestjs/bullmq';
 export const ACCESS_TOKEN_USER_DATA_KEY = 'user';
 export const ACCESS_TOKEN_COOKIE_KEY = 'access_token';
 export const REFRESH_TOKEN_COOKIE_KEY = 'refresh_token';
-export const SKIP_AUTH_TAG = 'isPublic';
+export const PUBLIC_ACCESS_TAG = 'isPublic';
+export const ALLOW_UNVERIFIED_TAG = 'allowUnverified';
 
 export const RENDER_QUEUE_NAME = 'resumes';
 export const RENDER_PDF_JOB_NAME = 'render-pdf';
