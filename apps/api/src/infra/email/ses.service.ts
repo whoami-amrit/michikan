@@ -1,4 +1,4 @@
-import { SendEmailCommand, SESClient, VerifyEmailIdentityCommand } from '@aws-sdk/client-ses';
+import { SendEmailCommand, SESClient } from '@aws-sdk/client-ses';
 import { Inject, Injectable } from '@nestjs/common';
 import type { ConfigType } from '@nestjs/config/dist/types/config.type';
 import awsConfig from 'src/config/aws.config';
@@ -11,17 +11,7 @@ export class SesService {
     private readonly config: ConfigType<typeof awsConfig>,
   ) {}
 
-  private async validateEmailIdentity(email: string): Promise<void> {
-    const command = new VerifyEmailIdentityCommand({
-      EmailAddress: email,
-    });
-
-    await this.sesClient.send(command);
-  }
-
   async sendVerificationLink(to: string, link: string) {
-    await this.validateEmailIdentity(to);
-
     const command = new SendEmailCommand({
       Destination: {
         ToAddresses: [to],
