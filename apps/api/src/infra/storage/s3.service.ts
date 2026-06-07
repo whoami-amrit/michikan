@@ -1,9 +1,9 @@
 import { GetObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import awsConfig from '@config/aws.config';
 import { Inject, Injectable } from '@nestjs/common';
 import type { ConfigType } from '@nestjs/config';
 import { ReadStream } from 'fs';
-import awsConfig from 'src/config/aws.config';
 
 @Injectable()
 export class S3Service {

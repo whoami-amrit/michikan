@@ -1,5 +1,5 @@
 import { IProblemDetails } from '@common/types/problem-detail.interface';
-import { Prisma } from '@db/client';
+import { Prisma } from '@michikan/db';
 import {
   ArgumentsHost,
   Catch,

@@ -1,8 +1,8 @@
 import { RENDER_QUEUE_NAME } from '@common/constants';
+import valkeyConfig from '@config/valkey.config';
 import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigType } from '@nestjs/config';
-import valkeyConfig from 'src/config/valkey.config';
 
 import { BullMqService } from './bullmq.service';
 

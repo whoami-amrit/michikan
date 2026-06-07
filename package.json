@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Monorepo for michikan web app",
   "scripts": {
-    "build": "turbo run build",
+    "build": "turbo run build build:worker",
     "dev": "dotenv-run -- turbo run dev dev:worker",
     "lint": "turbo run lint",
     "lint:root": "eslint . --max-warnings=0",

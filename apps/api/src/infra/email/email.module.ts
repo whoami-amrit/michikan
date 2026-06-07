@@ -1,7 +1,7 @@
 import { SESClient } from '@aws-sdk/client-ses';
+import awsConfig from '@config/aws.config';
 import { Global, Module } from '@nestjs/common';
 import { ConfigModule, ConfigType } from '@nestjs/config';
-import awsConfig from 'src/config/aws.config';
 
 import { SesService } from './ses.service';
 

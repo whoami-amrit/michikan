@@ -1,4 +1,4 @@
-import { JobApplicationStatus } from '@db/enums';
+import { JobApplicationStatus } from '@michikan/db';
 import { createZodDto } from 'nestjs-zod';
 import z from 'zod';
 

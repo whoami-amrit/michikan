@@ -1,4 +1,4 @@
-import { ResumeRenderJob } from '@db/client';
+import { ResumeRenderJob } from '@michikan/db';
 
 export interface IRenderStatusResponse {
   status: ResumeRenderJob['status'] | null;

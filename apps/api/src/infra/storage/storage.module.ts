@@ -1,7 +1,7 @@
 import { S3Client } from '@aws-sdk/client-s3';
+import awsConfig from '@config/aws.config';
 import { Global, Module } from '@nestjs/common';
 import { ConfigModule, ConfigType } from '@nestjs/config';
-import awsConfig from 'src/config/aws.config';
 
 import { S3Service } from './s3.service';
 

@@ -1,11 +1,11 @@
-import type { Session, User } from '@db/client';
-import { Provider } from '@db/client';
+import appConfig from '@config/app.config';
+import type { Session, User } from '@michikan/db';
+import { Provider } from '@michikan/db';
 import { Inject, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import type { ConfigType } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import bcrypt from 'bcrypt';
 import type { Request, Response } from 'express';
-import appConfig from 'src/config/app.config';
 import { PrismaService } from 'src/infra/database/prisma.service';
 import { SesService } from 'src/infra/email/ses.service';
 

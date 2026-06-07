@@ -1,4 +1,4 @@
-import { Prisma, User } from '@db/client';
+import { Prisma, User } from '@michikan/db';
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/infra/database/prisma.service';
 

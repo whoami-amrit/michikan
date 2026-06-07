@@ -3,7 +3,7 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": [".next/**", "!.next/cache/**"]
+      "outputs": [".next/**", "!.next/cache/**", "dist/**"]
     },
     "check:types": {
       "dependsOn": ["^check:types"]
@@ -15,6 +15,9 @@
     "dev:worker": {
       "persistent": true,
       "cache": false
+    },
+    "build:worker": {
+      "dependsOn": ["^build:worker"]
     },
     "lint": {
       "dependsOn": ["build"]

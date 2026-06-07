@@ -1,8 +1,8 @@
+import appConfig from '@config/app.config';
 import { Module, RequestMethod } from '@nestjs/common';
 import { ConfigModule, ConfigType } from '@nestjs/config';
 import { createId } from '@paralleldrive/cuid2';
 import { LoggerModule as PinoLoggerModule } from 'nestjs-pino';
-import appConfig from 'src/config/app.config';
 
 @Module({
   imports: [

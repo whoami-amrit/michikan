@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto';
 
 import { RENDER_PDF_JOB_NAME, RENDER_QUEUE_NAME } from '@common/constants';
 import { ICreateJobResponse } from '@common/types/create-job.response';
-import { Resume } from '@db/client';
+import { Resume } from '@michikan/db';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Queue } from 'bullmq';
