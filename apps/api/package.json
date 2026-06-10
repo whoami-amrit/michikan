@@ -23,7 +23,7 @@
     "test:cov": "dotenv-run -- jest --coverage",
     "test:debug": "dotenv-run -- node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "dotenv-run -- jest --config ./test/jest-e2e.json",
-    "check:cycles": "madge --circular --extensions ts src"
+    "check:cycles": "madge --circular --extensions ts src --exclude \".*/generated/.*\""
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1045.0",
