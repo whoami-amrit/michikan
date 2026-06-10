@@ -1,13 +1,12 @@
 import { JD_ANALYSIS_QUEUE_NAME, JD_ANALYZER_JOB_NAME } from '@common/constants';
 import { ICreateJobResponse } from '@common/types/create-job.response';
 import { JobApplication, User } from '@michikan/db';
+import { ICreateJobApplicationDto, IUpdateJobApplicationStatusDto } from '@michikan/shared';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Injectable, Logger } from '@nestjs/common';
 import { Queue } from 'bullmq';
 import { PrismaService } from 'src/infra/database/prisma.service';
 
-import { CreateJobApplicationDto } from './dto/create.dto';
-import { UpdateJobApplicationStatusDto } from './dto/update-status.dto';
 import { IJdAnalysisJob } from './types';
 
 @Injectable()
@@ -19,7 +18,7 @@ export class JobApplicationsService {
     @InjectQueue(JD_ANALYSIS_QUEUE_NAME) private readonly analysisQueue: Queue<IJdAnalysisJob>,
   ) {}
 
-  async create(body: CreateJobApplicationDto, userId: User['id']): Promise<ICreateJobResponse> {
+  async create(body: ICreateJobApplicationDto, userId: User['id']): Promise<ICreateJobResponse> {
     const response = await this.prismaService.$transaction(async (prisma) => {
       const {
         id,
@@ -87,7 +86,7 @@ export class JobApplicationsService {
   async update(
     jobApplicationId: number,
     userId: User['id'],
-    body: UpdateJobApplicationStatusDto,
+    body: IUpdateJobApplicationStatusDto,
   ): Promise<void> {
     await this.prismaService.jobApplication.update({
       where: { id: jobApplicationId, userId },

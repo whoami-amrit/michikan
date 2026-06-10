@@ -1,6 +1,7 @@
 import { AllowUnverified } from '@common/decorators/allow-unverified.decorator';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
 import type { IJwtAccessPayload } from '@common/types/jwt-payload.interface';
+import { IUserResponse, UpdateUserSchema } from '@michikan/shared';
 import {
   Body,
   Controller,
@@ -10,10 +11,11 @@ import {
   NotFoundException,
   Patch,
 } from '@nestjs/common';
+import { createZodDto } from 'nestjs-zod';
 
-import { UpdateUserDto } from './dto/update.dto';
-import { IUserResponse } from './responses/user.response';
 import { UsersService } from './users.service';
+
+class UpdateUserDto extends createZodDto(UpdateUserSchema) {}
 
 @AllowUnverified()
 @Controller('users')

@@ -1,4 +1,3 @@
-import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
 
 const schema = z.object({
@@ -6,6 +5,6 @@ const schema = z.object({
   password: z.string().min(8, 'Password must be at least 8 characters'),
 });
 
-export class LoginDto extends createZodDto(schema) {}
+export type ILoginDto = z.infer<typeof schema>;
 
 export default schema;

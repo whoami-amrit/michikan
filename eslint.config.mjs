@@ -77,6 +77,16 @@ export default defineConfig([
     },
   },
 
+  {
+    files: ['packages/shared/**/*.{js,jsx,ts,tsx}'],
+    rules: {
+      '@typescript-eslint/no-empty-object-type': [
+        'error',
+        { allowInterfaces: 'with-single-extends' },
+      ],
+    },
+  },
+
   // 6. Prettier — must be last
   prettierConfig,
 ]);

@@ -3,15 +3,13 @@ import { createHash } from 'node:crypto';
 import { RENDER_PDF_JOB_NAME, RENDER_QUEUE_NAME } from '@common/constants';
 import { ICreateJobResponse } from '@common/types/create-job.response';
 import { Resume } from '@michikan/db';
+import { ICreateResumeDto, IRenderStatusResponse, IUpdateResumeDto } from '@michikan/shared';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Queue } from 'bullmq';
 import { PrismaService } from 'src/infra/database/prisma.service';
 import { S3Service } from 'src/infra/storage/s3.service';
 
-import { CreateResumeDto } from './dto/create.dto';
-import { UpdateResumeDto } from './dto/update.dto';
-import { IRenderStatusResponse } from './responses/render-status.response';
 import { IRenderPdfJob } from './types';
 
 @Injectable()
@@ -22,7 +20,7 @@ export class ResumeService {
     @InjectQueue(RENDER_QUEUE_NAME) private readonly renderQueue: Queue<IRenderPdfJob>,
   ) {}
 
-  create(userId: number, createResumeDto: CreateResumeDto): Promise<Resume> {
+  create(userId: number, createResumeDto: ICreateResumeDto): Promise<Resume> {
     return this.prisma.resume.create({
       data: {
         json: createResumeDto.json,
@@ -33,7 +31,7 @@ export class ResumeService {
     });
   }
 
-  update(resumeId: number, userId: number, updateResumeDto: UpdateResumeDto): Promise<Resume> {
+  update(resumeId: number, userId: number, updateResumeDto: IUpdateResumeDto): Promise<Resume> {
     return this.prisma.resume.update({
       where: { id: resumeId, userId },
       data: updateResumeDto,

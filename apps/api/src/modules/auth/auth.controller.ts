@@ -1,13 +1,15 @@
 import { AllowUnverified } from '@common/decorators/allow-unverified.decorator';
 import { Public } from '@common/decorators/public.decorator';
+import { IUserResponse, LoginSchema, SignupSchema } from '@michikan/shared';
 import { Body, Controller, Get, HttpCode, HttpStatus, Post, Query, Req, Res } from '@nestjs/common';
 import type { Request, Response } from 'express';
+import { createZodDto } from 'nestjs-zod';
 
-import { IUserResponse } from '../users/responses/user.response';
 import { AuthService } from './auth.service';
 import { VERIFY_EMAIL_PATH } from './constants';
-import { LoginDto } from './dto/login.dto';
-import { RegisterDto } from './dto/register.dto';
+
+class LoginDto extends createZodDto(LoginSchema) {}
+class SignupDto extends createZodDto(SignupSchema) {}
 
 @Public()
 @AllowUnverified()
@@ -15,14 +17,14 @@ import { RegisterDto } from './dto/register.dto';
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @Post('register')
+  @Post('signup')
   @HttpCode(HttpStatus.CREATED)
-  async register(
-    @Body() registerDto: RegisterDto,
+  async signup(
+    @Body() signupDto: SignupDto,
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ): Promise<IUserResponse> {
-    const user = await this.authService.register(registerDto, req, res);
+    const user = await this.authService.signup(signupDto, req, res);
 
     return {
       createdAt: user.createdAt,

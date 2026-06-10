@@ -1,6 +1,7 @@
 import appConfig from '@config/app.config';
 import type { Session, User } from '@michikan/db';
 import { Provider } from '@michikan/db';
+import { ILoginDto, ISignupDto } from '@michikan/shared';
 import { Inject, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import type { ConfigType } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
@@ -17,8 +18,6 @@ import {
   TOKEN_VALIDITY_MAP,
   VERIFY_EMAIL_PATH,
 } from './constants';
-import { LoginDto } from './dto/login.dto';
-import { RegisterDto } from './dto/register.dto';
 import { IJwtEmailVerifyPayload, IJwtRefreshPayload, JwtTokenType } from './types';
 
 @Injectable()
@@ -33,7 +32,7 @@ export class AuthService {
     private readonly config: ConfigType<typeof appConfig>,
   ) {}
 
-  async register(createUserDto: RegisterDto, req: Request, res: Response): Promise<User> {
+  async signup(createUserDto: ISignupDto, req: Request, res: Response): Promise<User> {
     const { email, password, name } = createUserDto;
 
     const hashedPassword = await bcrypt.hash(password, BCRYPT_SALT_ROUNDS);
@@ -91,7 +90,7 @@ export class AuthService {
     });
   }
 
-  async login(loginDto: LoginDto, req: Request, res: Response): Promise<void> {
+  async login(loginDto: ILoginDto, req: Request, res: Response): Promise<void> {
     const { email, password } = loginDto;
 
     const account = await this.prisma.account.findUnique({

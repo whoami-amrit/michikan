@@ -1,5 +1,6 @@
 import { CurrentUser } from '@common/decorators/current-user.decorator';
 import type { IJwtAccessPayload } from '@common/types/jwt-payload.interface';
+import { CreateResumeSchema, UpdateResumeSchema } from '@michikan/shared';
 import {
   Body,
   Controller,
@@ -12,10 +13,12 @@ import {
   Patch,
   Post,
 } from '@nestjs/common';
+import { createZodDto } from 'nestjs-zod';
 
-import { CreateResumeDto } from './dto/create.dto';
-import { UpdateResumeDto } from './dto/update.dto';
 import { ResumeService } from './resumes.service';
+
+class CreateResumeDto extends createZodDto(CreateResumeSchema) {}
+class UpdateResumeDto extends createZodDto(UpdateResumeSchema) {}
 
 @Controller('resumes')
 export class ResumeController {

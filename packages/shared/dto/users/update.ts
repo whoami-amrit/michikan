@@ -1,4 +1,3 @@
-import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
 
 const schema = z.object({
@@ -6,6 +5,6 @@ const schema = z.object({
   email: z.never('Email cannot be updated'),
 });
 
-export class UpdateUserDto extends createZodDto(schema) {}
+export type IUpdateUserDto = z.infer<typeof schema>;
 
 export default schema;

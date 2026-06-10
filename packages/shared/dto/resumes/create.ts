@@ -1,6 +1,6 @@
-import ResumeJsonSchema from '@common/types/resume.interface';
-import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
+
+import ResumeJsonSchema from '../../types/resume-json';
 
 const schema = z.object({
   json: ResumeJsonSchema,
@@ -8,6 +8,6 @@ const schema = z.object({
   description: z.string().max(200).optional(),
 });
 
-export class CreateResumeDto extends createZodDto(schema) {}
+export type ICreateResumeDto = z.infer<typeof schema>;
 
 export default schema;

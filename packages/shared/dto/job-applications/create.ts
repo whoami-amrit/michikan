@@ -1,4 +1,3 @@
-import { createZodDto } from 'nestjs-zod';
 import z from 'zod';
 
 const schema = z.object({
@@ -6,6 +5,6 @@ const schema = z.object({
   resumeId: z.number().nonnegative(),
 });
 
-export class CreateJobApplicationDto extends createZodDto(schema) {}
+export type ICreateJobApplicationDto = z.infer<typeof schema>;
 
 export default schema;
