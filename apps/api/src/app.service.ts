@@ -26,7 +26,7 @@ export class AppService {
 
       return {
         status: 'down',
-        error: result.reason,
+        error: result.reason as string,
       };
     });
 

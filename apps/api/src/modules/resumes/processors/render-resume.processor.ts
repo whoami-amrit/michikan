@@ -21,7 +21,7 @@ import { RenderErrorEnum, RenderErrors } from './render-resume.errors';
 export class RenderResumeProcessor extends WorkerHost {
   private readonly logger = new Logger(RenderResumeProcessor.name);
   private readonly template: TemplateDelegate;
-  private readonly renderOutputPath = process.env.RENDER_OUTPUT_PATH || '/tmp/michikan-renders';
+  private readonly renderOutputPath = process.env.RENDER_OUTPUT_PATH ?? '/tmp/michikan-renders';
   private readonly TEX_FILE_NAME = 'resume.tex';
   private readonly PDF_FILE_NAME = 'resume.pdf';
 
@@ -79,11 +79,11 @@ export class RenderResumeProcessor extends WorkerHost {
 
       const { hostname, pathname } = new URL(url);
 
-      if (hostname.match(/.*(github|gitlab).*/)) {
+      if (/.*(github|gitlab).*/.test(hostname)) {
         return `${hostname.replace('www.', '')}/${pathname.split('/')[1]}`;
       }
 
-      if (hostname.match(/.*linkedin.*/)) {
+      if (/.*linkedin.*/.test(hostname)) {
         return `${hostname.replace('www.', '')}/${pathname.split('/')[2]}`;
       }
 
@@ -99,7 +99,7 @@ export class RenderResumeProcessor extends WorkerHost {
       default:
         this.logger.warn('Received job with unknown name: ' + name);
 
-        this.updateJobStatus(data.jobId, { status: 'FAILED', error: 'Unknown job name' });
+        await this.updateJobStatus(data.jobId, { status: 'FAILED', error: 'Unknown job name' });
 
         throw new UnrecoverableError('Unknown job name');
     }
@@ -211,7 +211,7 @@ export class RenderResumeProcessor extends WorkerHost {
     try {
       await fs.rm(jobDir, { recursive: true });
     } catch (err) {
-      this.logger.warn(`Warning: Failed to delete local job directory: ${err}`);
+      this.logger.warn(`Warning: Failed to delete local job directory: ${err as string}`);
     }
   }
 
@@ -264,7 +264,7 @@ export class RenderResumeProcessor extends WorkerHost {
           reject(new RenderErrors(RenderErrorEnum.PDFLATEX_NOT_FOUND, err));
         }
 
-        reject(new RenderErrors(RenderErrorEnum.PDF_COMPILATION_FAILED, err as Error));
+        reject(new RenderErrors(RenderErrorEnum.PDF_COMPILATION_FAILED, err));
       });
     });
   }

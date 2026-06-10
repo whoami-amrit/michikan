@@ -24,7 +24,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
     const { status, title, detail } = this.resolveException(exception);
 
     this.logger.debug(
-      `[${request.method}] ${request.url} → ${status}: ${title}\n${exception}`,
+      `[${request.method}] ${request.url} → ${status}: ${title}`,
       exception instanceof Error ? exception.stack : undefined,
     );
 

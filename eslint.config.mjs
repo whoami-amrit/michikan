@@ -1,26 +1,30 @@
 import js from '@eslint/js';
 import { defineConfig, globalIgnores } from 'eslint/config';
-import nextVitals from 'eslint-config-next/core-web-vitals';
-import nextTs from 'eslint-config-next/typescript';
 import prettierConfig from 'eslint-config-prettier/flat';
+import reactHooks from 'eslint-plugin-react-hooks';
+import reactRefresh from 'eslint-plugin-react-refresh';
 import simpleImportSort from 'eslint-plugin-simple-import-sort';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
 export default defineConfig([
   // 1. Global ignores
-  globalIgnores([
-    '**/node_modules/**',
-    'apps/web/.next/**',
-    'apps/web/out/**',
-    'apps/web/next-env.d.ts',
-    'apps/api/dist/**',
-    '**/build/**',
-  ]),
+  globalIgnores(['**/node_modules/**', 'apps/web/dist/**', 'apps/api/dist/**', '**/build/**']),
 
-  // 2. Base configs — all files
-  js.configs.recommended,
-  ...tseslint.configs.recommended,
+  {
+    files: ['**/*.{js,mjs,cjs,jsx}'],
+    extends: [js.configs.recommended],
+  },
+
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [tseslint.configs.recommendedTypeChecked, tseslint.configs.stylisticTypeChecked],
+    languageOptions: {
+      parserOptions: {
+        projectService: true,
+      },
+    },
+  },
 
   // 3. Import sorting — all files
   {
@@ -60,20 +64,9 @@ export default defineConfig([
   // `extends` inside a config object scopes the entire array to `files`
   {
     files: ['apps/web/**/*.{js,jsx,ts,tsx}'],
-    extends: [nextVitals, nextTs],
+    extends: [reactHooks.configs.flat.recommended, reactRefresh.configs.vite],
     languageOptions: {
-      globals: {
-        ...globals.browser,
-        ...globals.node,
-      },
-    },
-    settings: {
-      react: { version: 'detect' },
-      next: { rootDir: 'apps/web/' },
-    },
-    rules: {
-      'react/react-in-jsx-scope': 'off',
-      'react/prop-types': 'off',
+      globals: globals.browser,
     },
   },
 

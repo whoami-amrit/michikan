@@ -1,6 +1,6 @@
 {
   "name": "@michikan/api",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "API server for michikan web app",
   "author": "Amrit Borah",
   "private": true,

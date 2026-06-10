@@ -102,7 +102,7 @@ export class AuthService {
       },
     });
 
-    if (!account || !account.hashedPassword) {
+    if (!account?.hashedPassword) {
       throw new UnauthorizedException('Invalid email or password');
     }
 
@@ -268,8 +268,8 @@ export class AuthService {
 
   private extractSessionMetadata(req: Request): Pick<Session, 'ip' | 'userAgent'> {
     return {
-      ip: req.ip || req.socket.remoteAddress || 'unknown',
-      userAgent: req.headers['user-agent'] || 'unknown',
+      ip: req.ip ?? req.socket.remoteAddress ?? 'unknown',
+      userAgent: req.headers['user-agent'] ?? 'unknown',
     };
   }
 }
