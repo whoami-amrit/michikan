@@ -9,7 +9,14 @@ import tseslint from 'typescript-eslint';
 
 export default defineConfig([
   // 1. Global ignores
-  globalIgnores(['**/node_modules/**', 'apps/web/dist/**', 'apps/api/dist/**', '**/build/**']),
+  globalIgnores([
+    '**/node_modules/**',
+    'apps/web/dist/**',
+    'apps/api/dist/**',
+    '**/build/**',
+    '**/dist/**',
+    '**/generated/**',
+  ]),
 
   {
     files: ['**/*.{js,mjs,cjs,jsx}'],
@@ -19,10 +26,17 @@ export default defineConfig([
   {
     files: ['**/*.{ts,tsx}'],
     extends: [tseslint.configs.recommendedTypeChecked, tseslint.configs.stylisticTypeChecked],
+    ignores: ['**/prisma.config.ts'], // Prisma's config file is not meant to be type-checked
     languageOptions: {
       parserOptions: {
         projectService: true,
       },
+    },
+    rules: {
+      '@typescript-eslint/no-empty-object-type': [
+        'error',
+        { allowInterfaces: 'with-single-extends' },
+      ],
     },
   },
 
@@ -53,10 +67,6 @@ export default defineConfig([
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
       'no-unused-vars': 'off',
-      '@typescript-eslint/no-empty-object-type': [
-        'error',
-        { allowInterfaces: 'with-single-extends' },
-      ],
     },
   },
 
@@ -67,16 +77,6 @@ export default defineConfig([
     extends: [reactHooks.configs.flat.recommended, reactRefresh.configs.vite],
     languageOptions: {
       globals: globals.browser,
-    },
-  },
-
-  {
-    files: ['packages/shared/**/*.{js,jsx,ts,tsx}'],
-    rules: {
-      '@typescript-eslint/no-empty-object-type': [
-        'error',
-        { allowInterfaces: 'with-single-extends' },
-      ],
     },
   },
 

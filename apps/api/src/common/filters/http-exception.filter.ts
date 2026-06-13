@@ -1,5 +1,4 @@
 import { IProblemDetails } from '@common/types/problem-detail.interface';
-import { Prisma } from '@michikan/db';
 import {
   ArgumentsHost,
   Catch,
@@ -8,6 +7,7 @@ import {
   HttpStatus,
   Logger,
 } from '@nestjs/common';
+import { Prisma } from 'db';
 import { Request, Response } from 'express';
 import { ZodValidationException } from 'nestjs-zod';
 import { ZodError } from 'zod';

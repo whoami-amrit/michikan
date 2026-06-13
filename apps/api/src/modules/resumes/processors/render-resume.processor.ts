@@ -1,10 +1,10 @@
 import { AccessDenied, NoSuchBucket } from '@aws-sdk/client-s3';
 import { RENDER_PDF_JOB_NAME, RENDER_QUEUE_NAME } from '@common/constants';
-import { Prisma } from '@michikan/db';
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Injectable, Logger } from '@nestjs/common';
 import { Job, UnrecoverableError } from 'bullmq';
 import { spawn } from 'child_process';
+import { Prisma } from 'db';
 import { mkdirSync, readFileSync } from 'fs';
 import * as fs from 'fs/promises';
 import type { TemplateDelegate } from 'handlebars';

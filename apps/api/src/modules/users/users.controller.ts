@@ -1,17 +1,9 @@
 import { AllowUnverified } from '@common/decorators/allow-unverified.decorator';
 import { CurrentUser } from '@common/decorators/current-user.decorator';
 import type { IJwtAccessPayload } from '@common/types/jwt-payload.interface';
-import { IUserResponse, UpdateUserSchema } from '@michikan/shared';
-import {
-  Body,
-  Controller,
-  Get,
-  HttpCode,
-  HttpStatus,
-  NotFoundException,
-  Patch,
-} from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Patch } from '@nestjs/common';
 import { createZodDto } from 'nestjs-zod';
+import { IUserResponse, UpdateUserSchema } from 'shared';
 
 import { UsersService } from './users.service';
 
@@ -23,19 +15,8 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Get('me')
-  async getUserData(@CurrentUser() { sub: userId }: IJwtAccessPayload): Promise<IUserResponse> {
-    const user = await this.usersService.findById(userId);
-
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-
-    return {
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      createdAt: user.createdAt,
-    };
+  getUserData(@CurrentUser() jwtPayload: IJwtAccessPayload): Promise<IUserResponse> {
+    return this.usersService.findById(jwtPayload);
   }
 
   @Patch('me')

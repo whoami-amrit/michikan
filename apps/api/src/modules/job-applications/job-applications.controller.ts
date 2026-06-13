@@ -1,6 +1,5 @@
 import { CurrentUser } from '@common/decorators/current-user.decorator';
 import type { IJwtAccessPayload } from '@common/types/jwt-payload.interface';
-import { CreateJobApplicationSchema, UpdateJobApplicationStatusSchema } from '@michikan/shared';
 import {
   Body,
   Controller,
@@ -14,6 +13,7 @@ import {
   Post,
 } from '@nestjs/common';
 import { createZodDto } from 'node_modules/nestjs-zod/dist/dto.mjs';
+import { CreateJobApplicationSchema, UpdateJobApplicationStatusSchema } from 'shared';
 
 import { JobApplicationsService } from './job-applications.service';
 

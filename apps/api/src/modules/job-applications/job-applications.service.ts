@@ -1,10 +1,10 @@
 import { JD_ANALYSIS_QUEUE_NAME, JD_ANALYZER_JOB_NAME } from '@common/constants';
 import { ICreateJobResponse } from '@common/types/create-job.response';
-import { JobApplication, User } from '@michikan/db';
-import { ICreateJobApplicationDto, IUpdateJobApplicationStatusDto } from '@michikan/shared';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Injectable, Logger } from '@nestjs/common';
 import { Queue } from 'bullmq';
+import { JobApplication, User } from 'db';
+import { ICreateJobApplicationDto, IUpdateJobApplicationStatusDto } from 'shared';
 import { PrismaService } from 'src/infra/database/prisma.service';
 
 import { IJdAnalysisJob } from './types';

@@ -1,6 +1,5 @@
 import { CurrentUser } from '@common/decorators/current-user.decorator';
 import type { IJwtAccessPayload } from '@common/types/jwt-payload.interface';
-import { CreateResumeSchema, UpdateResumeSchema } from '@michikan/shared';
 import {
   Body,
   Controller,
@@ -14,6 +13,7 @@ import {
   Post,
 } from '@nestjs/common';
 import { createZodDto } from 'nestjs-zod';
+import { CreateResumeSchema, UpdateResumeSchema } from 'shared';
 
 import { ResumeService } from './resumes.service';
 

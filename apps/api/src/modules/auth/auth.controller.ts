@@ -1,9 +1,9 @@
 import { AllowUnverified } from '@common/decorators/allow-unverified.decorator';
 import { Public } from '@common/decorators/public.decorator';
-import { IUserResponse, LoginSchema, SignupSchema } from '@michikan/shared';
 import { Body, Controller, Get, HttpCode, HttpStatus, Post, Query, Req, Res } from '@nestjs/common';
 import type { Request, Response } from 'express';
 import { createZodDto } from 'nestjs-zod';
+import { IUserResponse, LoginSchema, SignupSchema } from 'shared';
 
 import { AuthService } from './auth.service';
 import { VERIFY_EMAIL_PATH } from './constants';
@@ -23,7 +23,7 @@ export class AuthController {
     @Body() signupDto: SignupDto,
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
-  ): Promise<IUserResponse> {
+  ): Promise<Omit<IUserResponse, 'plan' | 'verified'>> {
     const user = await this.authService.signup(signupDto, req, res);
 
     return {
@@ -31,6 +31,7 @@ export class AuthController {
       email: user.email,
       id: user.id,
       name: user.name,
+      avatar: user.avatar,
     };
   }
 

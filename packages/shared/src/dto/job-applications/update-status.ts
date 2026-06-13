@@ -1,4 +1,4 @@
-import { JobApplicationStatus } from '@michikan/db';
+import { JobApplicationStatus } from 'db';
 import z from 'zod';
 
 const schema = z.object({

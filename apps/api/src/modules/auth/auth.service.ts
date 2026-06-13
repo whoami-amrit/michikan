@@ -1,12 +1,12 @@
 import appConfig from '@config/app.config';
-import type { Session, User } from '@michikan/db';
-import { Provider } from '@michikan/db';
-import { ILoginDto, ISignupDto } from '@michikan/shared';
 import { Inject, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import type { ConfigType } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import bcrypt from 'bcrypt';
+import type { Session, User } from 'db';
+import { Provider } from 'db';
 import type { Request, Response } from 'express';
+import { ILoginDto, ISignupDto } from 'shared';
 import { PrismaService } from 'src/infra/database/prisma.service';
 import { SesService } from 'src/infra/email/ses.service';
 
@@ -240,10 +240,10 @@ export class AuthService {
     } catch {
       const metadata = this.extractSessionMetadata(req);
       this.logger.warn(
-        `Invalid refresh token provided from IP ${metadata.ip} with user-agent ${metadata.userAgent}`,
+        `Invalid token provided from IP ${metadata.ip} with user-agent ${metadata.userAgent}`,
       );
 
-      throw new UnauthorizedException('Refresh token is invalid or expired');
+      throw new UnauthorizedException('Token is invalid or expired');
     }
   }
 

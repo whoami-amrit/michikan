@@ -51,9 +51,10 @@ model Resume {
 model User {
   id                 Int               @id @default(autoincrement())
   email              String            @unique
-  name               String?
+  name               String
   createdAt          DateTime          @default(now())
   updatedAt          DateTime          @updatedAt
+  avatar             String?
   resumes            Resume[] // 1 to n relationship with Resume
   accounts           Account[] // 1 to 1 relationship with Account
   sessions           Session[] // 1 to n relationship with Session

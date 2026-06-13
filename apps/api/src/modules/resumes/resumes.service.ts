@@ -2,11 +2,11 @@ import { createHash } from 'node:crypto';
 
 import { RENDER_PDF_JOB_NAME, RENDER_QUEUE_NAME } from '@common/constants';
 import { ICreateJobResponse } from '@common/types/create-job.response';
-import { Resume } from '@michikan/db';
-import { ICreateResumeDto, IRenderStatusResponse, IUpdateResumeDto } from '@michikan/shared';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Queue } from 'bullmq';
+import { Resume } from 'db';
+import { ICreateResumeDto, IRenderStatusResponse, IUpdateResumeDto } from 'shared';
 import { PrismaService } from 'src/infra/database/prisma.service';
 import { S3Service } from 'src/infra/storage/s3.service';
 
