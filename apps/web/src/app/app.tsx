@@ -5,9 +5,9 @@ import { Toaster } from 'sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { MainContextProvider } from '@/lib/contexts/main/provider';
 
+import { AuthFormPage, VerifyEmailPage } from './auth';
 import Layout from './layout';
 
-const AuthPage = lazy(() => import('./auth'));
 const JobsPage = lazy(() => import('./jobs'));
 const AnalysisPage = lazy(() => import('./analysis'));
 const ResumesPage = lazy(() => import('./resumes'));
@@ -21,15 +21,19 @@ function App() {
         <TooltipProvider>
           <BrowserRouter>
             <Suspense>
-              <AuthPage />
-              <Layout>
-                <Routes>
-                  <Route path="/jobs" element={<JobsPage />} />
-                  <Route path="/analysis" element={<AnalysisPage />} />
-                  <Route path="/resumes" element={<ResumesPage />} />
-                  <Route path="/user" element={<UserPage />} />
-                </Routes>
-              </Layout>
+              <Routes>
+                <Route>
+                  <Route path="/signup" element={<AuthFormPage type="signup" />} />
+                  <Route path="/login" element={<AuthFormPage type="login" />} />
+                  <Route path="/verify-email" element={<VerifyEmailPage />} />
+                </Route>
+                <Route element={<Layout />}>
+                  <Route path="jobs" element={<JobsPage />} />
+                  <Route path="analysis" element={<AnalysisPage />} />
+                  <Route path="resumes" element={<ResumesPage />} />
+                  <Route path="user" element={<UserPage />} />
+                </Route>
+              </Routes>
             </Suspense>
           </BrowserRouter>
         </TooltipProvider>

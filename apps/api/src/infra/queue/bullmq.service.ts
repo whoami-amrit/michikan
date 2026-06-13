@@ -16,6 +16,8 @@ export class BullMqService implements OnModuleInit {
 
   async healthCheck(): Promise<void> {
     const client = await this.renderQueue.client;
-    await client.ping();
+    if (client.status === 'end') {
+      throw new Error('Unable to connect to BullMQ: Redis client is disconnected');
+    }
   }
 }

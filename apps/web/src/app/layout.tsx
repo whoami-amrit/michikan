@@ -1,4 +1,4 @@
-import { NavLink } from 'react-router';
+import { NavLink, Outlet } from 'react-router';
 
 import { AppSidebar } from '@/components/app-sidebar';
 import {
@@ -14,7 +14,7 @@ import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 import { useBreadcrumbs } from '@/hooks/use-breadcrumbs';
 import { SidebarProvider } from '@/lib/contexts/sidebar/provider';
 
-export default function Layout({ children }: { children: React.ReactNode }) {
+export default function Layout() {
   const crumbs = useBreadcrumbs({
     mapping: {
       overview: 'Overview',
@@ -51,7 +51,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             </Breadcrumb>
           </div>
         </header>
-        {children}
+        <Outlet />
       </SidebarInset>
     </SidebarProvider>
   );

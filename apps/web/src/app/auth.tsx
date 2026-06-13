@@ -2,17 +2,17 @@ import { isHTTPError } from 'ky';
 import { GalleryVerticalEnd } from 'lucide-react';
 import type { SubmitEvent } from 'react';
 import { useEffect } from 'react';
-import { Route, Routes } from 'react-router';
 import { useNavigate } from 'react-router';
 import { useSearchParams } from 'react-router';
-import type { IProblemDetails } from 'shared';
+import type { IProblemDetails, IUserResponse } from 'shared';
 import { toast } from 'sonner';
 import useSWRMutation from 'swr/mutation';
 
-import bg from '@/assets/auth-bg.webp';
+import authBg from '@/assets/auth-bg.webp';
 import { ErrorToast } from '@/components/error-toast';
 import { LoginForm } from '@/components/login-form';
 import { SignupForm } from '@/components/signup-form';
+import { useMainContext } from '@/lib/contexts/main/hook';
 import { api } from '@/lib/utils';
 
 export const VerifyEmailPage = () => {
@@ -56,6 +56,7 @@ const getSignupPayload = (formData: FormData) => ({
 
 export function AuthFormPage({ type }: { type: 'login' | 'signup' }) {
   const navigate = useNavigate();
+  const { setState } = useMainContext();
 
   const onSubmit = (e: SubmitEvent<HTMLFormElement>) => {
     const formData = new FormData(e.currentTarget);
@@ -69,8 +70,12 @@ export function AuthFormPage({ type }: { type: 'login' | 'signup' }) {
       .post(`/auth/${type}`, {
         json,
       })
-      .json()
-      .then(() => navigate('/dashboard'))
+      .then(() => api.get<IUserResponse>('/users/me').json())
+      .then((user) => {
+        console.log('user', user);
+        setState((prev) => ({ ...prev, user }));
+      })
+      .then(() => navigate('/analysis'))
       .catch((err) => {
         if (isHTTPError(err)) {
           const problemDetails = err.data as IProblemDetails;
@@ -102,7 +107,7 @@ export function AuthFormPage({ type }: { type: 'login' | 'signup' }) {
       </div>
       <div className="relative hidden bg-muted lg:block">
         <img
-          src={bg}
+          src={authBg}
           alt="Image"
           className="absolute inset-0 h-full w-full object-cover dark:brightness-50"
         />
@@ -110,15 +115,3 @@ export function AuthFormPage({ type }: { type: 'login' | 'signup' }) {
     </div>
   );
 }
-
-const Auth = () => {
-  return (
-    <Routes>
-      <Route path="/signup" element={<AuthFormPage type="signup" />} />
-      <Route path="/login" element={<AuthFormPage type="login" />} />
-      <Route path="/verify-email" element={<VerifyEmailPage />} />
-    </Routes>
-  );
-};
-
-export default Auth;

@@ -10,7 +10,9 @@
     "db:migrate": "dotenv-run -- prisma migrate dev",
     "db:deploy": "dotenv-run -- prisma migrate deploy",
     "db:studio": "dotenv-run -- prisma studio",
-    "prebuild": "pnpm db:generate"
+    "db:reset": "dotenv-run -- prisma migrate reset",
+    "prebuild": "pnpm db:generate",
+    "postinstall": "pnpm build"
   },
   "author": "Amrit Borah",
   "license": "MIT",
@@ -23,7 +25,6 @@
     "@types/node": "^25.9.2",
     "@types/pg": "^8.20.0",
     "prisma": "7.8.0",
-    "tsx": "^4.22.4",
-    "typescript": "^5.9.3"
+    "tsx": "^4.22.4"
   }
 }
