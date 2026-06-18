@@ -2,10 +2,11 @@
   "name": "shared",
   "version": "1.0.0",
   "description": "common types & utilities for michikan monorepo",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "dist/cjs/index.js",
+  "types": "dist/cjs/index.d.ts",
+  "module": "dist/esm/index.js",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc -b tsconfig.esm.json tsconfig.json",
     "dev": "tsc --watch",
     "check:types": "tsc --noEmit",
     "check:cycles": "madge --circular --extensions ts src --exclude \".*/generated/.*\""
@@ -15,7 +16,6 @@
   "license": "MIT",
   "packageManager": "pnpm@10.33.3",
   "dependencies": {
-    "db": "workspace:*",
     "zod": "^4.4.3"
   }
 }

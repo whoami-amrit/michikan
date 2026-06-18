@@ -70,7 +70,7 @@ export function AuthFormPage({ type }: { type: 'login' | 'signup' }) {
       .post(`/auth/${type}`, {
         json,
       })
-      .then(() => api.get<IUserResponse>('/users/me').json())
+      .then(() => api.get('/users/me').json<IUserResponse>())
       .then((user) => {
         console.log('user', user);
         setState((prev) => ({ ...prev, user }));

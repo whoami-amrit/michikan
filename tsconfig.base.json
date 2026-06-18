@@ -1,9 +1,9 @@
 {
   "compilerOptions": {
     "target": "ES2023",
-    "module": "esnext",
+    "module": "nodenext",
     "lib": ["esnext"],
-    "moduleResolution": "bundler",
+    "moduleResolution": "nodenext",
     "resolvePackageJsonExports": true,
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
@@ -17,11 +17,11 @@
     "resolveJsonModule": true,
     "allowJs": true,
     "strict": true,
+    "strictNullChecks": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
-    "useDefineForClassFields": true,
-    "removeComments": false
+    "useDefineForClassFields": true
   }
 }

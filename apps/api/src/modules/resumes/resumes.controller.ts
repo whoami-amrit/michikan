@@ -13,7 +13,7 @@ import {
   Post,
 } from '@nestjs/common';
 import { createZodDto } from 'nestjs-zod';
-import { CreateResumeSchema, UpdateResumeSchema } from 'shared';
+import { CreateResumeSchema, IGetResumesResponse, UpdateResumeSchema } from 'shared';
 
 import { ResumeService } from './resumes.service';
 
@@ -42,8 +42,8 @@ export class ResumeController {
   }
 
   @Get()
-  getAll(@CurrentUser() user: IJwtAccessPayload) {
-    return this.resumeService.get(user.sub);
+  getAll(@CurrentUser() user: IJwtAccessPayload): Promise<IGetResumesResponse[]> {
+    return this.resumeService.getAll(user.sub);
   }
 
   @Get(':id')

@@ -6,7 +6,12 @@ import { InjectQueue } from '@nestjs/bullmq';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Queue } from 'bullmq';
 import { Resume } from 'db';
-import { ICreateResumeDto, IRenderStatusResponse, IUpdateResumeDto } from 'shared';
+import {
+  ICreateResumeDto,
+  IGetResumesResponse,
+  IRenderStatusResponse,
+  IUpdateResumeDto,
+} from 'shared';
 import { PrismaService } from 'src/infra/database/prisma.service';
 import { S3Service } from 'src/infra/storage/s3.service';
 
@@ -44,15 +49,21 @@ export class ResumeService {
     });
   }
 
-  get(userId: number, resumeId?: number) {
-    if (resumeId) {
-      return this.prisma.resume.findUnique({
-        where: { id: resumeId, userId },
-      });
-    }
+  get(userId: number, resumeId?: number): Promise<Resume | null> {
+    return this.prisma.resume.findUnique({
+      where: { id: resumeId, userId },
+    });
+  }
 
+  getAll(userId: number): Promise<IGetResumesResponse[]> {
     return this.prisma.resume.findMany({
       where: { userId },
+      include: {
+        jobApplications: { select: { id: true } },
+      },
+      omit: {
+        json: true,
+      },
     });
   }
 

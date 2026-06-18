@@ -1,11 +1,12 @@
 {
   "name": "db",
   "version": "1.0.0",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "dist/cjs/index.js",
+  "types": "dist/cjs/index.d.ts",
+  "module": "dist/esm/index.js",
   "description": "prisma package for michikan web app",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc -b tsconfig.esm.json tsconfig.json",
     "db:generate": "dotenv-run -- prisma generate",
     "db:migrate": "dotenv-run -- prisma migrate dev",
     "db:deploy": "dotenv-run -- prisma migrate deploy",

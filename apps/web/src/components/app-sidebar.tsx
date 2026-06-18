@@ -1,11 +1,27 @@
 'use client';
 
-import { FileTextIcon, FolderIcon, SearchIcon, UserCircle } from 'lucide-react';
+import {
+  FileTextIcon,
+  FolderIcon,
+  SearchIcon,
+  SidebarCloseIcon,
+  SidebarOpenIcon,
+  UserCircle,
+} from 'lucide-react';
 import * as React from 'react';
 
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
-import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader } from '@/components/ui/sidebar';
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+} from '@/components/ui/sidebar';
+import { useSidebar } from '@/lib/contexts/sidebar/hook';
 
 const data = {
   navMain: [
@@ -32,12 +48,23 @@ const data = {
   ],
 };
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const { open, toggleSidebar } = useSidebar();
+
   return (
-    <Sidebar variant="inset" {...props}>
+    <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
-        <div className="grid flex-1 text-left text-sm font-bold leading-tight px-2 pt-4">
-          <span className="truncate font-heading">Michikan</span>
-        </div>
+        <SidebarMenu>
+          <SidebarMenuItem className="pt-3">
+            <SidebarMenuButton onClick={toggleSidebar}>
+              {open && (
+                <div className="flex flex-1 text-left shrink-0">
+                  <span className="font-sm font-bold font-heading">Michikan</span>
+                </div>
+              )}
+              {open ? <SidebarCloseIcon /> : <SidebarOpenIcon />}
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} />

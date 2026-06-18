@@ -1,7 +1,7 @@
-import { Prisma } from 'db';
+import { User } from 'db';
 
 export interface IUserResponse extends Required<
-  Pick<Prisma.UserModel, 'name' | 'id' | 'email' | 'createdAt' | 'avatar'>
+  Pick<User, 'name' | 'id' | 'email' | 'createdAt' | 'avatar'>
 > {
   plan: 'free' | 'pro';
   verified: boolean;

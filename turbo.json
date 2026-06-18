@@ -3,21 +3,23 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": [".next/**", "!.next/cache/**", "dist/**"]
+      "outputs": ["dist/**"]
     },
     "check:types": {
       "dependsOn": ["^check:types"]
     },
     "dev": {
       "persistent": true,
-      "cache": false
+      "cache": false,
+      "dependsOn": ["^build"]
     },
     "dev:worker": {
       "persistent": true,
-      "cache": false
+      "cache": false,
+      "dependsOn": ["^build"]
     },
     "build:worker": {
-      "dependsOn": ["^build:worker"]
+      "dependsOn": ["^build"]
     },
     "lint": {
       "dependsOn": ["build"]
