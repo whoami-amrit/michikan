@@ -16,6 +16,7 @@
   "license": "MIT",
   "packageManager": "pnpm@10.33.3",
   "dependencies": {
+    "db": "workspace:*",
     "zod": "^4.4.3"
   }
 }
