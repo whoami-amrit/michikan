@@ -1,9 +1,9 @@
 {
   "name": "db",
   "version": "1.0.0",
-  "main": "dist/cjs/index.js",
-  "types": "dist/cjs/index.d.ts",
-  "module": "dist/esm/index.js",
+  "main": "dist/cjs/server.js",
+  "types": "dist/cjs/server.d.ts",
+  "module": "dist/esm/browser.js",
   "description": "prisma package for michikan web app",
   "scripts": {
     "build": "tsc -b tsconfig.esm.json tsconfig.json",

@@ -1,7 +1,4 @@
-import type { IUserResponse } from 'shared';
-
 export interface IMainState {
-  user: IUserResponse | null;
   theme: 'light' | 'dark' | 'system';
 }
 

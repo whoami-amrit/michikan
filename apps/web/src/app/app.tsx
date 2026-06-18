@@ -4,6 +4,7 @@ import { Toaster } from 'sonner';
 
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { MainContextProvider } from '@/lib/contexts/main/provider';
+import { UserContextProvider } from '@/lib/contexts/user/provider';
 
 import { AuthFormPage, VerifyEmailPage } from './auth';
 import Layout from './layout';
@@ -35,7 +36,13 @@ function App() {
                   <Route index path="/login" element={<AuthFormPage type="login" />} />
                   <Route path="/verify-email" element={<VerifyEmailPage />} />
                 </Route>
-                <Route element={<Layout />}>
+                <Route
+                  element={
+                    <UserContextProvider>
+                      <Layout />
+                    </UserContextProvider>
+                  }
+                >
                   <Route path="jobs" element={<JobsPage />} />
                   <Route path="analysis" element={<AnalysisPage />} />
                   <Route path="resumes">

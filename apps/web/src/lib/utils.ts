@@ -1,11 +1,46 @@
 import { type ClassValue, clsx } from 'clsx';
-import ky from 'ky';
+import ky, { isHTTPError } from 'ky';
 import { twMerge } from 'tailwind-merge';
+
+import { HttpStatus } from './constants';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+const API_PREFIX = '/api/v1';
+
 export const api = ky.create({
-  prefix: 'api/v1',
+  prefix: API_PREFIX,
+  hooks: {
+    afterResponse: [
+      async ({ response }) => {
+        if (response.status === HttpStatus.UNAUTHORIZED) {
+          try {
+            await ky.get(`${API_PREFIX}/auth/refresh`);
+
+            return response;
+          } catch (refreshError) {
+            if (!isHTTPError(refreshError)) {
+              throw refreshError;
+            }
+
+            if (refreshError.response.status !== HttpStatus.UNAUTHORIZED) {
+              throw refreshError;
+            }
+
+            document.cookie = '';
+            window.location.href = '/login';
+            return response;
+          }
+        }
+
+        return response;
+      },
+    ],
+  },
+  retry: {
+    limit: 1, // Limit retries to 1 to avoid infinite loops
+    statusCodes: [HttpStatus.UNAUTHORIZED],
+  },
 });

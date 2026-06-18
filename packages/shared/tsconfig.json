@@ -2,7 +2,8 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "outDir": "./dist/cjs",
-    "rootDir": "src"
+    "rootDir": "src",
+    "incremental": true
   },
   "include": ["src/index.ts"],
   "exclude": ["node_modules", "dist", "generated"]

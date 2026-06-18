@@ -8,7 +8,6 @@ const appThemeStorageKey = 'app-theme';
 
 export const MainContextProvider = ({ children }: { children: React.ReactNode }) => {
   const [state, setState] = useState<IMainState>({
-    user: null,
     theme: (localStorage.getItem(appThemeStorageKey) ?? 'system') as IMainState['theme'],
   });
 

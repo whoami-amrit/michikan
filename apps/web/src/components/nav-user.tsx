@@ -18,14 +18,12 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
-import { useMainContext } from '@/lib/contexts/main/hook';
 import { useSidebar } from '@/lib/contexts/sidebar/hook';
+import { useUserContext } from '@/lib/contexts/user/hook';
 
 export function NavUser() {
   const { isMobile } = useSidebar();
-  const {
-    state: { user },
-  } = useMainContext();
+  const user = useUserContext();
 
   if (user === null) {
     return null;

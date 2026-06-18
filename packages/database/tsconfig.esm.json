@@ -6,6 +6,6 @@
     "outDir": "./dist/esm",
     "rootDir": "."
   },
-  "include": ["index.ts"],
-  "exclude": ["node_modules", "dist", "generated"]
+  "include": ["browser.ts"],
+  "exclude": ["node_modules", "dist", "generated", "server.ts"]
 }
