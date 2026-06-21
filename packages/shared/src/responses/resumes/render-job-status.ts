@@ -1,7 +1,7 @@
-import { ResumeRenderJob } from 'db';
+import { ResumeRenderWorker } from 'db';
 
 export interface IRenderStatusResponse {
-  status: ResumeRenderJob['status'] | null;
-  error?: ResumeRenderJob['error'];
+  status: ResumeRenderWorker['status'] | null;
+  error?: ResumeRenderWorker['error'];
   downloadUrl?: string;
 }

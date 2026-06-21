@@ -4,7 +4,8 @@
     "module": "esnext",
     "moduleResolution": "bundler",
     "outDir": "./dist/esm",
-    "rootDir": "."
+    "rootDir": ".",
+    "incremental": false
   },
   "include": ["browser.ts"],
   "exclude": ["node_modules", "dist", "generated", "server.ts"]

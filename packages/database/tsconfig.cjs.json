@@ -2,7 +2,8 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "outDir": "./dist/cjs",
-    "rootDir": "."
+    "rootDir": ".",
+    "incremental": false
   },
   "include": ["server.ts"],
   "exclude": ["node_modules", "dist", "generated", "browser.ts"]
