@@ -11,7 +11,7 @@ import path from 'path';
 import { PrismaService } from 'src/infra/database/prisma.service';
 import z from 'zod';
 
-import { IJdAnalysisJob } from '../types';
+import { IJdAnalysisWorker } from '../types';
 
 export const RequirementMatchSchema = z.object({
   requirement: z.string(),
@@ -61,7 +61,7 @@ export class JobDescriptionAnalyzerProcessor extends WorkerHost {
     }
   }
 
-  async process(job: Job<IJdAnalysisJob>) {
+  async process(job: Job<IJdAnalysisWorker>) {
     const { name, data } = job;
 
     switch (name) {
@@ -70,19 +70,19 @@ export class JobDescriptionAnalyzerProcessor extends WorkerHost {
         break;
       default:
         this.logger.warn('Received JD evaluation job with unknown name: ' + name);
-        await this.prismaService.analysisJob.update({
-          where: { id: data.analysisJobId },
+        await this.prismaService.analysisWorker.update({
+          where: { id: data.analysisWorkerId },
           data: { status: 'FAILED', error: 'Unknown job name' },
         });
         throw new UnrecoverableError('Unknown job name');
     }
   }
 
-  private async handleJDMatch({ analysisJobId }: IJdAnalysisJob) {
-    const analysisJob = await this.prismaService.analysisJob.findUnique({
-      where: { id: analysisJobId },
+  private async handleJDMatch({ analysisWorkerId }: IJdAnalysisWorker) {
+    const analysisJob = await this.prismaService.analysisWorker.findUnique({
+      where: { id: analysisWorkerId },
       include: {
-        jobApplication: {
+        job: {
           include: {
             resume: true,
           },
@@ -91,25 +91,25 @@ export class JobDescriptionAnalyzerProcessor extends WorkerHost {
     });
 
     if (!analysisJob) {
-      const errorString = `Analysis job with ID ${analysisJobId} not found`;
+      const errorString = `Analysis job with ID ${analysisWorkerId} not found`;
       this.logger.error(errorString, error instanceof Error ? error.stack : undefined);
       throw new UnrecoverableError(errorString);
     }
 
-    if (!analysisJob.jobApplication.resume) {
-      const errorString = `No associated resume for this analysis job ${analysisJobId}`;
+    if (!analysisJob.job.resume) {
+      const errorString = `No associated resume for this analysis job ${analysisWorkerId}`;
       this.logger.error(errorString, error instanceof Error ? error.stack : undefined);
       throw new UnrecoverableError(errorString);
     }
 
     const prompt = this.template({
-      jobDescription: analysisJob.jobApplication.jobDescription,
-      resumeJson: JSON.stringify(analysisJob.jobApplication.resume.json),
+      jobDescription: analysisJob.job.jobDescription,
+      resumeJson: JSON.stringify(analysisJob.job.resume.json),
     });
 
     try {
-      await this.prismaService.analysisJob.update({
-        where: { id: analysisJobId },
+      await this.prismaService.analysisWorker.update({
+        where: { id: analysisWorkerId },
         data: { status: 'IN_PROGRESS' },
       });
 
@@ -131,8 +131,8 @@ export class JobDescriptionAnalyzerProcessor extends WorkerHost {
         throw new Error('No response from Google GenAI');
       }
 
-      await this.prismaService.analysisJob.update({
-        where: { id: analysisJobId },
+      await this.prismaService.analysisWorker.update({
+        where: { id: analysisWorkerId },
         data: {
           status: 'COMPLETED',
           analysis: ResumeMatchOutputSchema.parse(JSON.parse(response.text)),
@@ -141,8 +141,8 @@ export class JobDescriptionAnalyzerProcessor extends WorkerHost {
     } catch (error) {
       this.logger.error('Failed to evaluate JD', error instanceof Error ? error.stack : { error });
 
-      await this.prismaService.analysisJob.update({
-        where: { id: analysisJobId },
+      await this.prismaService.analysisWorker.update({
+        where: { id: analysisWorkerId },
         data: { status: 'FAILED' },
       });
 

@@ -1,6 +1,12 @@
 import { ALLOW_UNVERIFIED_TAG, PUBLIC_ACCESS_TAG } from '@common/constants';
 import { IJwtAccessPayload } from '@common/types/jwt-payload.interface';
-import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  CanActivate,
+  ExecutionContext,
+  ForbiddenException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
@@ -38,12 +44,12 @@ export class AuthGuard implements CanActivate {
       req.user = this.jwt.verify<IJwtAccessPayload>(token);
 
       if (!allowUnverified && !req.user.verified) {
-        throw new UnauthorizedException('Email verification required');
+        throw new ForbiddenException('Email verification required');
       }
 
       return true;
     } catch (err) {
-      if (err instanceof UnauthorizedException) {
+      if (err instanceof UnauthorizedException || err instanceof ForbiddenException) {
         throw err;
       }
 

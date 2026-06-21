@@ -1,9 +1,9 @@
+import { Job } from 'db';
 import { PlusIcon } from 'lucide-react';
 import { useNavigate } from 'react-router';
-import { type IGetResumesResponse, ResumeJsonSchema } from 'shared';
 import useSWR from 'swr';
 
-import { AppBreadcrumb } from '@/components/app-breadcrumb';
+import AppHeader from '@/components/app-header';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
@@ -17,69 +17,36 @@ import {
 import { useBreadcrumbs } from '@/hooks/use-breadcrumbs';
 import { api } from '@/lib/utils';
 
-export function ResumeDetailPage() {
-  return null;
-}
-
-export function NewResumePage() {
-  const crumbs = useBreadcrumbs({
-    mappings: {
-      resumes: {
-        label: 'Resumes',
-        children: {
-          new: {
-            label: 'New Resume',
-          },
-        },
-      },
-    },
-  });
-
-  console.log('ResumeJsonSchema', ResumeJsonSchema);
-
-  return (
-    <div className="flex flex-col items-center w-full">
-      <header className="flex w-full justify-between p-6">
-        <AppBreadcrumb crumbs={crumbs} />
-      </header>
-    </div>
-  );
-}
-
-export default function ResumesPage() {
-  const { data, isLoading } = useSWR('resumes', async () =>
-    api.get('/resumes').json<IGetResumesResponse[]>(),
+export default function JobsPage() {
+  const { data, isLoading } = useSWR('job-applications', async () =>
+    api.get('/jobs').json<Job[]>(),
   );
 
   const navigate = useNavigate();
 
-  const crumbs = useBreadcrumbs({
-    mappings: {
-      resumes: {
-        label: 'Resumes',
-      },
+  const crumbs = useBreadcrumbs([
+    {
+      label: 'Jobs',
     },
-  });
+  ]);
 
   return (
     <div className="flex flex-col items-center w-full">
-      <header className="flex w-full justify-between p-6">
-        <AppBreadcrumb crumbs={crumbs} />
-      </header>
+      <AppHeader crumbs={crumbs} />
 
       <main className="w-2xl flex flex-col gap-4">
         <div className="flex">
           <div className="grow" />
           <Button
-            variant="default"
             onClick={() => {
-              void navigate('/resumes/new');
+              void navigate('/jobs/new');
             }}
           >
             <PlusIcon />
-            New Resume
+            New Job
           </Button>
         </div>
+
         {isLoading ? (
           <div className="flex w-full max-w-sm flex-col gap-2">
             {Array.from({ length: 5 }).map((_, index) => (
@@ -95,16 +62,23 @@ export default function ResumesPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Name</TableHead>
-                <TableHead>Jobs</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Resume</TableHead>
                 <TableHead>Last Updated</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {data?.map((resume) => (
-                <TableRow key={resume.id}>
-                  <TableCell>{resume.name}</TableCell>
-                  <TableCell>{resume.jobApplications.length}</TableCell>
-                  <TableCell>{new Date(resume.updatedAt).toLocaleDateString()}</TableCell>
+              {data?.map((job) => (
+                <TableRow
+                  onClick={() => {
+                    void navigate(`/jobs/${job.id}`);
+                  }}
+                  key={job.id}
+                >
+                  <TableCell>{job.title}</TableCell>
+                  <TableCell>{job.status}</TableCell>
+                  <TableCell>{job.resumeId}</TableCell>
+                  <TableCell>{new Date(job.updatedAt).toLocaleDateString()}</TableCell>
                 </TableRow>
               ))}
             </TableBody>

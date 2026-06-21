@@ -3,8 +3,8 @@ import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
 
 import { ResumeModule } from '../resumes/resumes.module';
-import { JobApplicationController } from './job-applications.controller';
-import { JobApplicationsService } from './job-applications.service';
+import { JobsController } from './jobs.controller';
+import { JobsService } from './jobs.service';
 
 @Module({
   imports: [
@@ -14,7 +14,7 @@ import { JobApplicationsService } from './job-applications.service';
       ...COMMON_BULL_QUEUE_OPTIONS,
     }),
   ],
-  controllers: [JobApplicationController],
-  providers: [JobApplicationsService],
+  controllers: [JobsController],
+  providers: [JobsService],
 })
-export class JobApplicationModule {}
+export class JobsModule {}

@@ -16,6 +16,7 @@ import { LoggerModule } from './infra/logger/logger.module';
 import { QueueModule } from './infra/queue/queue.module';
 import { StorageModule } from './infra/storage/storage.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { JobsModule } from './modules/jobs/jobs.module';
 import { ResumeModule } from './modules/resumes/resumes.module';
 import { UsersModule } from './modules/users/users.module';
 
@@ -38,6 +39,7 @@ import { UsersModule } from './modules/users/users.module';
     AuthModule,
     UsersModule,
     ResumeModule,
+    JobsModule,
   ],
   controllers: [AppController],
   providers: [

@@ -1,4 +1,3 @@
-import { IProblemDetails } from '@common/types/problem-detail.interface';
 import {
   ArgumentsHost,
   Catch,
@@ -10,6 +9,7 @@ import {
 import { Prisma } from 'db';
 import { Request, Response } from 'express';
 import { ZodValidationException } from 'nestjs-zod';
+import { IProblemDetails } from 'shared';
 import { ZodError } from 'zod';
 
 @Catch()

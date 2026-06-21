@@ -1,13 +1,13 @@
 import { createHash } from 'node:crypto';
 
 import { RENDER_PDF_JOB_NAME, RENDER_QUEUE_NAME } from '@common/constants';
-import { ICreateJobResponse } from '@common/types/create-job.response';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Queue } from 'bullmq';
 import { Resume } from 'db';
 import {
   ICreateResumeDto,
+  ICreateWorkerResponse,
   IGetResumesResponse,
   IRenderStatusResponse,
   IUpdateResumeDto,
@@ -15,14 +15,14 @@ import {
 import { PrismaService } from 'src/infra/database/prisma.service';
 import { S3Service } from 'src/infra/storage/s3.service';
 
-import { IRenderPdfJob } from './types';
+import { IRenderPdfWorker } from './types';
 
 @Injectable()
 export class ResumeService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly s3Service: S3Service,
-    @InjectQueue(RENDER_QUEUE_NAME) private readonly renderQueue: Queue<IRenderPdfJob>,
+    @InjectQueue(RENDER_QUEUE_NAME) private readonly renderQueue: Queue<IRenderPdfWorker>,
   ) {}
 
   create(userId: number, createResumeDto: ICreateResumeDto): Promise<Resume> {
@@ -49,7 +49,7 @@ export class ResumeService {
     });
   }
 
-  get(userId: number, resumeId?: number): Promise<Resume | null> {
+  get(userId: number, resumeId: number): Promise<Resume | null> {
     return this.prisma.resume.findUnique({
       where: { id: resumeId, userId },
     });
@@ -59,7 +59,7 @@ export class ResumeService {
     return this.prisma.resume.findMany({
       where: { userId },
       include: {
-        jobApplications: { select: { id: true } },
+        jobs: { select: { id: true } },
       },
       omit: {
         json: true,
@@ -67,7 +67,7 @@ export class ResumeService {
     });
   }
 
-  async renderPdf(resumeId: number, userId: number): Promise<ICreateJobResponse> {
+  async renderPdf(resumeId: number, userId: number): Promise<ICreateWorkerResponse> {
     const resume = await this.prisma.resume.findUnique({
       where: { id: resumeId, userId },
     });
@@ -80,13 +80,13 @@ export class ResumeService {
 
     if (previousSuccessJob) {
       return {
-        jobId: previousSuccessJob.id,
+        workerId: previousSuccessJob.id,
         status: previousSuccessJob.status,
       };
     }
 
     const resumeRenderJob = await this.prisma.$transaction(async (prisma) => {
-      const resumeRenderJob = await prisma.resumeRenderJob.create({
+      const resumeRenderJob = await prisma.resumeRenderWorker.create({
         data: {
           status: 'PENDING',
           sourceHash: this.createHashOfResumeJson(resume),
@@ -96,14 +96,14 @@ export class ResumeService {
       });
 
       await this.renderQueue.add(RENDER_PDF_JOB_NAME, {
-        jobId: resumeRenderJob.id,
+        workerId: resumeRenderJob.id,
       });
 
       return resumeRenderJob;
     });
 
     return {
-      jobId: resumeRenderJob.id,
+      workerId: resumeRenderJob.id,
       status: resumeRenderJob.status,
     };
   }
@@ -115,7 +115,7 @@ export class ResumeService {
   private async checkPreviousSuccessRenderJob(resume: Resume, userId: number) {
     const latestSourceHash = this.createHashOfResumeJson(resume);
 
-    const previousJob = await this.prisma.resumeRenderJob.findFirst({
+    const previousJob = await this.prisma.resumeRenderWorker.findFirst({
       where: {
         resumeId: resume.id,
         userId,
@@ -126,9 +126,9 @@ export class ResumeService {
     return previousJob?.sourceHash === latestSourceHash ? previousJob : null;
   }
 
-  async getRenderStatus(jobId: number, userId: number): Promise<IRenderStatusResponse> {
-    const renderJob = await this.prisma.resumeRenderJob.findUnique({
-      where: { id: jobId, userId },
+  async getRenderStatus(workerId: number, userId: number): Promise<IRenderStatusResponse> {
+    const renderJob = await this.prisma.resumeRenderWorker.findUnique({
+      where: { id: workerId, userId },
       include: { resume: true },
     });
 

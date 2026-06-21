@@ -1,11 +1,11 @@
-import { JobApplicationStatus } from 'db';
+import { JobStatus } from 'db';
 import z from 'zod';
 
 const schema = z.object({
-  status: z.enum(JobApplicationStatus),
+  status: z.enum(JobStatus),
   saved: z.literal(true, 'Operation not allowed, delete resource instead').optional(),
 });
 
-export type IUpdateJobApplicationStatusDto = z.infer<typeof schema>;
+export type IUpdateJobStatusDto = z.infer<typeof schema>;
 
 export default schema;

@@ -1,9 +1,9 @@
 import { z } from 'zod';
 
-import ResumeJsonSchema from '../../types/resume-json';
+import ResumeSchema from '../../types/resume-json';
 
 const schema = z.object({
-  json: ResumeJsonSchema.optional(),
+  json: ResumeSchema.optional(),
 });
 
 export type IUpdateResumeDto = z.infer<typeof schema>;

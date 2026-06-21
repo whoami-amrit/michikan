@@ -13,7 +13,7 @@ import path from 'path';
 import { PrismaService } from 'src/infra/database/prisma.service';
 import { S3Service } from 'src/infra/storage/s3.service';
 
-import { IRenderPdfJob } from '../types';
+import { IRenderPdfWorker } from '../types';
 import { RenderErrorEnum, RenderErrors } from './render-resume.errors';
 
 @Injectable()
@@ -91,7 +91,7 @@ export class RenderResumeProcessor extends WorkerHost {
     });
   }
 
-  async process({ name, data }: Job<IRenderPdfJob>) {
+  async process({ name, data }: Job<IRenderPdfWorker>) {
     switch (name) {
       case RENDER_PDF_JOB_NAME:
         await this.renderPdf(data);
@@ -99,20 +99,20 @@ export class RenderResumeProcessor extends WorkerHost {
       default:
         this.logger.warn('Received job with unknown name: ' + name);
 
-        await this.updateJobStatus(data.jobId, { status: 'FAILED', error: 'Unknown job name' });
+        await this.updateJobStatus(data.workerId, { status: 'FAILED', error: 'Unknown job name' });
 
         throw new UnrecoverableError('Unknown job name');
     }
   }
 
-  private async renderPdf({ jobId }: IRenderPdfJob) {
+  private async renderPdf({ workerId }: IRenderPdfWorker) {
     try {
-      await this.updateJobStatus(jobId, { status: 'IN_PROGRESS' });
+      await this.updateJobStatus(workerId, { status: 'IN_PROGRESS' });
 
-      const { jobDir, texFilePath, pdfFilePath } = await this.initTempJobDirectory(jobId);
+      const { workDir, texFilePath, pdfFilePath } = await this.initTempJobDirectory(workerId);
 
-      const job = await this.prisma.resumeRenderJob.findUnique({
-        where: { id: jobId },
+      const job = await this.prisma.resumeRenderWorker.findUnique({
+        where: { id: workerId },
         include: {
           resume: true,
         },
@@ -121,20 +121,20 @@ export class RenderResumeProcessor extends WorkerHost {
       // already checked job existence in updateJobStatus
       await this.writeLatexToFile(texFilePath, job!.resume.json);
 
-      await this.compilePdfLatex(jobDir);
+      await this.compilePdfLatex(workDir);
 
       await this.verifyPdfExists(pdfFilePath);
 
-      const storageKey = await this.uploadPdfAndGetStorageKey(jobId, pdfFilePath);
+      const storageKey = await this.uploadPdfAndGetStorageKey(workerId, pdfFilePath);
 
-      await this.updateJobStatus(jobId, { status: 'COMPLETED', storageKey });
+      await this.updateJobStatus(workerId, { status: 'COMPLETED', storageKey });
 
-      await this.cleanupLocalJobDir(jobDir);
+      await this.cleanupLocalJobDir(workDir);
     } catch (error) {
       if (error instanceof RenderErrors) {
-        await this.updateJobStatus(jobId, { status: 'FAILED', error: String(error) });
+        await this.updateJobStatus(workerId, { status: 'FAILED', error: String(error) });
       } else {
-        await this.updateJobStatus(jobId, {
+        await this.updateJobStatus(workerId, {
           status: 'FAILED',
           error: RenderErrors.getMessageForErrorType(RenderErrorEnum.UNKNOWN_ERROR),
         });
@@ -145,17 +145,17 @@ export class RenderResumeProcessor extends WorkerHost {
   }
 
   private async initTempJobDirectory(
-    jobId: number,
-  ): Promise<{ jobDir: string; texFilePath: string; pdfFilePath: string }> {
-    const jobDir = path.join(this.renderOutputPath, String(jobId));
+    workerId: number,
+  ): Promise<{ workDir: string; texFilePath: string; pdfFilePath: string }> {
+    const workDir = path.join(this.renderOutputPath, String(workerId));
 
     try {
-      await fs.mkdir(jobDir, { recursive: true });
+      await fs.mkdir(workDir, { recursive: true });
 
       return {
-        jobDir,
-        texFilePath: path.join(jobDir, this.TEX_FILE_NAME),
-        pdfFilePath: path.join(jobDir, this.PDF_FILE_NAME),
+        workDir,
+        texFilePath: path.join(workDir, this.TEX_FILE_NAME),
+        pdfFilePath: path.join(workDir, this.PDF_FILE_NAME),
       };
     } catch (error) {
       throw new RenderErrors(RenderErrorEnum.FAILED_CREATE_DIRECTORY, error as Error);
@@ -181,10 +181,10 @@ export class RenderResumeProcessor extends WorkerHost {
     }
   }
 
-  private async uploadPdfAndGetStorageKey(jobId: number, pdfFilePath: string): Promise<string> {
+  private async uploadPdfAndGetStorageKey(workerId: number, pdfFilePath: string): Promise<string> {
     const fileBuffer = await fs.open(pdfFilePath);
     const readStream = fileBuffer.createReadStream();
-    const s3Key = `${jobId}:resume.pdf`;
+    const s3Key = `${workerId}:resume.pdf`;
 
     try {
       await this.s3Service.uploadFile(s3Key, readStream);
@@ -207,25 +207,25 @@ export class RenderResumeProcessor extends WorkerHost {
     }
   }
 
-  private async cleanupLocalJobDir(jobDir: string): Promise<void> {
+  private async cleanupLocalJobDir(workDir: string): Promise<void> {
     try {
-      await fs.rm(jobDir, { recursive: true });
+      await fs.rm(workDir, { recursive: true });
     } catch (err) {
       this.logger.warn(`Warning: Failed to delete local job directory: ${err as string}`);
     }
   }
 
   private async updateJobStatus(
-    jobId: number,
-    data: Prisma.ResumeRenderJobUpdateInput,
+    workerId: number,
+    data: Prisma.ResumeRenderWorkerUpdateInput,
   ): Promise<void> {
-    await this.prisma.resumeRenderJob.update({
-      where: { id: jobId },
+    await this.prisma.resumeRenderWorker.update({
+      where: { id: workerId },
       data,
     });
   }
 
-  private compilePdfLatex(jobDir: string): Promise<void> {
+  private compilePdfLatex(workDir: string): Promise<void> {
     const TIMEOUT_MS = 30000;
 
     return new Promise((resolve, reject) => {
@@ -233,7 +233,7 @@ export class RenderResumeProcessor extends WorkerHost {
 
       const process = spawn('pdflatex', [
         '-interaction=nonstopmode',
-        `-output-directory=${jobDir}`,
+        `-output-directory=${workDir}`,
         this.TEX_FILE_NAME,
       ]);
 

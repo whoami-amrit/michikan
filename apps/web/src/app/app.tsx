@@ -7,18 +7,14 @@ import { MainContextProvider } from '@/lib/contexts/main/provider';
 import { UserContextProvider } from '@/lib/contexts/user/provider';
 
 import { AuthFormPage, VerifyEmailPage } from './auth';
+import NewJobPage from './jobs/detail';
+import JobsPage from './jobs/list';
 import Layout from './layout';
-import ResumesPage from './resumes';
+import ResumesPage from './resumes/list';
 
-const JobsPage = lazy(() => import('./jobs'));
 const AnalysisPage = lazy(() => import('./analysis'));
 
-const ResumeDetailPage = lazy(() =>
-  import('./resumes').then((mod) => ({ default: mod.ResumeDetailPage })),
-);
-const NewResumePage = lazy(() =>
-  import('./resumes').then((mod) => ({ default: mod.NewResumePage })),
-);
+const ResumeDetailPage = lazy(() => import('./resumes/detail'));
 
 const UserPage = lazy(() => import('./user'));
 
@@ -43,12 +39,15 @@ function App() {
                     </UserContextProvider>
                   }
                 >
-                  <Route path="jobs" element={<JobsPage />} />
+                  <Route path="jobs">
+                    <Route index element={<JobsPage />} />
+                    <Route path="new" element={<NewJobPage />} />
+                  </Route>
                   <Route path="analysis" element={<AnalysisPage />} />
                   <Route path="resumes">
                     <Route index element={<ResumesPage />} />
-                    <Route path="new" element={<NewResumePage />} />
-                    <Route path=":id" element={<ResumeDetailPage />} />
+                    <Route path="new" element={<ResumeDetailPage type="new" />} />
+                    <Route path=":id" element={<ResumeDetailPage type="edit" />} />
                   </Route>
                   <Route path="user" element={<UserPage />} />
                 </Route>

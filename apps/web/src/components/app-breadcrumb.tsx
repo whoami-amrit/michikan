@@ -10,6 +10,19 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from './ui/breadcrumb';
+import { Skeleton } from './ui/skeleton';
+
+const BreadcrumbItemContent = ({ crumb, isLast }: { crumb: ICrumb; isLast: boolean }) => {
+  if (crumb.isLoading) {
+    return <Skeleton className="h-4 w-16" />;
+  }
+
+  if (isLast) {
+    return <BreadcrumbPage>{crumb.label}</BreadcrumbPage>;
+  }
+
+  return <BreadcrumbLink render={<NavLink to={crumb.pathname}>{crumb.label}</NavLink>} />;
+};
 
 export const AppBreadcrumb = ({ crumbs }: { crumbs: ICrumb[] }) => {
   return (
@@ -18,12 +31,8 @@ export const AppBreadcrumb = ({ crumbs }: { crumbs: ICrumb[] }) => {
         {crumbs.map((crumb, index) => (
           <>
             {index !== 0 && <BreadcrumbSeparator />}
-            <BreadcrumbItem key={crumb.name}>
-              {index === crumbs.length - 1 ? (
-                <BreadcrumbPage>{crumb.name}</BreadcrumbPage>
-              ) : (
-                <BreadcrumbLink render={<NavLink to={crumb.path}>{crumb.name}</NavLink>} />
-              )}
+            <BreadcrumbItem key={index}>
+              {<BreadcrumbItemContent crumb={crumb} isLast={index === crumbs.length - 1} />}
             </BreadcrumbItem>
           </>
         ))}

@@ -1,10 +1,10 @@
-import { isHTTPError } from 'ky';
+import ky, { isHTTPError } from 'ky';
 import { GalleryVerticalEnd } from 'lucide-react';
 import type { SubmitEvent } from 'react';
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { useSearchParams } from 'react-router';
-import type { IProblemDetails, IUserResponse } from 'shared';
+import type { IProblemDetails } from 'shared';
 import { toast } from 'sonner';
 import useSWRMutation from 'swr/mutation';
 
@@ -12,8 +12,7 @@ import authBg from '@/assets/auth-bg.webp';
 import { ErrorToast } from '@/components/error-toast';
 import { LoginForm } from '@/components/login-form';
 import { SignupForm } from '@/components/signup-form';
-import { useMainContext } from '@/lib/contexts/main/hook';
-import { api } from '@/lib/utils';
+import { api, API_PREFIX } from '@/lib/utils';
 
 export const VerifyEmailPage = () => {
   const [params] = useSearchParams();
@@ -28,8 +27,16 @@ export const VerifyEmailPage = () => {
   );
 
   useEffect(() => {
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
-    trigger().catch(() => {});
+    trigger()
+      .then(() => api.get('/auth/refresh'))
+      .catch((err) => {
+        if (isHTTPError(err)) {
+          const problemDetails = err.data as IProblemDetails;
+          toast.error(<ErrorToast problem={problemDetails} />);
+        }
+
+        console.log(err);
+      });
   }, [trigger]);
 
   if (isMutating) {
@@ -56,25 +63,23 @@ const getSignupPayload = (formData: FormData) => ({
 
 export function AuthFormPage({ type }: { type: 'login' | 'signup' }) {
   const navigate = useNavigate();
-  const { setState } = useMainContext();
 
   const onSubmit = (e: SubmitEvent<HTMLFormElement>) => {
-    const formData = new FormData(e.currentTarget);
-
     // prevent refresh
     e.preventDefault();
 
+    const formData = new FormData(e.currentTarget);
+
+    if (type === 'signup' && formData.get('password') !== formData.get('confirm-password')) {
+      toast.error('Passwords do not match');
+      return;
+    }
+
     const json = (type === 'login' ? getLoginPayload : getSignupPayload)(formData);
 
-    api
-      .post(`/auth/${type}`, {
-        json,
-      })
-      .then(() => api.get('/users/me').json<IUserResponse>())
-      .then((user) => {
-        console.log('user', user);
-        setState((prev) => ({ ...prev, user }));
-      })
+    ky.post(`${API_PREFIX}/auth/${type}`, {
+      json,
+    })
       .then(() => navigate('/analysis'))
       .catch((err) => {
         if (isHTTPError(err)) {

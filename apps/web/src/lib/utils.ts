@@ -1,5 +1,6 @@
 import { type ClassValue, clsx } from 'clsx';
 import ky, { isHTTPError } from 'ky';
+import { toast } from 'sonner';
 import { twMerge } from 'tailwind-merge';
 
 import { HttpStatus } from './constants';
@@ -8,7 +9,7 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-const API_PREFIX = '/api/v1';
+export const API_PREFIX = '/api/v1';
 
 export const api = ky.create({
   prefix: API_PREFIX,
@@ -33,6 +34,10 @@ export const api = ky.create({
             window.location.href = '/login';
             return response;
           }
+        }
+
+        if (response.status === HttpStatus.FORBIDDEN) {
+          toast.warning('You need to verify your email to access this resource');
         }
 
         return response;

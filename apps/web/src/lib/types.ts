@@ -8,6 +8,7 @@ export interface IMainContext {
 }
 
 export interface ICrumb {
-  name: string;
-  path: string;
+  label: string;
+  isLoading?: boolean;
+  pathname: string;
 }

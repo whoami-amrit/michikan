@@ -5,6 +5,6 @@ const schema = z.object({
   resumeId: z.number().nonnegative(),
 });
 
-export type ICreateJobApplicationDto = z.infer<typeof schema>;
+export type ICreateJobDto = z.infer<typeof schema>;
 
 export default schema;

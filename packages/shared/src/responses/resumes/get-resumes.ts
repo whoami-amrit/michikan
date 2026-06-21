@@ -1,5 +1,5 @@
-import { JobApplication, Resume } from 'db';
+import { Job, Resume } from 'db';
 
 export interface IGetResumesResponse extends Omit<Resume, 'json'> {
-  jobApplications: Pick<JobApplication, 'id'>[];
+  jobs: Pick<Job, 'id'>[];
 }

@@ -1,6 +1,6 @@
-import { JobStatus } from 'db';
+import { WorkerStatus } from 'db';
 
-export interface ICreateJobResponse {
-  status: JobStatus;
-  jobId: number;
+export interface ICreateWorkerResponse {
+  status: WorkerStatus;
+  workerId: number;
 }

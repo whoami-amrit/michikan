@@ -1,10 +1,4 @@
 {
-  "extends": "../../tsconfig.base.json",
-  "compilerOptions": {
-    "outDir": "./dist/cjs",
-    "rootDir": "src",
-    "incremental": true
-  },
-  "include": ["src/index.ts"],
-  "exclude": ["node_modules", "dist", "generated"]
+  "files": [],
+  "references": [{ "path": "./tsconfig.esm.json" }, { "path": "./tsconfig.cjs.json" }]
 }

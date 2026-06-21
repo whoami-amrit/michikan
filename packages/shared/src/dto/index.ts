@@ -1,4 +1,4 @@
 export * from './auth';
-export * from './job-applications';
+export * from './jobs';
 export * from './resumes';
 export * from './users';

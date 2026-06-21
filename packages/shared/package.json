@@ -6,8 +6,8 @@
   "types": "dist/cjs/index.d.ts",
   "module": "dist/esm/index.js",
   "scripts": {
-    "build": "tsc -b tsconfig.esm.json tsconfig.json",
-    "dev": "tsc --watch",
+    "build": "tsc -b",
+    "dev": "tsc -b --watch",
     "check:types": "tsc --noEmit",
     "check:cycles": "madge --circular --extensions ts src --exclude \".*/generated/.*\""
   },

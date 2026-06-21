@@ -1,3 +1,3 @@
-export interface IRenderPdfJob {
-  jobId: number;
+export interface IRenderPdfWorker {
+  workerId: number;
 }

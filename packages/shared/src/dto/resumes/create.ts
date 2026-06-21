@@ -1,9 +1,9 @@
 import { z } from 'zod';
 
-import ResumeJsonSchema from '../../types/resume-json';
+import ResumeSchema from '../../types/resume-json';
 
 const schema = z.object({
-  json: ResumeJsonSchema,
+  json: ResumeSchema,
   name: z.string().min(1, 'Resume name is required').max(50),
   description: z.string().max(200).optional(),
 });
