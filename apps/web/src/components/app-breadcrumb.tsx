@@ -1,3 +1,4 @@
+import { Fragment } from 'react/jsx-runtime';
 import { NavLink } from 'react-router';
 
 import type { ICrumb } from '@/lib/types';
@@ -29,12 +30,12 @@ export const AppBreadcrumb = ({ crumbs }: { crumbs: ICrumb[] }) => {
     <Breadcrumb>
       <BreadcrumbList>
         {crumbs.map((crumb, index) => (
-          <>
+          <Fragment key={index}>
             {index !== 0 && <BreadcrumbSeparator />}
-            <BreadcrumbItem key={index}>
-              {<BreadcrumbItemContent crumb={crumb} isLast={index === crumbs.length - 1} />}
+            <BreadcrumbItem>
+              <BreadcrumbItemContent crumb={crumb} isLast={index === crumbs.length - 1} />
             </BreadcrumbItem>
-          </>
+          </Fragment>
         ))}
       </BreadcrumbList>
     </Breadcrumb>

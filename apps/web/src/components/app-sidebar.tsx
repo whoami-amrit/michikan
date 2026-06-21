@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import * as React from 'react';
 
+import MichikanIcon from '@/assets/michikan-icon.svg?react';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
 import {
@@ -57,7 +58,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarMenuItem className="pt-3">
             <SidebarMenuButton onClick={toggleSidebar}>
               {open && (
-                <div className="flex flex-1 text-left shrink-0">
+                <div className="flex flex-1 text-left shrink-0 items-center gap-2">
+                  <MichikanIcon className="size-6" />
                   <span className="font-sm font-bold font-heading">Michikan</span>
                 </div>
               )}
