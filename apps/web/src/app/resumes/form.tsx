@@ -2,7 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Resume } from 'db';
 import { isHTTPError } from 'ky';
 import { SubmitHandler, useForm } from 'react-hook-form';
-import { useLocation, useNavigate, useParams } from 'react-router';
+import { useNavigate } from 'react-router';
 import {
   ICreateResumeDto,
   IProblemDetails,
@@ -11,15 +11,11 @@ import {
   ResumeJsonSchema,
 } from 'shared';
 import { toast } from 'sonner';
-import useSWR from 'swr';
 
-import AppHeader from '@/components/app-header';
 import { ErrorToast } from '@/components/error-toast';
 import { Button } from '@/components/ui/button';
 import { Field, FieldError, FieldGroup, FieldLabel, FieldSeparator } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
-import { Skeleton } from '@/components/ui/skeleton';
-import { useBreadcrumbs } from '@/hooks/use-breadcrumbs';
 import { api } from '@/lib/utils';
 
 type ResumeFormProps =
@@ -34,7 +30,7 @@ type ResumeFormProps =
       data?: never;
     };
 
-function ResumeForm({ type, data, id }: ResumeFormProps) {
+export function ResumeForm({ type, data, id }: ResumeFormProps) {
   const navigate = useNavigate();
   const {
     register,
@@ -103,7 +99,7 @@ function ResumeForm({ type, data, id }: ResumeFormProps) {
             />
             <FieldError errors={[errors.personalInfo?.summary]} />
           </Field>
-          <FieldGroup className="ml-4">
+          <FieldGroup>
             <FieldLabel>Contact Information</FieldLabel>
             <Field>
               <FieldLabel>Email</FieldLabel>
@@ -132,7 +128,7 @@ function ResumeForm({ type, data, id }: ResumeFormProps) {
               />
               <FieldError errors={[errors.personalInfo?.contact?.linkedin]} />
             </Field>
-            <FieldGroup className="ml-4">
+            <FieldGroup>
               <FieldLabel>Portfolio</FieldLabel>
               <Field>
                 <FieldLabel>Url</FieldLabel>
@@ -165,86 +161,4 @@ function ResumeForm({ type, data, id }: ResumeFormProps) {
       </form>
     </div>
   );
-}
-
-function EditResumePage() {
-  const { id } = useParams();
-
-  const { pathname } = useLocation();
-
-  const { data: detail, isLoading } = useSWR<Resume>(pathname, {
-    fetcher: () => api.get(`/resumes/${id}`).json<Resume>(),
-  });
-
-  const crumbs = useBreadcrumbs([
-    {
-      label: 'Resumes',
-    },
-    {
-      label: `Edit ${detail?.name}`,
-      isLoading,
-    },
-  ]);
-
-  return (
-    <div className="flex flex-col w-full">
-      <AppHeader crumbs={crumbs} />
-
-      {isLoading ? (
-        <div className="flex justify-center">
-          <div className="flex flex-col gap-8 max-w-2xl grow">
-            <div className="flex flex-col gap-2 w-full">
-              <Skeleton className="w-1/2 h-4" />
-              <Skeleton className="w-full h-6" />
-            </div>
-            <div className="flex flex-col gap-2 w-full">
-              <Skeleton className="w-1/2 h-4" />
-              <Skeleton className="w-full h-6" />
-            </div>
-            <div className="flex flex-col gap-2 w-full">
-              <Skeleton className="w-1/2 h-4" />
-              <Skeleton className="w-full h-6" />
-            </div>
-            <div className="flex flex-col gap-2 w-full">
-              <Skeleton className="w-1/2 h-4" />
-              <Skeleton className="w-full h-6" />
-            </div>
-            <div className="flex flex-col gap-2 w-full">
-              <Skeleton className="w-1/2 h-4" />
-              <Skeleton className="w-full h-6" />
-            </div>
-          </div>
-        </div>
-      ) : (
-        <ResumeForm type="edit" data={detail?.json as IResumeJson} id={id!} />
-      )}
-    </div>
-  );
-}
-
-function NewResumePage() {
-  const crumbs = useBreadcrumbs([
-    {
-      label: 'Resumes',
-    },
-    {
-      label: `New Resume`,
-    },
-  ]);
-
-  return (
-    <div className="flex flex-col w-full">
-      <AppHeader crumbs={crumbs} />
-
-      <ResumeForm type="new" />
-    </div>
-  );
-}
-
-export default function ResumeDetailPage({
-  type,
-}: {
-  type: React.ComponentProps<typeof ResumeForm>['type'];
-}) {
-  return type === 'new' ? <NewResumePage /> : <EditResumePage />;
 }
