@@ -16,7 +16,7 @@
     "dev:worker": {
       "persistent": true,
       "cache": false,
-      "dependsOn": ["^build"]
+      "dependsOn": ["^build:worker"]
     },
     "build:worker": {
       "dependsOn": ["^build"]

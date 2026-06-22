@@ -1,7 +1,7 @@
 import z from 'zod';
 
-// Contact Information Schema
-const ContactSchema = z.object({
+const PersonalInfoSchema = z.object({
+  name: z.string().min(1, 'Name is required'),
   email: z.email('Invalid email address'),
   github: z.url('Invalid GitHub URL').optional(),
   linkedin: z.url('Invalid LinkedIn URL').optional(),
@@ -17,10 +17,11 @@ const ContactSchema = z.object({
     .optional(),
 });
 
-// Skills organized by category
-const SkillsSchema = z.record(z.string(), z.array(z.string()));
+const SkillEntrySchema = z.object({
+  category: z.string().min(1, 'Category is required'),
+  skills: z.array(z.string()).optional(),
+});
 
-// Experience entry
 const ExperienceEntrySchema = z
   .object({
     title: z.string().min(1, 'Job title is required'),
@@ -53,7 +54,6 @@ const ExperienceEntrySchema = z
     }
   });
 
-// Project/Open Source entry
 const ProjectEntrySchema = z.object({
   title: z.string().min(1, 'Project title is required'),
   description: z.string().optional(),
@@ -62,7 +62,6 @@ const ProjectEntrySchema = z.object({
   technologies: z.array(z.string()).optional(),
 });
 
-// Education entry
 const EducationEntrySchema = z.object({
   institution: z.string().min(1, 'Institution name is required'),
   degree: z.string().min(1, 'Degree is required'),
@@ -70,17 +69,13 @@ const EducationEntrySchema = z.object({
   graduationDate: z.string().refine((date) => !isNaN(Date.parse(date)), 'Invalid graduation date'),
 });
 
-// Complete Resume Schema
 const schema = z.object({
-  personalInfo: z.object({
-    name: z.string().min(1, 'Name is required'),
-    summary: z.string().optional(),
-    contact: ContactSchema,
-  }),
-  skills: SkillsSchema.optional(),
+  personalInfo: PersonalInfoSchema,
+  skills: z.array(SkillEntrySchema).optional(),
   experience: z.array(ExperienceEntrySchema).optional(),
   projects: z.array(ProjectEntrySchema).optional(),
   education: z.array(EducationEntrySchema).optional(),
+  summary: z.string().optional(),
 });
 
 export type IResumeJson = z.infer<typeof schema>;

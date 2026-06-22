@@ -4,7 +4,6 @@ import {
   SearchIcon,
   SidebarCloseIcon,
   SidebarOpenIcon,
-  UserCircle,
 } from 'lucide-react';
 import * as React from 'react';
 
@@ -38,11 +37,6 @@ const data = {
       title: 'Resumes',
       url: '/resumes',
       icon: <FileTextIcon />,
-    },
-    {
-      title: 'User',
-      url: '/user',
-      icon: <UserCircle />,
     },
   ],
 };

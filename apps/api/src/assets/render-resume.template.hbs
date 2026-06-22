@@ -36,7 +36,8 @@ right=0.5in]{geometry}              % specify right page margin
 \vspace{5pt}
 
 % contact information
-\centerline{\href{mailto:{{contact.email}} }{ {{contact.email}} }{{#if contact.portfolio}} | \href{ {{contact.portfolio.url}} }{ {{contact.portfolio.label}} }{{/if}}{{#if contact.github}} | \href{ {{ contact.github }} }{ {{ getPublicProfileUrlLabel contact.github }} }{{/if}}{{#if contact.linkedin}} | \href{ {{contact.linkedin }} }{ {{ getPublicProfileUrlLabel contact.linkedin }} }{{/if}}{{#if contact.phone}} | {{ contact.phone }}{{/if}} }
+\centerline{\href{mailto:{{email}} }{ {{email}} }{{#if portfolio}} | \href{ {{portfolio.url}} }{ {{portfolio.label}} }{{/if}}{{#if github}} | \href{ {{ github }} }{ {{ getPublicProfileUrlLabel github }} }{{/if}}{{#if linkedin}} | \href{ {{linkedin }} }{ {{ getPublicProfileUrlLabel linkedin }} }{{/if}}{{#if phone}} | {{ phone }}{{/if}} }
+{{/with}}
 
 \vspace{-10pt}
 
@@ -44,10 +45,9 @@ right=0.5in]{geometry}              % specify right page margin
 % summary section
 \section*{Summary}
 {{{summary}}}
-{{/if}}
-{{/with}}
-
 \vspace{-18.5pt}
+{{/if}}
+
 
 % skills section
 \section*{Skills}
