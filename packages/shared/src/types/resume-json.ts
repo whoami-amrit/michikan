@@ -85,6 +85,4 @@ const schema = z.object({
 
 export type IResumeJson = z.infer<typeof schema>;
 
-export const ResumeJsonSchema = schema.toJSONSchema({ target: 'draft-07' });
-
 export default schema;

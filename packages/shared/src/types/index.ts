@@ -1,2 +1,2 @@
 export type { IProblemDetails } from './problem-detail';
-export { type IResumeJson, ResumeJsonSchema } from './resume-json';
+export { type IResumeJson, default as ResumeJsonSchema } from './resume-json';
