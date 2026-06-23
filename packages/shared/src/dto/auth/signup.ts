@@ -1,9 +1,12 @@
 import { z } from 'zod';
 
+import { emailSchema, nameSchema } from '../../common.zod';
+import { passwordSchema } from './common';
+
 const schema = z.object({
-  email: z.email('Invalid email address'),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
-  name: z.string().max(255, 'Name must not exceed 255 characters'),
+  email: emailSchema,
+  password: passwordSchema,
+  name: nameSchema,
 });
 
 export type ISignupDto = z.infer<typeof schema>;

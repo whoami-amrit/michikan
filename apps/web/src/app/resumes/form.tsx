@@ -7,13 +7,14 @@ import {
   SubmitHandler,
   useFieldArray,
   useForm,
-  useFormContext,
+  useFormContext as useRHFFormContext,
 } from 'react-hook-form';
 import { useNavigate } from 'react-router';
 import {
   ICreateResumeDto,
   IProblemDetails,
   IResumeJson,
+  IResumeJsonInput,
   IUpdateResumeDto,
   ResumeJsonSchema,
 } from 'shared';
@@ -50,6 +51,8 @@ type ResumeFormProps =
       data?: never;
     };
 
+const useFormContext = () => useRHFFormContext<IResumeJsonInput, unknown, IResumeJson>();
+
 enum TabsEnum {
   PersonalInfo = 'personal-info',
   Skills = 'skills',
@@ -63,7 +66,7 @@ function PersonalInfoTab() {
   const {
     register,
     formState: { errors },
-  } = useFormContext<IResumeJson>();
+  } = useFormContext();
 
   return (
     <FieldGroup>
@@ -152,8 +155,8 @@ function SkillsTab() {
   const {
     register,
     formState: { errors },
-  } = useFormContext<IResumeJson>();
-  const { fields, append, remove } = useFieldArray<IResumeJson, 'skills'>({
+  } = useFormContext();
+  const { fields, append, remove } = useFieldArray<IResumeJsonInput, 'skills'>({
     name: 'skills',
   });
 
@@ -216,8 +219,8 @@ function ExperienceTab() {
   const {
     register,
     formState: { errors },
-  } = useFormContext<IResumeJson>();
-  const { fields, append, remove } = useFieldArray<IResumeJson, 'experience'>({
+  } = useFormContext();
+  const { fields, append, remove } = useFieldArray<IResumeJsonInput, 'experience'>({
     name: 'experience',
   });
 
@@ -236,6 +239,8 @@ function ExperienceTab() {
                 isCurrentRole: false,
                 startDate: '',
                 endDate: '',
+                location: '',
+                description: '',
               })
             }
           >
@@ -314,9 +319,9 @@ function ExperienceTab() {
 
 export function ResumeForm({ type, data, id }: ResumeFormProps) {
   const navigate = useNavigate();
-  const methods = useForm({
+  const methods = useForm<IResumeJsonInput, unknown, IResumeJson>({
     defaultValues: data,
-    mode: 'onSubmit',
+    mode: 'onBlur',
     resolver: zodResolver(ResumeJsonSchema),
   });
   const { handleSubmit } = methods;

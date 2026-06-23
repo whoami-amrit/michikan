@@ -1,7 +1,9 @@
 import { z } from 'zod';
 
+import { nameSchema, zodSafeString } from '../../common.zod';
+
 const schema = z.object({
-  name: z.string().max(255, 'Name must not exceed 255 characters').optional(),
+  name: zodSafeString.pipe(nameSchema.optional()),
   email: z.never('Email cannot be updated'),
 });
 
