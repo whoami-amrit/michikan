@@ -26,17 +26,30 @@ const PersonalInfoSchema = z.object({
       .max(500, 'LinkedIn URL must be less than 500 characters')
       .optional(),
   ),
-  portfolio: z
-    .object({
-      url: z
-        .url('Invalid portfolio URL')
-        .max(500, 'Portfolio URL must be less than 500 characters'),
-      label: z
-        .string()
-        .min(1, 'Label is required')
-        .max(50, 'Label must be less than 50 characters'),
-    })
-    .optional(),
+  portfolio: z.preprocess(
+    (value: Record<string, unknown>) => {
+      if (typeof value !== 'object' || value === null) {
+        return value;
+      }
+
+      if (value.url === '' && value.label === '') {
+        return undefined;
+      }
+
+      return value;
+    },
+    z
+      .object({
+        url: z
+          .url('Invalid portfolio URL')
+          .max(500, 'Portfolio URL must be less than 500 characters'),
+        label: z
+          .string()
+          .min(1, 'Label is required')
+          .max(50, 'Label must be less than 50 characters'),
+      })
+      .optional(),
+  ),
   phone: zodSafeString.pipe(
     z
       .string()

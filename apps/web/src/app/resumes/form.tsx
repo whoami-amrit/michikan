@@ -1,8 +1,9 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Resume } from 'db';
 import { isHTTPError } from 'ky';
-import { Plus, X } from 'lucide-react';
+import { PencilSparklesIcon, PlusIcon, XIcon } from 'lucide-react';
 import {
+  Controller,
   FormProvider,
   SubmitHandler,
   useFieldArray,
@@ -23,6 +24,7 @@ import { toast } from 'sonner';
 import { ErrorToast } from '@/components/error-toast';
 import { Button } from '@/components/ui/button';
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { DatePickerSimple } from '@/components/ui/date-picker';
 import {
   Field,
   FieldDescription,
@@ -34,6 +36,7 @@ import {
   FieldSet,
 } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
+import { MultiSelect } from '@/components/ui/multi-select';
 import { Progress, ProgressLabel, ProgressValue } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
@@ -91,8 +94,6 @@ function PersonalInfoTab() {
             />
             <FieldError errors={[errors.personalInfo?.email]} />
           </Field>
-        </FieldGroup>
-        <FieldGroup className="grid-cols-2 grid gap-4">
           <Field>
             <FieldLabel>Github or Gitlab</FieldLabel>
             <Input
@@ -110,6 +111,15 @@ function PersonalInfoTab() {
               className="bg-background"
             />
             <FieldError errors={[errors.personalInfo?.linkedin]} />
+          </Field>
+          <Field>
+            <FieldLabel>Phone</FieldLabel>
+            <Input
+              {...register('personalInfo.phone')}
+              placeholder="123-456-7890"
+              className="bg-background"
+            />
+            <FieldError errors={[errors.personalInfo?.phone]} />
           </Field>
         </FieldGroup>
       </FieldSet>
@@ -173,7 +183,7 @@ function SkillsTab() {
         </FieldDescription>
         <div className="flex justify-end">
           <Button onClick={() => append({ category: '', skills: [] })}>
-            <Plus />
+            <PlusIcon />
             Add Category
           </Button>
         </div>
@@ -191,7 +201,7 @@ function SkillsTab() {
           <FieldGroup key={field.category} className="flex-row gap-4">
             <Field className="w-50 shrink-0">
               <Input
-                {...register(`skills.${index}.category` as const)}
+                {...register(`skills.${index}.category`)}
                 placeholder="Ex. Frontend"
                 className="bg-background"
               />
@@ -199,14 +209,14 @@ function SkillsTab() {
             </Field>
             <Field className="grow">
               <Input
-                {...register(`skills.${index}.skills` as const)}
+                {...register(`skills.${index}.skills`)}
                 placeholder="Ex. React, TypeScript, Tailwind CSS, Next.js"
                 className="bg-background"
               />
               <FieldError errors={[errors.skills?.[index]?.skills]} />
             </Field>
             <Button className="w-8" variant="destructive" onClick={() => remove(index)}>
-              <X />
+              <XIcon />
             </Button>
           </FieldGroup>
         ))}
@@ -218,6 +228,7 @@ function SkillsTab() {
 function ExperienceTab() {
   const {
     register,
+    control,
     formState: { errors },
   } = useFormContext();
   const { fields, append, remove } = useFieldArray<IResumeJsonInput, 'experience'>({
@@ -244,7 +255,7 @@ function ExperienceTab() {
               })
             }
           >
-            <Plus />
+            <PlusIcon />
             Add Experience
           </Button>
         </div>
@@ -255,7 +266,7 @@ function ExperienceTab() {
                 <Field className="w-64">
                   <FieldLabel>Job Title</FieldLabel>
                   <Input
-                    {...register(`experience.${index}.title` as const)}
+                    {...register(`experience.${index}.title`)}
                     placeholder="Ex. Software Engineer"
                     className="bg-background"
                   />
@@ -264,49 +275,157 @@ function ExperienceTab() {
               </CardTitle>
               <CardAction>
                 <Button variant="destructive" size="icon-sm" onClick={() => remove(index)}>
-                  <X />
+                  <XIcon />
                 </Button>
               </CardAction>
             </CardHeader>
             <CardContent>
-              <FieldGroup className="grid-cols-2 grid gap-4 auto-rows-min">
-                <Field>
-                  <FieldLabel>Company</FieldLabel>
-                  <Input
-                    {...register(`experience.${index}.company` as const)}
-                    placeholder="Ex. Google"
-                    className="bg-background"
-                  />
-                  <FieldError errors={[errors.experience?.[index]?.company]} />
-                </Field>
-                <Field>
-                  <FieldLabel>Location</FieldLabel>
-                  <Input
-                    {...register(`experience.${index}.location` as const)}
-                    placeholder="Ex. San Francisco, CA"
-                    className="bg-background"
-                  />
-                  <FieldError errors={[errors.experience?.[index]?.company]} />
-                </Field>
+              <FieldGroup>
+                <div className="grid grid-cols-2 gap-4">
+                  <Field>
+                    <FieldLabel>Company</FieldLabel>
+                    <Input
+                      {...register(`experience.${index}.company`)}
+                      placeholder="Ex. Google"
+                      className="bg-background"
+                    />
+                    <FieldError errors={[errors.experience?.[index]?.company]} />
+                  </Field>
+                  <Field>
+                    <FieldLabel>Location</FieldLabel>
+                    <Input
+                      {...register(`experience.${index}.location`)}
+                      placeholder="Ex. San Francisco, CA"
+                      className="bg-background"
+                    />
+                    <FieldError errors={[errors.experience?.[index]?.location]} />
+                  </Field>
+                </div>
                 <Field className="col-span-2">
                   <FieldLabel>Highlights</FieldLabel>
-                  <Textarea {...register(`experience.${index}.description` as const)}></Textarea>
+                  <Textarea
+                    {...register(`experience.${index}.highlights`, {
+                      setValueAs: (value: string | string[]) =>
+                        typeof value === 'string'
+                          ? value
+                              ?.split('\n')
+                              .map((line) => line.trim())
+                              .filter((line) => !!line.length)
+                          : [],
+                    })}
+                  ></Textarea>
                 </Field>
+                <div className="flex gap-4">
+                  <Field className="w-44">
+                    <FieldLabel>Start Date</FieldLabel>
+                    <Controller
+                      name={`experience.${index}.startDate`}
+                      control={control}
+                      render={({ field }) => <DatePickerSimple {...field} />}
+                    />
+                    <FieldError errors={[errors.experience?.[index]?.startDate]} />
+                  </Field>
+                  <Field className="w-44">
+                    <FieldLabel>End Date</FieldLabel>
+                    <Controller
+                      name={`experience.${index}.endDate`}
+                      control={control}
+                      render={({ field }) => <DatePickerSimple {...field} />}
+                    />
+                    <FieldError errors={[errors.experience?.[index]?.endDate]} />
+                  </Field>
+                </div>
+              </FieldGroup>
+            </CardContent>
+          </Card>
+        ))}
+      </FieldSet>
+    </FieldGroup>
+  );
+}
+
+function EducationTab() {
+  const {
+    register,
+    control,
+    formState: { errors },
+  } = useFormContext();
+  const { fields, append, remove } = useFieldArray<IResumeJsonInput, 'education'>({
+    name: 'education',
+  });
+
+  return (
+    <FieldGroup>
+      <FieldSet>
+        <FieldLegend>Education</FieldLegend>
+        <FieldDescription>
+          Add details of your educational background. Your most recent and relevant qualifications.
+        </FieldDescription>
+        <div className="flex justify-end">
+          <Button
+            onClick={() =>
+              append({
+                degree: '',
+                field: '',
+                institution: '',
+                graduationDate: '',
+              })
+            }
+          >
+            <PlusIcon />
+            Add Qualification
+          </Button>
+        </div>
+        {fields.map((field, index) => (
+          <Card key={field.degree}>
+            <CardHeader>
+              <CardTitle>
+                <Field className="w-44">
+                  <FieldLabel>Graduation Date</FieldLabel>
+                  <Controller
+                    name={`education.${index}.graduationDate`}
+                    control={control}
+                    render={({ field }) => <DatePickerSimple {...field} />}
+                  />
+                  <FieldError errors={[errors.education?.[index]?.graduationDate]} />
+                </Field>
+              </CardTitle>
+              <CardAction>
+                <Button variant="destructive" size="icon-sm" onClick={() => remove(index)}>
+                  <XIcon />
+                </Button>
+              </CardAction>
+            </CardHeader>
+            <CardContent>
+              <FieldGroup>
+                <div className="grid grid-cols-2 gap-4">
+                  <Field>
+                    <FieldLabel>Degree</FieldLabel>
+                    <Input
+                      {...register(`education.${index}.degree`)}
+                      placeholder="Ex. Bachelor of Science"
+                      className="bg-background"
+                    />
+                    <FieldError errors={[errors.education?.[index]?.degree]} />
+                  </Field>
+                  <Field>
+                    <FieldLabel>Field of Study</FieldLabel>
+                    <Input
+                      {...register(`education.${index}.field`)}
+                      placeholder="Ex. Computer Science"
+                      className="bg-background"
+                    />
+                    <FieldError errors={[errors.education?.[index]?.field]} />
+                  </Field>
+                </div>
                 <Field>
-                  <FieldLabel>Start Date</FieldLabel>
+                  <FieldLabel>Institution</FieldLabel>
                   <Input
-                    {...register(`experience.${index}.startDate` as const)}
+                    {...register(`education.${index}.institution`)}
+                    placeholder="Ex. Stanford University"
                     className="bg-background"
                   />
-                  <FieldError errors={[errors.experience?.[index]?.startDate]} />
-                </Field>
-                <Field>
-                  <FieldLabel>End Date</FieldLabel>
-                  <Input
-                    {...register(`experience.${index}.endDate` as const)}
-                    className="bg-background"
-                  />
-                  <FieldError errors={[errors.experience?.[index]?.endDate]} />
+                  <FieldError errors={[errors.education?.[index]?.institution]} />
                 </Field>
               </FieldGroup>
             </CardContent>
@@ -317,16 +436,172 @@ function ExperienceTab() {
   );
 }
 
+function ProjectsTab() {
+  const {
+    register,
+    control,
+    formState: { errors },
+  } = useFormContext();
+  const { fields, append, remove } = useFieldArray<IResumeJsonInput, 'projects'>({
+    name: 'projects',
+  });
+
+  return (
+    <FieldGroup>
+      <FieldSet>
+        <FieldLegend>Projects</FieldLegend>
+        <FieldDescription>Add your relevant projects.</FieldDescription>
+        <div className="flex justify-end">
+          <Button
+            onClick={() =>
+              append({
+                title: '',
+                description: '',
+                url: '',
+                highlights: [],
+                technologies: [],
+              })
+            }
+          >
+            <PlusIcon />
+            Add Project
+          </Button>
+        </div>
+        {fields.map((field, index) => (
+          <Card key={field.title}>
+            <CardHeader>
+              <CardTitle>
+                <Field className="w-64">
+                  <FieldLabel>Project Title</FieldLabel>
+                  <Input
+                    {...register(`projects.${index}.title`)}
+                    placeholder="Ex. Software Engineer"
+                    className="bg-background"
+                  />
+                  <FieldError errors={[errors.projects?.[index]?.title]} />
+                </Field>
+              </CardTitle>
+              <CardAction>
+                <Button variant="destructive" size="icon-sm" onClick={() => remove(index)}>
+                  <XIcon />
+                </Button>
+              </CardAction>
+            </CardHeader>
+            <CardContent>
+              <FieldGroup className="grid grid-cols-2">
+                <Field className="col-span-2">
+                  <FieldLabel>Description</FieldLabel>
+                  <Input
+                    {...register(`projects.${index}.description`)}
+                    placeholder="Ex. Developed a web application for managing tasks"
+                    className="bg-background"
+                  />
+                  <FieldError errors={[errors.projects?.[index]?.description]} />
+                </Field>
+                <Field className="col-span-2">
+                  <FieldLabel>Highlights</FieldLabel>
+                  <Textarea
+                    {...register(`projects.${index}.highlights`, {
+                      setValueAs: (value: string | string[]) =>
+                        typeof value === 'string'
+                          ? value
+                              ?.split('\n')
+                              .map((line) => line.trim())
+                              .filter((line) => !!line.length)
+                          : [],
+                    })}
+                  ></Textarea>
+                </Field>
+                <Field>
+                  <FieldLabel>Technologies</FieldLabel>
+                  <Controller
+                    name={`projects.${index}.technologies`}
+                    control={control}
+                    render={({ field }) => (
+                      <MultiSelect {...field} items={['React.js', 'Nuxt.js']} />
+                    )}
+                  />
+                </Field>
+                <Field>
+                  <FieldLabel>URL</FieldLabel>
+                  <Input
+                    {...register(`projects.${index}.url`)}
+                    placeholder="Ex. https://github.com/user/project"
+                    className="bg-background"
+                  />
+                  <FieldError errors={[errors.projects?.[index]?.url]} />
+                </Field>
+              </FieldGroup>
+            </CardContent>
+          </Card>
+        ))}
+      </FieldSet>
+    </FieldGroup>
+  );
+}
+
+function SummaryTab() {
+  const {
+    register,
+    formState: { errors },
+  } = useFormContext();
+
+  return (
+    <FieldGroup>
+      <FieldSet>
+        <FieldLegend>Summary</FieldLegend>
+        <FieldDescription>
+          Provide a brief summary of your professional background, skills, and career goals. This
+          section should be concise and highlight your key strengths and achievements. Or you could
+          let our AI assist you in writing a summary as per the details you have provided so far.
+        </FieldDescription>
+
+        <Field>
+          <div className="relative">
+            <Textarea className="min-h-44" {...register('summary')} />
+            <Button className="absolute bottom-2 right-2" variant="secondary" size="icon-lg">
+              {/* TODO!: implement this AI summary feature in the backend */}
+              <PencilSparklesIcon />
+            </Button>
+          </div>
+          <FieldError errors={[errors.summary]} />
+        </Field>
+      </FieldSet>
+    </FieldGroup>
+  );
+}
+
 export function ResumeForm({ type, data, id }: ResumeFormProps) {
   const navigate = useNavigate();
   const methods = useForm<IResumeJsonInput, unknown, IResumeJson>({
-    defaultValues: data,
+    defaultValues:
+      type === 'new'
+        ? {
+            personalInfo: {
+              name: '',
+              email: '',
+              github: '',
+              linkedin: '',
+              portfolio: undefined,
+              phone: '',
+            },
+            skills: [],
+            experience: [],
+            projects: [],
+            education: [],
+            summary: '',
+          }
+        : data,
     mode: 'onBlur',
+    shouldUnregister: true,
     resolver: zodResolver(ResumeJsonSchema),
   });
   const { handleSubmit } = methods;
+  console.log('ResumeForm data:', methods.formState.errors);
 
-  const onSubmit: SubmitHandler<IResumeJson> = async (formData) => {
+  const onSubmit: SubmitHandler<IResumeJson> = async (formData, event) => {
+    event?.preventDefault();
+
     try {
       if (type === 'new') {
         const { id } = await api
@@ -362,7 +637,8 @@ export function ResumeForm({ type, data, id }: ResumeFormProps) {
     <div className="flex justify-center grow">
       <FormProvider {...methods}>
         <form
-          onSubmit={void handleSubmit(onSubmit)}
+          // eslint-disable-next-line @typescript-eslint/no-misused-promises
+          onSubmit={handleSubmit(onSubmit)}
           className="flex flex-col gap-6 max-w-2xl grow px-6 lg:px-0"
         >
           <Tabs className="gap-8 grow" defaultValue={TabsEnum.PersonalInfo}>
@@ -384,21 +660,29 @@ export function ResumeForm({ type, data, id }: ResumeFormProps) {
               <ExperienceTab />
             </TabsContent>
             <TabsContent value={TabsEnum.Education}>
-              <div>Education</div>
+              <EducationTab />
             </TabsContent>
             <TabsContent value={TabsEnum.Projects}>
-              <div>Projects</div>
+              <ProjectsTab />
             </TabsContent>
             <TabsContent value={TabsEnum.Summary}>
-              <div>Summary</div>
+              <SummaryTab />
             </TabsContent>
           </Tabs>
           <div className="flex justify-between self-end sticky bottom-0 bg-background py-4 shadow-lg shadow-black/10 w-full">
+            {
+              // TODO!: implement this feature
+            }
             <Progress value={50} className="w-76 gap-2">
               <ProgressLabel>Progress</ProgressLabel>
               <ProgressValue />
             </Progress>
-            <Button>{type === 'new' ? 'Save' : 'Update'}</Button>
+            <div className="flex gap-2">
+              <Button type="reset" variant="secondary">
+                Reset
+              </Button>
+              <Button type="submit">{type === 'new' ? 'Save' : 'Update'}</Button>
+            </div>
           </div>
         </form>
       </FormProvider>
