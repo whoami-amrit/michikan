@@ -110,6 +110,9 @@ importers:
       db:
         specifier: workspace:*
         version: link:../../packages/database
+      escape-latex:
+        specifier: ^1.2.0
+        version: 1.2.0
       google-auth-library:
         specifier: ^10.6.2
         version: 10.7.0
@@ -165,6 +168,9 @@ importers:
       '@types/cookie-parser':
         specifier: ^1.4.10
         version: 1.4.10(@types/express@5.0.6)
+      '@types/escape-latex':
+        specifier: ^0.1.36
+        version: 0.1.36
       '@types/express':
         specifier: ^5.0.0
         version: 5.0.6
@@ -2101,6 +2107,9 @@ packages:
   '@types/cookiejar@2.1.5':
     resolution: {integrity: sha512-he+DHOWReW0nghN24E1WUqM0efK4kI9oTqDm6XmK8ZPe2djZ90BSNdGnIyCLzCPw7/pogPlGbzI2wHGGmi4O/Q==}
 
+  '@types/escape-latex@0.1.36':
+    resolution: {integrity: sha512-2gWBUcGLG4Vd60UwNyjsBB8ckFToUZWUgaHDe5DW5otgkjh3NG9yQ6VohMG6rknFdVXW7olkFpcDkkbQF+yyug==}
+
   '@types/eslint-scope@3.7.7':
     resolution: {integrity: sha512-MzMFlSLBqNF2gcHWO0G1vP/YQyfvrxZ0bF+u7mzUdZ1/xK4A4sru+nraZz5i3iEIk1l1uyicaDVTB4QbbEkAYg==}
 
@@ -3393,6 +3402,9 @@ packages:
 
   escape-html@1.0.3:
     resolution: {integrity: sha512-NiSupZ4OeuGwr68lGIeym/ksIZMJodUGOSCZ/FSnTxcrekbvqrgdUxlJOMpijaKZVjAJrWrGs/6Jy8OMuyj9ow==}
+
+  escape-latex@1.2.0:
+    resolution: {integrity: sha512-nV5aVWW1K0wEiUIEdZ4erkGGH8mDxGyxSeqPzRNtWP7ataw+/olFObw7hujFWlVjNsaDFw5VZ5NzVSIqRgfTiw==}
 
   escape-string-regexp@2.0.0:
     resolution: {integrity: sha512-UpzcLCXolUWcNu5HtVMHYdXJjArjsF9C0aNnquZYY4uW/Vu0miy5YoWvbV345HauVvcAUnpRuhMMcqTcGOY2+w==}
@@ -8518,6 +8530,8 @@ snapshots:
 
   '@types/cookiejar@2.1.5': {}
 
+  '@types/escape-latex@0.1.36': {}
+
   '@types/eslint-scope@3.7.7':
     dependencies:
       '@types/eslint': 9.6.1
@@ -9909,6 +9923,8 @@ snapshots:
   escalade@3.2.0: {}
 
   escape-html@1.0.3: {}
+
+  escape-latex@1.2.0: {}
 
   escape-string-regexp@2.0.0: {}
 

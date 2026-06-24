@@ -31,12 +31,12 @@ right=0.5in]{geometry}              % specify right page margin
 
 {{#with personalInfo}}
 % name
-\centerline{\Huge {{name}} }
+\centerline{\Huge {{escape name}} }
 
 \vspace{5pt}
 
 % contact information
-\centerline{\href{mailto:{{email}} }{ {{email}} }{{#if portfolio}} | \href{ {{portfolio.url}} }{ {{portfolio.label}} }{{/if}}{{#if github}} | \href{ {{ github }} }{ {{ getPublicProfileUrlLabel github }} }{{/if}}{{#if linkedin}} | \href{ {{linkedin }} }{ {{ getPublicProfileUrlLabel linkedin }} }{{/if}}{{#if phone}} | {{ phone }}{{/if}} }
+\centerline{\href{mailto:{{escape email}} }{ {{escape email}} }{{#if portfolio}} | \href{ {{escape portfolio.url}} }{ {{ escape portfolio.label}} }{{/if}}{{#if github}} | \href{ {{ escape github }} }{ {{ escape (getPublicProfileUrlLabel github) }} }{{/if}}{{#if linkedin}} | \href{ {{escape linkedin }} }{ {{ escape (getPublicProfileUrlLabel linkedin) }} }{{/if}}{{#if phone}} | {{ escape phone }}{{/if}} }
 {{/with}}
 
 \vspace{-10pt}
@@ -44,7 +44,7 @@ right=0.5in]{geometry}              % specify right page margin
 {{#if summary}}
 % summary section
 \section*{Summary}
-{{{summary}}}
+{{{escape summary}}}
 \vspace{-18.5pt}
 {{/if}}
 
@@ -52,7 +52,7 @@ right=0.5in]{geometry}              % specify right page margin
 % skills section
 \section*{Skills}
 {{#each skills}}
-\textbf{ {{@key}} }: {{commaJoin this}} \\
+\textbf{ {{escape @key}} }: {{escape (commaJoin this)}} \\
 {{/each}}
 
 \vspace{-18.5pt}
@@ -60,11 +60,11 @@ right=0.5in]{geometry}              % specify right page margin
 % experience section
 \section*{Experience}
 {{#each experience}}
-\textbf{ {{this.title}}, } { {{this.company}} } -- {{ this.location }} \hfill {{formatDate this.startDate }} -- {{#if this.endDate}}{{formatDate this.endDate }}{{else}}Present{{/if}} \\
+\textbf{ {{ escape this.title}}, } { {{ escape this.company}} } -- {{ escape this.location }} \hfill {{ escape (formatDate this.startDate) }} -- {{#if this.endDate}}{{ escape (formatDate this.endDate) }}{{else}}Present{{/if}} \\
 \vspace{-9pt}
 \begin{itemize}
   {{#each this.highlights}}
-  \item {{this}}
+  \item {{escape this}}
   {{/each}}
 \end{itemize}
 {{/each}}
@@ -74,17 +74,17 @@ right=0.5in]{geometry}              % specify right page margin
 % projects section
 \section*{Projects}
 {{#each projects}}
-\textbf{ {{this.title}} } {{#if this.url}}\hfill \href{ {{this.url}} }{ {{this.url}} }{{/if}} \\
+\textbf{ {{escape this.title}} } {{#if this.url}}\hfill \href{ {{ escape this.url}} }{ {{ escape this.url}} }{{/if}} \\
 {{#if this.description}}
-{{this.description}} \\
+{{escape this.description}} \\
 \vspace{-9pt}
 {{/if}}
 {{#if this.technologies}}
-\textbf{Technologies:} {{commaJoin this.technologies}} \\
+\textbf{Technologies:} {{escape (commaJoin this.technologies)}} \\
 {{/if}}
 \begin{itemize}
   {{#each this.highlights}}
-  \item {{this}}
+  \item {{escape this}}
   {{/each}}
 \end{itemize}
 {{/each}}
@@ -94,7 +94,7 @@ right=0.5in]{geometry}              % specify right page margin
 % education section
 \section*{Education}
 {{#each education}}
-\textbf{ {{this.institution}} } -- {{this.degree}} in {{this.field}} \hfill {{formatDate this.graduationDate}} \\
+\textbf{ {{escape this.institution}} } -- {{escape this.degree}} in {{escape this.field}} \hfill {{escape (formatDate this.graduationDate)}} \\
 {{/each}}
 
 \end{document}

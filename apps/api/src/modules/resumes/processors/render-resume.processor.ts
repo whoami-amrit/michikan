@@ -5,6 +5,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Job, UnrecoverableError } from 'bullmq';
 import { spawn } from 'child_process';
 import { Prisma } from 'db';
+import escapeLatex from 'escape-latex';
 import { mkdirSync, readFileSync } from 'fs';
 import * as fs from 'fs/promises';
 import type { TemplateDelegate } from 'handlebars';
@@ -89,6 +90,10 @@ export class RenderResumeProcessor extends WorkerHost {
 
       return hostname.replace('www.', '');
     });
+
+    HandleBars.registerHelper('escape', (text: string) =>
+      escapeLatex(text, { preserveFormatting: false }),
+    );
   }
 
   async process({ name, data }: Job<IRenderPdfWorker>) {
