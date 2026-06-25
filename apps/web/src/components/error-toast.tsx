@@ -7,7 +7,7 @@ export const ErrorToast = ({ problem }: { problem: IProblemDetails }) => {
 
       <div className="flex-col gap-2">
         {Array.isArray(problem.detail)
-          ? problem.detail.map((detail, key) => <li key={key}>{detail}</li>)
+          ? problem.detail.map((detail, key) => <p key={key}>{detail}</p>)
           : problem.detail}
       </div>
     </div>

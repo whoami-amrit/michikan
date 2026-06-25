@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { ComponentProps, Fragment } from 'react';
 
 import {
   Combobox,
@@ -14,36 +14,32 @@ import {
 } from '@/components/ui/combobox';
 
 function MultiSelect({
-  items,
-  defaultValue,
   onChange,
+  ...props
 }: {
-  items: string[];
-  defaultValue?: string[];
   onChange: (value: string[]) => void;
-}) {
+} & ComponentProps<typeof Combobox<string, true>>) {
   const anchor = useComboboxAnchor();
 
   return (
     <Combobox<string, true>
+      {...props}
       multiple
       autoHighlight
-      items={items}
-      defaultValue={defaultValue}
       onValueChange={(values, event) => {
         console.log('values', values, 'event', event);
         onChange(values);
       }}
     >
-      <ComboboxChips ref={anchor} className="w-full max-w-xs">
+      <ComboboxChips ref={anchor} className="w-full">
         <ComboboxValue>
           {(values: string[]) => (
-            <React.Fragment>
+            <Fragment>
               {values.map((value: string) => (
                 <ComboboxChip key={value}>{value}</ComboboxChip>
               ))}
               <ComboboxChipsInput />
-            </React.Fragment>
+            </Fragment>
           )}
         </ComboboxValue>
       </ComboboxChips>

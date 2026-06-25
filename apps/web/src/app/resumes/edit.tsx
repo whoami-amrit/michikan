@@ -33,7 +33,7 @@ export function EditResumePage() {
     <div className="flex flex-col w-full">
       <AppHeader crumbs={crumbs} />
 
-      {isLoading ? (
+      {isLoading || detail === undefined ? (
         <div className="flex justify-center">
           <div className="flex flex-col gap-8 max-w-2xl grow">
             <div className="flex flex-col gap-2 w-full">
@@ -59,7 +59,15 @@ export function EditResumePage() {
           </div>
         </div>
       ) : (
-        <ResumeForm type="edit" data={detail?.json as IResumeJson} id={id!} />
+        <ResumeForm
+          type="edit"
+          data={{
+            json: detail.json as IResumeJson,
+            name: detail.name,
+            description: detail.description ?? undefined,
+          }}
+          id={id!}
+        />
       )}
     </div>
   );

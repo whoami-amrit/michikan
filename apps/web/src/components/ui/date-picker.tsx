@@ -5,13 +5,15 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 function DatePickerSimple({
+  value,
   onChange,
 }: {
+  value?: Date;
   label?: string;
-  onChange?: (date: Date | undefined) => void;
+  onChange?: (date: string | undefined) => void;
 }) {
   const [open, setOpen] = React.useState(false);
-  const [date, setDate] = React.useState<Date | undefined>(undefined);
+  const [date, setDate] = React.useState<Date | undefined>(value);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -31,7 +33,7 @@ function DatePickerSimple({
           onSelect={(date) => {
             setDate(date);
             setOpen(false);
-            onChange?.(date);
+            onChange?.(date?.toISOString());
           }}
         />
       </PopoverContent>

@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Resume } from 'db';
 import { isHTTPError } from 'ky';
-import { PencilSparklesIcon, PlusIcon, XIcon } from 'lucide-react';
+import { AlertCircle, PencilSparklesIcon, PlusIcon, XIcon } from 'lucide-react';
 import {
   Controller,
   FormProvider,
@@ -12,12 +12,12 @@ import {
 } from 'react-hook-form';
 import { useNavigate } from 'react-router';
 import {
+  CreateResumeSchema,
   ICreateResumeDto,
+  ICreateResumeDtoInput,
   IProblemDetails,
   IResumeJson,
   IResumeJsonInput,
-  IUpdateResumeDto,
-  ResumeJsonSchema,
 } from 'shared';
 import { toast } from 'sonner';
 
@@ -46,7 +46,7 @@ type ResumeFormProps =
   | {
       type: 'edit';
       id: string;
-      data: IResumeJson;
+      data: ICreateResumeDto;
     }
   | {
       type: 'new';
@@ -56,14 +56,23 @@ type ResumeFormProps =
 
 const useFormContext = () => useRHFFormContext<IResumeJsonInput, unknown, IResumeJson>();
 
-enum TabsEnum {
-  PersonalInfo = 'personal-info',
-  Skills = 'skills',
-  Experience = 'experience',
-  Education = 'education',
-  Projects = 'projects',
-  Summary = 'summary',
-}
+const TabKeys: Record<string, keyof IResumeJsonInput> = {
+  PersonalInfo: 'personalInfo',
+  Skills: 'skills',
+  Experience: 'experience',
+  Education: 'education',
+  Projects: 'projects',
+  Summary: 'summary',
+};
+
+const tabs = [
+  [TabKeys.PersonalInfo, 'Personal Info'],
+  [TabKeys.Skills, 'Skills'],
+  [TabKeys.Experience, 'Experience'],
+  [TabKeys.Education, 'Education'],
+  [TabKeys.Projects, 'Projects'],
+  [TabKeys.Summary, 'Summary'],
+] as const;
 
 function PersonalInfoTab() {
   const {
@@ -164,6 +173,7 @@ function PersonalInfoTab() {
 function SkillsTab() {
   const {
     register,
+    control,
     formState: { errors },
   } = useFormContext();
   const { fields, append, remove } = useFieldArray<IResumeJsonInput, 'skills'>({
@@ -208,10 +218,10 @@ function SkillsTab() {
               <FieldError errors={[errors.skills?.[index]?.category]} />
             </Field>
             <Field className="grow">
-              <Input
-                {...register(`skills.${index}.skills`)}
-                placeholder="Ex. React, TypeScript, Tailwind CSS, Next.js"
-                className="bg-background"
+              <Controller
+                name={`skills.${index}.skills`}
+                control={control}
+                render={({ field }) => <MultiSelect {...field} items={['React.js', 'Nuxt.js']} />}
               />
               <FieldError errors={[errors.skills?.[index]?.skills]} />
             </Field>
@@ -301,19 +311,29 @@ function ExperienceTab() {
                     <FieldError errors={[errors.experience?.[index]?.location]} />
                   </Field>
                 </div>
+                <Field>
+                  <FieldLabel>Description</FieldLabel>
+                  <Input
+                    {...register(`experience.${index}.description`)}
+                    placeholder="Ex. Worked as a software engineer on the frontend team, building user interfaces for web applications."
+                    className="bg-background"
+                  />
+                  <FieldError errors={[errors.experience?.[index]?.description]} />
+                </Field>
                 <Field className="col-span-2">
                   <FieldLabel>Highlights</FieldLabel>
-                  <Textarea
-                    {...register(`experience.${index}.highlights`, {
-                      setValueAs: (value: string | string[]) =>
-                        typeof value === 'string'
-                          ? value
-                              ?.split('\n')
-                              .map((line) => line.trim())
-                              .filter((line) => !!line.length)
-                          : [],
-                    })}
-                  ></Textarea>
+                  <Controller
+                    name={`experience.${index}.highlights`}
+                    control={control}
+                    render={({ field }) => (
+                      <Textarea
+                        className="max-h-44"
+                        {...field}
+                        value={field.value?.join?.('\n')}
+                        onChange={(e) => field.onChange(e.target.value.split('\n'))}
+                      />
+                    )}
+                  />
                 </Field>
                 <div className="flex gap-4">
                   <Field className="w-44">
@@ -321,7 +341,16 @@ function ExperienceTab() {
                     <Controller
                       name={`experience.${index}.startDate`}
                       control={control}
-                      render={({ field }) => <DatePickerSimple {...field} />}
+                      render={({ field }) => (
+                        <DatePickerSimple
+                          {...field}
+                          value={
+                            field.value && typeof field.value === 'string'
+                              ? new Date(field.value)
+                              : undefined
+                          }
+                        />
+                      )}
                     />
                     <FieldError errors={[errors.experience?.[index]?.startDate]} />
                   </Field>
@@ -330,7 +359,16 @@ function ExperienceTab() {
                     <Controller
                       name={`experience.${index}.endDate`}
                       control={control}
-                      render={({ field }) => <DatePickerSimple {...field} />}
+                      render={({ field }) => (
+                        <DatePickerSimple
+                          {...field}
+                          value={
+                            field.value && typeof field.value === 'string'
+                              ? new Date(field.value)
+                              : undefined
+                          }
+                        />
+                      )}
                     />
                     <FieldError errors={[errors.experience?.[index]?.endDate]} />
                   </Field>
@@ -385,7 +423,16 @@ function EducationTab() {
                   <Controller
                     name={`education.${index}.graduationDate`}
                     control={control}
-                    render={({ field }) => <DatePickerSimple {...field} />}
+                    render={({ field }) => (
+                      <DatePickerSimple
+                        {...field}
+                        value={
+                          field.value && typeof field.value === 'string'
+                            ? new Date(field.value)
+                            : undefined
+                        }
+                      />
+                    )}
                   />
                   <FieldError errors={[errors.education?.[index]?.graduationDate]} />
                 </Field>
@@ -500,17 +547,18 @@ function ProjectsTab() {
                 </Field>
                 <Field className="col-span-2">
                   <FieldLabel>Highlights</FieldLabel>
-                  <Textarea
-                    {...register(`projects.${index}.highlights`, {
-                      setValueAs: (value: string | string[]) =>
-                        typeof value === 'string'
-                          ? value
-                              ?.split('\n')
-                              .map((line) => line.trim())
-                              .filter((line) => !!line.length)
-                          : [],
-                    })}
-                  ></Textarea>
+                  <Controller
+                    name={`projects.${index}.highlights`}
+                    control={control}
+                    render={({ field }) => (
+                      <Textarea
+                        className="max-h-44"
+                        {...field}
+                        value={field.value?.join?.('\n')}
+                        onChange={(e) => field.onChange(e.target.value.split('\n'))}
+                      />
+                    )}
+                  />
                 </Field>
                 <Field>
                   <FieldLabel>Technologies</FieldLabel>
@@ -558,7 +606,7 @@ function SummaryTab() {
 
         <Field>
           <div className="relative">
-            <Textarea className="min-h-44" {...register('summary')} />
+            <Textarea className="min-h-44 max-h-64" {...register('summary')} />
             <Button className="absolute bottom-2 right-2" variant="secondary" size="icon-lg">
               {/* TODO!: implement this AI summary feature in the backend */}
               <PencilSparklesIcon />
@@ -573,44 +621,44 @@ function SummaryTab() {
 
 export function ResumeForm({ type, data, id }: ResumeFormProps) {
   const navigate = useNavigate();
-  const methods = useForm<IResumeJsonInput, unknown, IResumeJson>({
+  const methods = useForm<ICreateResumeDtoInput, unknown, ICreateResumeDto>({
     defaultValues:
       type === 'new'
         ? {
-            personalInfo: {
-              name: '',
-              email: '',
-              github: '',
-              linkedin: '',
-              portfolio: undefined,
-              phone: '',
+            name: '',
+            description: '',
+            json: {
+              personalInfo: {
+                name: '',
+                email: '',
+                github: '',
+                linkedin: '',
+                phone: '',
+              },
+              skills: [],
+              experience: [],
+              projects: [],
+              education: [],
+              summary: '',
             },
-            skills: [],
-            experience: [],
-            projects: [],
-            education: [],
-            summary: '',
           }
         : data,
     mode: 'onBlur',
-    shouldUnregister: true,
-    resolver: zodResolver(ResumeJsonSchema),
+    resolver: zodResolver(CreateResumeSchema),
   });
-  const { handleSubmit } = methods;
-  console.log('ResumeForm data:', methods.formState.errors);
+  const {
+    handleSubmit,
+    formState: { errors },
+  } = methods;
 
-  const onSubmit: SubmitHandler<IResumeJson> = async (formData, event) => {
+  const onSubmit: SubmitHandler<ICreateResumeDto> = async (formData, event) => {
     event?.preventDefault();
 
     try {
       if (type === 'new') {
         const { id } = await api
           .post('/resumes', {
-            json: {
-              json: formData,
-              name: 'test',
-              description: 'Test resume',
-            } satisfies ICreateResumeDto,
+            json: formData,
           })
           .json<Resume>();
 
@@ -619,9 +667,7 @@ export function ResumeForm({ type, data, id }: ResumeFormProps) {
       }
 
       await api.patch(`/resumes/${id}`, {
-        json: {
-          json: formData,
-        } satisfies IUpdateResumeDto,
+        json: formData,
       });
     } catch (error) {
       if (isHTTPError(error)) {
@@ -641,31 +687,41 @@ export function ResumeForm({ type, data, id }: ResumeFormProps) {
           onSubmit={handleSubmit(onSubmit)}
           className="flex flex-col gap-6 max-w-2xl grow px-6 lg:px-0"
         >
-          <Tabs className="gap-8 grow" defaultValue={TabsEnum.PersonalInfo}>
+          <FieldGroup className="grid-cols-3 grid gap-4">
+            <Field>
+              <FieldLabel>Name</FieldLabel>
+              <Input {...methods.register('name')} placeholder="Enter resume name" />
+            </Field>
+            <Field className="col-span-2">
+              <FieldLabel>Description</FieldLabel>
+              <Input {...methods.register('description')} placeholder="Enter resume description" />
+            </Field>
+          </FieldGroup>
+          <Tabs className="gap-8 grow" defaultValue={TabKeys.PersonalInfo}>
             <TabsList variant={'line'}>
-              <TabsTrigger value={TabsEnum.PersonalInfo}>Personal Info</TabsTrigger>
-              <TabsTrigger value={TabsEnum.Skills}>Skills</TabsTrigger>
-              <TabsTrigger value={TabsEnum.Experience}>Experience</TabsTrigger>
-              <TabsTrigger value={TabsEnum.Education}>Education</TabsTrigger>
-              <TabsTrigger value={TabsEnum.Projects}>Projects</TabsTrigger>
-              <TabsTrigger value={TabsEnum.Summary}>Summary</TabsTrigger>
+              {tabs.map(([tabKey, tabLabel]) => (
+                <TabsTrigger key={tabKey} value={tabKey}>
+                  {errors.json?.[tabKey] && <AlertCircle className="text-red-400" />}
+                  {tabLabel}
+                </TabsTrigger>
+              ))}
             </TabsList>
-            <TabsContent value={TabsEnum.PersonalInfo}>
+            <TabsContent value={TabKeys.PersonalInfo}>
               <PersonalInfoTab />
             </TabsContent>
-            <TabsContent value={TabsEnum.Skills}>
+            <TabsContent value={TabKeys.Skills}>
               <SkillsTab />
             </TabsContent>
-            <TabsContent value={TabsEnum.Experience}>
+            <TabsContent value={TabKeys.Experience}>
               <ExperienceTab />
             </TabsContent>
-            <TabsContent value={TabsEnum.Education}>
+            <TabsContent value={TabKeys.Education}>
               <EducationTab />
             </TabsContent>
-            <TabsContent value={TabsEnum.Projects}>
+            <TabsContent value={TabKeys.Projects}>
               <ProjectsTab />
             </TabsContent>
-            <TabsContent value={TabsEnum.Summary}>
+            <TabsContent value={TabKeys.Summary}>
               <SummaryTab />
             </TabsContent>
           </Tabs>

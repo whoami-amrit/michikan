@@ -1,12 +1,25 @@
 import z from 'zod';
 
-export const zodSafeString = z
+export const resourceNameSchema = z
   .string()
-  .trim()
-  .transform((value) => (value === '' ? undefined : value));
+  .min(1, 'Resume name is required')
+  .max(50, 'Resume name must be less than 50 characters');
+export const resourceDescriptionSchema = z
+  .string()
+  .max(200, 'Description must be less than 200 characters')
+  .optional();
+
+export const zodSafeString = z.preprocess((value) => {
+  if (typeof value === 'string' && value.trim() === '') {
+    return undefined;
+  }
+
+  return value;
+}, z.string().trim().optional());
 
 export const nameSchema = z
   .string()
+  .trim()
   .min(1, 'Name is required')
   .max(255, 'Name must be less than 255 characters');
 
@@ -45,6 +58,7 @@ const PersonalInfoSchema = z.object({
           .max(500, 'Portfolio URL must be less than 500 characters'),
         label: z
           .string()
+          .trim()
           .min(1, 'Label is required')
           .max(50, 'Label must be less than 50 characters'),
       })
@@ -62,12 +76,14 @@ const PersonalInfoSchema = z.object({
 const SkillEntrySchema = z.object({
   category: z
     .string()
+    .trim()
     .min(1, 'Category is required')
     .max(50, 'Category must be less than 50 characters'),
   skills: z
     .array(
       z
         .string()
+        .trim()
         .min(1, 'At least one skill is required')
         .max(100, 'Skill must be less than 100 characters'),
     )
@@ -78,16 +94,21 @@ const ExperienceEntrySchema = z
   .object({
     title: z
       .string()
+      .trim()
       .min(3, 'Job title is required')
       .max(100, 'Job title must be less than 100 characters'),
     company: z
       .string()
+      .trim()
       .min(1, 'Company name is required')
       .max(100, 'Company name must be less than 100 characters'),
     location: zodSafeString.pipe(
       z.string().max(100, 'Location must be less than 100 characters').optional(),
     ),
-    startDate: z.string().refine((date) => !isNaN(Date.parse(date)), 'Invalid start date'),
+    startDate: z
+      .string()
+      .trim()
+      .refine((date) => !isNaN(Date.parse(date)), 'Invalid start date'),
     endDate: zodSafeString.pipe(
       z
         .string()
@@ -99,7 +120,7 @@ const ExperienceEntrySchema = z
       z.string().max(1000, 'Description must be less than 1000 characters').optional(),
     ),
     highlights: z
-      .array(z.string().max(500, 'Highlight must be less than 500 characters'))
+      .array(z.string().trim().max(500, 'Highlight must be less than 500 characters'))
       .min(1, 'At least one highlight is required')
       .max(10, 'Maximum 10 highlights per experience'),
   })
@@ -124,6 +145,7 @@ const ExperienceEntrySchema = z
 const ProjectEntrySchema = z.object({
   title: z
     .string()
+    .trim()
     .min(1, 'Project title is required')
     .max(100, 'Project title must be less than 100 characters'),
   description: zodSafeString.pipe(
@@ -136,22 +158,30 @@ const ProjectEntrySchema = z.object({
       .optional(),
   ),
   highlights: z
-    .array(z.string().max(500, 'Highlight must be less than 500 characters'))
+    .array(z.string().trim().max(500, 'Highlight must be less than 500 characters'))
     .min(1, 'At least one highlight is required')
     .max(10, 'Maximum 10 highlights per project'),
   technologies: z
-    .array(z.string().max(50, 'Technology name must be less than 50 characters'))
+    .array(z.string().trim().max(50, 'Technology name must be less than 50 characters'))
     .max(15, 'Maximum 15 technologies per project'),
 });
 
 const EducationEntrySchema = z.object({
   institution: z
     .string()
+    .trim()
     .min(1, 'Institution name is required')
     .max(100, 'Institution name must be less than 100 characters'),
-  degree: z.string().min(1, 'Degree is required').max(50, 'Degree must be less than 50 characters'),
+  degree: z
+    .string()
+    .trim()
+    .min(1, 'Degree is required')
+    .max(50, 'Degree must be less than 50 characters'),
   field: zodSafeString.pipe(z.string().max(50, 'Field must be less than 50 characters').optional()),
-  graduationDate: z.string().refine((date) => !isNaN(Date.parse(date)), 'Invalid graduation date'),
+  graduationDate: z
+    .string()
+    .trim()
+    .refine((date) => !isNaN(Date.parse(date)), 'Invalid graduation date'),
 });
 
 const schema = z.object({

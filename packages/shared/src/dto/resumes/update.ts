@@ -1,8 +1,9 @@
 import { z } from 'zod';
 
-import { ResumeJsonSchema } from '../../common.zod';
+import { resourceDescriptionSchema, ResumeJsonSchema } from '../../common.zod';
 
 const schema = z.object({
+  description: resourceDescriptionSchema,
   json: ResumeJsonSchema,
 });
 
