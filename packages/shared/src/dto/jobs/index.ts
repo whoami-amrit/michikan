@@ -1,2 +1,2 @@
-export { default as CreateJobSchema, type ICreateJobDto } from './create';
-export { type IUpdateJobStatusDto, default as UpdateJobStatusSchema } from './update-status';
+export { default as CreateJobSchema, type ICreateJobDto, type ICreateJobDtoInput } from './create';
+export { type IUpdateJobDto, type IUpdateJobDtoInput, default as UpdateJobSchema } from './update';

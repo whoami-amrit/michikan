@@ -1,7 +1,8 @@
 import { CircleAlert, RotateCwIcon } from 'lucide-react';
-import { ErrorBoundary } from 'react-error-boundary';
+import { ErrorBoundary, getErrorMessage } from 'react-error-boundary';
 import { BrowserRouter, Route, Routes } from 'react-router';
 import { Toaster } from 'sonner';
+import { useSWRConfig } from 'swr';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -18,28 +19,43 @@ import { UserContextProvider } from '@/lib/contexts/user/provider';
 
 import AnalysisPage from './analysis';
 import { AuthFormPage, VerifyEmailPage } from './auth';
-import NewJobPage from './jobs/detail';
+import { EditJobPage } from './jobs/edit';
 import JobsPage from './jobs/list';
+import { NewJobPage } from './jobs/new';
 import Layout from './layout';
 import { EditResumePage } from './resumes/edit';
 import ResumesPage from './resumes/list';
 import { NewResumePage } from './resumes/new';
 
 function App() {
+  const { mutate } = useSWRConfig();
+
   return (
     <main>
+      <Toaster />
       <ErrorBoundary
-        fallbackRender={({ resetErrorBoundary }) => (
+        fallbackRender={({ resetErrorBoundary, error }) => (
           <Empty className="h-screen">
             <EmptyHeader>
               <EmptyMedia variant="icon">
                 <CircleAlert />
               </EmptyMedia>
               <EmptyTitle>Something went wrong :/</EmptyTitle>
-              <EmptyDescription>Rest assured we are working on fixing this.</EmptyDescription>
+              <EmptyDescription>
+                {getErrorMessage(error)}
+                <br />
+                Rest assured we are working on fixing this.
+              </EmptyDescription>
             </EmptyHeader>
             <EmptyContent>
-              <Button onClick={resetErrorBoundary} variant="outline" size="sm">
+              <Button
+                onClick={() => {
+                  resetErrorBoundary();
+                  void mutate(() => true, undefined, { revalidate: false });
+                }}
+                variant="outline"
+                size="sm"
+              >
                 <RotateCwIcon />
                 Retry
               </Button>
@@ -47,7 +63,6 @@ function App() {
           </Empty>
         )}
       >
-        <Toaster />
         <MainContextProvider>
           <TooltipProvider>
             <BrowserRouter>
@@ -67,6 +82,7 @@ function App() {
                   <Route path="jobs">
                     <Route index element={<JobsPage />} />
                     <Route path="new" element={<NewJobPage />} />
+                    <Route path=":id" element={<EditJobPage />} />
                   </Route>
                   <Route path="analysis" element={<AnalysisPage />} />
                   <Route path="resumes">

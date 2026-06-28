@@ -1,12 +1,12 @@
-import { JD_ANALYSIS_QUEUE_NAME, JD_ANALYZER_JOB_NAME } from '@common/constants';
+import { JD_ANALYSIS_QUEUE_NAME } from '@common/constants';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Injectable, Logger } from '@nestjs/common';
 import { Queue } from 'bullmq';
-import { Job, User } from 'db';
-import { ICreateJobDto, ICreateWorkerResponse, IUpdateJobStatusDto } from 'shared';
+import { Job, User, WorkerStatus } from 'db';
+import { ICreateJobDto, IUpdateJobDto } from 'shared';
 import { PrismaService } from 'src/infra/database/prisma.service';
 
-import { IJdAnalysisWorker } from './types';
+import { IJdAnalysis } from './types';
 
 @Injectable()
 export class JobsService {
@@ -14,64 +14,62 @@ export class JobsService {
 
   constructor(
     private readonly prismaService: PrismaService,
-    @InjectQueue(JD_ANALYSIS_QUEUE_NAME) private readonly analysisQueue: Queue<IJdAnalysisWorker>,
+    @InjectQueue(JD_ANALYSIS_QUEUE_NAME) private readonly analysisQueue: Queue<IJdAnalysis>,
   ) {}
 
-  async create(body: ICreateJobDto, userId: User['id']): Promise<ICreateWorkerResponse> {
-    const response = await this.prismaService.$transaction(async (prisma) => {
-      const {
-        id,
-        analysisWorkers: [worker],
-      } = await prisma.job.create({
-        data: {
-          jobDescription: body.jobDescription,
-          resume: {
-            connect: {
-              id: body.resumeId,
-            },
-          },
-          user: {
-            connect: {
-              id: userId,
-            },
-          },
-          analysisWorkers: {
-            create: {},
+  async create(body: ICreateJobDto, userId: User['id']): Promise<Job> {
+    const job = await this.prismaService.job.create({
+      data: {
+        company: body.company,
+        title: body.title,
+        jobDescription: body.jobDescription,
+        applicationUrl: body.applicationUrl,
+        status: body.status,
+        ...(body.shouldAnalyzeOptions.should
+          ? {
+              analyses: {
+                create: {
+                  status: WorkerStatus.PENDING,
+                  resume: {
+                    connect: {
+                      id: body.shouldAnalyzeOptions.resumeId!,
+                    },
+                  },
+                  user: {
+                    connect: {
+                      id: userId,
+                    },
+                  },
+                },
+              },
+            }
+          : {}),
+        user: {
+          connect: {
+            id: userId,
           },
         },
-        include: {
-          analysisWorkers: true,
+      },
+      include: {
+        analyses: {
+          select: {
+            id: true,
+            status: true,
+          },
         },
-      });
-
-      this.logger.debug(
-        `Created job with ID ${id} and analysis job ID ${worker.id} for user ${userId}`,
-      );
-
-      await this.analysisQueue.add(JD_ANALYZER_JOB_NAME, {
-        analysisWorkerId: worker.id,
-      });
-
-      this.logger.debug(`Added analysis job with ID ${worker.id} to queue for job ID ${id}`);
-
-      return {
-        workerId: worker.id,
-        status: worker.status,
-      };
+      },
     });
 
-    this.logger.log(
-      `User ${userId} created unsaved job with analysis worker ID ${response.workerId}`,
-    );
+    if (body.shouldAnalyzeOptions.should) {
+      this.logger.debug(`Job ${job.id} created with analysis, adding to queue`);
 
-    return response;
-  }
+      await this.analysisQueue.add(JD_ANALYSIS_QUEUE_NAME, {
+        analysisId: job.analyses[0].id,
+        isCreatedFromJob: true,
+      });
+    }
 
-  async save(jobId: number, userId: User['id']): Promise<void> {
-    await this.prismaService.job.update({
-      where: { id: jobId, userId },
-      data: { saved: true },
-    });
+    return job;
   }
 
   async delete(jobId: number, userId: User['id']): Promise<void> {
@@ -80,10 +78,10 @@ export class JobsService {
     });
   }
 
-  async update(jobId: number, userId: User['id'], body: IUpdateJobStatusDto): Promise<void> {
+  async update(jobId: number, userId: User['id'], body: IUpdateJobDto): Promise<void> {
     await this.prismaService.job.update({
       where: { id: jobId, userId },
-      data: { status: body.status },
+      data: body,
     });
   }
 
@@ -91,8 +89,7 @@ export class JobsService {
     return this.prismaService.job.findUnique({
       where: { id: jobId, userId },
       include: {
-        resume: true,
-        analysisWorkers: true,
+        analyses: true,
       },
     });
   }
@@ -101,12 +98,7 @@ export class JobsService {
     return this.prismaService.job.findMany({
       where: { userId },
       include: {
-        resume: {
-          select: {
-            name: true,
-          },
-        },
-        analysisWorkers: {
+        analyses: {
           select: {
             id: true,
             status: true,
@@ -117,34 +109,5 @@ export class JobsService {
         jobDescription: true,
       },
     });
-  }
-
-  async reEvaluate(jobId: number, userId: User['id']): Promise<ICreateWorkerResponse> {
-    const response = await this.prismaService.$transaction(async (prisma) => {
-      const { id, status } = await prisma.analysisWorker.create({
-        data: {
-          job: {
-            connect: {
-              // todo: need to test if un-owned job can be connected?
-              id: jobId,
-              userId,
-            },
-          },
-        },
-      });
-
-      await this.analysisQueue.add(JD_ANALYZER_JOB_NAME, {
-        analysisWorkerId: id,
-      });
-
-      return {
-        workerId: id,
-        status,
-      };
-    });
-
-    this.logger.log(`User ${userId} triggered re-evaluation for job - ${jobId}`);
-
-    return response;
   }
 }

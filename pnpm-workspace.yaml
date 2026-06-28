@@ -1,6 +1,15 @@
 packages:
   - 'apps/*'
   - 'packages/*'
+allowBuilds:
+  '@google/genai': false
+  '@prisma/engines': false
+  bcrypt: false
+  esbuild: false
+  msgpackr-extract: false
+  prisma: true
+  protobufjs: false
+  unrs-resolver: false
 ignoredBuiltDependencies:
   - sharp
   - unrs-resolver

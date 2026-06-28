@@ -63,7 +63,6 @@ export default function JobsPage() {
               <TableRow>
                 <TableHead>Name</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Resume</TableHead>
                 <TableHead>Last Updated</TableHead>
               </TableRow>
             </TableHeader>
@@ -77,7 +76,6 @@ export default function JobsPage() {
                 >
                   <TableCell>{job.title}</TableCell>
                   <TableCell>{job.status}</TableCell>
-                  <TableCell>{job.resumeId}</TableCell>
                   <TableCell>{new Date(job.updatedAt).toLocaleDateString()}</TableCell>
                 </TableRow>
               ))}

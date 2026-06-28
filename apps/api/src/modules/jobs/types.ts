@@ -1,3 +1,4 @@
-export interface IJdAnalysisWorker {
-  analysisWorkerId: number;
+export interface IJdAnalysis {
+  analysisId: number;
+  isCreatedFromJob: boolean;
 }

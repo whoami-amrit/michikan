@@ -13,12 +13,12 @@ import {
   Post,
 } from '@nestjs/common';
 import { createZodDto } from 'nestjs-zod';
-import { CreateJobSchema, UpdateJobStatusSchema } from 'shared';
+import { CreateJobSchema, UpdateJobSchema } from 'shared';
 
 import { JobsService } from './jobs.service';
 
 class CreateJobDto extends createZodDto(CreateJobSchema) {}
-class UpdateJobStatusDto extends createZodDto(UpdateJobStatusSchema) {}
+class UpdateJobStatusDto extends createZodDto(UpdateJobSchema) {}
 
 @Controller('jobs')
 export class JobsController {
@@ -40,12 +40,6 @@ export class JobsController {
     return this.service.create(body, user.sub);
   }
 
-  @Post(':id/re-evaluate')
-  @HttpCode(HttpStatus.ACCEPTED)
-  reEvaluate(@CurrentUser() user: IJwtAccessPayload, @Param('id', ParseIntPipe) jobId: number) {
-    return this.service.reEvaluate(jobId, user.sub);
-  }
-
   @Patch(':id')
   update(
     @CurrentUser() user: IJwtAccessPayload,
@@ -58,10 +52,5 @@ export class JobsController {
   @Delete(':id')
   delete(@CurrentUser() user: IJwtAccessPayload, @Param('id', ParseIntPipe) jobId: number) {
     return this.service.delete(jobId, user.sub);
-  }
-
-  @Post(':id/save')
-  save(@CurrentUser() user: IJwtAccessPayload, @Param('id', ParseIntPipe) jobId: number) {
-    return this.service.save(jobId, user.sub);
   }
 }

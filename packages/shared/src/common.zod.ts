@@ -4,6 +4,7 @@ export const resourceNameSchema = z
   .string()
   .min(1, 'Resume name is required')
   .max(50, 'Resume name must be less than 50 characters');
+
 export const resourceDescriptionSchema = z
   .string()
   .max(200, 'Description must be less than 200 characters')

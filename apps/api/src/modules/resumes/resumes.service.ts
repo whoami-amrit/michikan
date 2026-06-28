@@ -85,21 +85,17 @@ export class ResumeService {
       };
     }
 
-    const resumeRenderJob = await this.prisma.$transaction(async (prisma) => {
-      const resumeRenderJob = await prisma.resumeRenderWorker.create({
-        data: {
-          status: 'PENDING',
-          sourceHash: this.createHashOfResumeJson(resume),
-          resumeId,
-          userId,
-        },
-      });
+    const resumeRenderJob = await this.prisma.resumeRenderWorker.create({
+      data: {
+        status: 'PENDING',
+        sourceHash: this.createHashOfResumeJson(resume),
+        resumeId,
+        userId,
+      },
+    });
 
-      await this.renderQueue.add(RENDER_PDF_JOB_NAME, {
-        workerId: resumeRenderJob.id,
-      });
-
-      return resumeRenderJob;
+    await this.renderQueue.add(RENDER_PDF_JOB_NAME, {
+      workerId: resumeRenderJob.id,
     });
 
     return {

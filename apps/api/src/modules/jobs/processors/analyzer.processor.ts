@@ -11,7 +11,7 @@ import path from 'path';
 import { PrismaService } from 'src/infra/database/prisma.service';
 import z from 'zod';
 
-import { IJdAnalysisWorker } from '../types';
+import { IJdAnalysis } from '../types';
 
 export const RequirementMatchSchema = z.object({
   requirement: z.string(),
@@ -61,7 +61,7 @@ export class JobDescriptionAnalyzerProcessor extends WorkerHost {
     }
   }
 
-  async process(job: Job<IJdAnalysisWorker>) {
+  async process(job: Job<IJdAnalysis>) {
     const { name, data } = job;
 
     switch (name) {
@@ -70,46 +70,55 @@ export class JobDescriptionAnalyzerProcessor extends WorkerHost {
         break;
       default:
         this.logger.warn('Received JD evaluation job with unknown name: ' + name);
-        await this.prismaService.analysisWorker.update({
-          where: { id: data.analysisWorkerId },
+        await this.prismaService.analysis.update({
+          where: { id: data.analysisId },
           data: { status: 'FAILED', error: 'Unknown job name' },
         });
         throw new UnrecoverableError('Unknown job name');
     }
   }
 
-  private async handleJDMatch({ analysisWorkerId }: IJdAnalysisWorker) {
-    const analysisJob = await this.prismaService.analysisWorker.findUnique({
-      where: { id: analysisWorkerId },
+  private async handleJDMatch({ analysisId, isCreatedFromJob }: IJdAnalysis) {
+    const analysisJob = await this.prismaService.analysis.findUnique({
+      where: { id: analysisId },
       include: {
-        job: {
-          include: {
-            resume: true,
-          },
-        },
+        resume: true,
+        ...(isCreatedFromJob
+          ? {
+              job: {
+                select: {
+                  jobDescription: true,
+                },
+              },
+            }
+          : {}),
       },
     });
 
     if (!analysisJob) {
-      const errorString = `Analysis job with ID ${analysisWorkerId} not found`;
+      const errorString = `Analysis job with ID ${analysisId} not found`;
       this.logger.error(errorString, error instanceof Error ? error.stack : undefined);
       throw new UnrecoverableError(errorString);
     }
 
-    if (!analysisJob.job.resume) {
-      const errorString = `No associated resume for this analysis job ${analysisWorkerId}`;
+    if (!analysisJob.resume) {
+      const errorString = `No associated resume for this analysis job ${analysisId}`;
       this.logger.error(errorString, error instanceof Error ? error.stack : undefined);
       throw new UnrecoverableError(errorString);
     }
+
+    const jobDescription = isCreatedFromJob
+      ? analysisJob.job!.jobDescription
+      : analysisJob.jobDescription;
 
     const prompt = this.template({
-      jobDescription: analysisJob.job.jobDescription,
-      resumeJson: JSON.stringify(analysisJob.job.resume.json),
+      jobDescription,
+      resumeJson: JSON.stringify(analysisJob.resume.json),
     });
 
     try {
-      await this.prismaService.analysisWorker.update({
-        where: { id: analysisWorkerId },
+      await this.prismaService.analysis.update({
+        where: { id: analysisId },
         data: { status: 'IN_PROGRESS' },
       });
 
@@ -131,18 +140,18 @@ export class JobDescriptionAnalyzerProcessor extends WorkerHost {
         throw new Error('No response from Google GenAI');
       }
 
-      await this.prismaService.analysisWorker.update({
-        where: { id: analysisWorkerId },
+      await this.prismaService.analysis.update({
+        where: { id: analysisId },
         data: {
           status: 'COMPLETED',
-          analysis: ResumeMatchOutputSchema.parse(JSON.parse(response.text)),
+          report: ResumeMatchOutputSchema.parse(JSON.parse(response.text)),
         },
       });
     } catch (error) {
       this.logger.error('Failed to evaluate JD', error instanceof Error ? error.stack : { error });
 
-      await this.prismaService.analysisWorker.update({
-        where: { id: analysisWorkerId },
+      await this.prismaService.analysis.update({
+        where: { id: analysisId },
         data: { status: 'FAILED' },
       });
 

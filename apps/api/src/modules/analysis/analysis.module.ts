@@ -2,8 +2,8 @@ import { COMMON_BULL_QUEUE_OPTIONS, JD_ANALYSIS_QUEUE_NAME } from '@common/const
 import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
 
-import { JobsController } from './jobs.controller';
-import { JobsService } from './jobs.service';
+import { AnalysisController } from './analysis.controller';
+import { AnalysisService } from './analysis.service';
 
 @Module({
   imports: [
@@ -12,7 +12,7 @@ import { JobsService } from './jobs.service';
       ...COMMON_BULL_QUEUE_OPTIONS,
     }),
   ],
-  controllers: [JobsController],
-  providers: [JobsService],
+  controllers: [AnalysisController],
+  providers: [AnalysisService],
 })
-export class JobsModule {}
+export class AnalysisModule {}

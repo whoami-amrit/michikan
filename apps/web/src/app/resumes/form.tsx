@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Resume } from 'db';
 import { isHTTPError } from 'ky';
-import { AlertCircle, PencilSparklesIcon, PlusIcon, XIcon } from 'lucide-react';
+import { AlertCircle, LoaderCircle, PencilSparklesIcon, PlusIcon, XIcon } from 'lucide-react';
 import {
   Controller,
   FormProvider,
@@ -17,7 +17,6 @@ import {
   ICreateResumeDtoInput,
   IProblemDetails,
   IResumeJson,
-  IResumeJsonInput,
 } from 'shared';
 import { toast } from 'sonner';
 
@@ -54,9 +53,9 @@ type ResumeFormProps =
       data?: never;
     };
 
-const useFormContext = () => useRHFFormContext<IResumeJsonInput, unknown, IResumeJson>();
+const useFormContext = () => useRHFFormContext<ICreateResumeDtoInput, unknown, ICreateResumeDto>();
 
-const TabKeys: Record<string, keyof IResumeJsonInput> = {
+const TabKeys: Record<string, keyof IResumeJson> = {
   PersonalInfo: 'personalInfo',
   Skills: 'skills',
   Experience: 'experience',
@@ -87,48 +86,48 @@ function PersonalInfoTab() {
           <Field>
             <FieldLabel>Name</FieldLabel>
             <Input
-              {...register('personalInfo.name')}
+              {...register('json.personalInfo.name')}
               type="text"
               placeholder="John Doe"
               className="bg-background"
             />
-            <FieldError errors={[errors.personalInfo?.name]} />
+            <FieldError errors={[errors.json?.personalInfo?.name]} />
           </Field>
           <Field>
             <FieldLabel>Email</FieldLabel>
             <Input
-              {...register('personalInfo.email')}
+              {...register('json.personalInfo.email')}
               placeholder="hello@world.me"
               className="bg-background"
             />
-            <FieldError errors={[errors.personalInfo?.email]} />
+            <FieldError errors={[errors.json?.personalInfo?.email]} />
           </Field>
           <Field>
             <FieldLabel>Github or Gitlab</FieldLabel>
             <Input
-              {...register('personalInfo.github')}
+              {...register('json.personalInfo.github')}
               placeholder="https://github.com/username"
               className="bg-background"
             />
-            <FieldError errors={[errors.personalInfo?.github]} />
+            <FieldError errors={[errors.json?.personalInfo?.github]} />
           </Field>
           <Field>
             <FieldLabel>LinkedIn</FieldLabel>
             <Input
-              {...register('personalInfo.linkedin')}
+              {...register('json.personalInfo.linkedin')}
               placeholder="https://linkedin.com/in/username"
               className="bg-background"
             />
-            <FieldError errors={[errors.personalInfo?.linkedin]} />
+            <FieldError errors={[errors.json?.personalInfo?.linkedin]} />
           </Field>
           <Field>
             <FieldLabel>Phone</FieldLabel>
             <Input
-              {...register('personalInfo.phone')}
+              {...register('json.personalInfo.phone')}
               placeholder="123-456-7890"
               className="bg-background"
             />
-            <FieldError errors={[errors.personalInfo?.phone]} />
+            <FieldError errors={[errors.json?.personalInfo?.phone]} />
           </Field>
         </FieldGroup>
       </FieldSet>
@@ -149,20 +148,20 @@ function PersonalInfoTab() {
           <Field>
             <FieldLabel>Url</FieldLabel>
             <Input
-              {...register('personalInfo.portfolio.url')}
+              {...register('json.personalInfo.portfolio.url')}
               placeholder="https://your-portfolio.com"
               className="bg-background"
             />
-            <FieldError errors={[errors.personalInfo?.portfolio?.url]} />
+            <FieldError errors={[errors.json?.personalInfo?.portfolio?.url]} />
           </Field>
           <Field>
             <FieldLabel>Label</FieldLabel>
             <Input
-              {...register('personalInfo.portfolio.label')}
+              {...register('json.personalInfo.portfolio.label')}
               placeholder="A label for your portfolio link"
               className="bg-background"
             />
-            <FieldError errors={[errors.personalInfo?.portfolio?.label]} />
+            <FieldError errors={[errors.json?.personalInfo?.portfolio?.label]} />
           </Field>
         </FieldGroup>
       </FieldSet>
@@ -176,8 +175,8 @@ function SkillsTab() {
     control,
     formState: { errors },
   } = useFormContext();
-  const { fields, append, remove } = useFieldArray<IResumeJsonInput, 'skills'>({
-    name: 'skills',
+  const { fields, append, remove } = useFieldArray<ICreateResumeDtoInput, 'json.skills'>({
+    name: 'json.skills',
   });
 
   return (
@@ -211,19 +210,19 @@ function SkillsTab() {
           <FieldGroup key={field.category} className="flex-row gap-4">
             <Field className="w-50 shrink-0">
               <Input
-                {...register(`skills.${index}.category`)}
+                {...register(`json.skills.${index}.category`)}
                 placeholder="Ex. Frontend"
                 className="bg-background"
               />
-              <FieldError errors={[errors.skills?.[index]?.category]} />
+              <FieldError errors={[errors.json?.skills?.[index]?.category]} />
             </Field>
             <Field className="grow">
               <Controller
-                name={`skills.${index}.skills`}
+                name={`json.skills.${index}.skills`}
                 control={control}
                 render={({ field }) => <MultiSelect {...field} items={['React.js', 'Nuxt.js']} />}
               />
-              <FieldError errors={[errors.skills?.[index]?.skills]} />
+              <FieldError errors={[errors.json?.skills?.[index]?.skills]} />
             </Field>
             <Button className="w-8" variant="destructive" onClick={() => remove(index)}>
               <XIcon />
@@ -241,8 +240,8 @@ function ExperienceTab() {
     control,
     formState: { errors },
   } = useFormContext();
-  const { fields, append, remove } = useFieldArray<IResumeJsonInput, 'experience'>({
-    name: 'experience',
+  const { fields, append, remove } = useFieldArray<ICreateResumeDtoInput, 'json.experience'>({
+    name: 'json.experience',
   });
 
   return (
@@ -276,11 +275,11 @@ function ExperienceTab() {
                 <Field className="w-64">
                   <FieldLabel>Job Title</FieldLabel>
                   <Input
-                    {...register(`experience.${index}.title`)}
+                    {...register(`json.experience.${index}.title`)}
                     placeholder="Ex. Software Engineer"
                     className="bg-background"
                   />
-                  <FieldError errors={[errors.experience?.[index]?.title]} />
+                  <FieldError errors={[errors.json?.experience?.[index]?.title]} />
                 </Field>
               </CardTitle>
               <CardAction>
@@ -295,35 +294,35 @@ function ExperienceTab() {
                   <Field>
                     <FieldLabel>Company</FieldLabel>
                     <Input
-                      {...register(`experience.${index}.company`)}
+                      {...register(`json.experience.${index}.company`)}
                       placeholder="Ex. Google"
                       className="bg-background"
                     />
-                    <FieldError errors={[errors.experience?.[index]?.company]} />
+                    <FieldError errors={[errors.json?.experience?.[index]?.company]} />
                   </Field>
                   <Field>
                     <FieldLabel>Location</FieldLabel>
                     <Input
-                      {...register(`experience.${index}.location`)}
+                      {...register(`json.experience.${index}.location`)}
                       placeholder="Ex. San Francisco, CA"
                       className="bg-background"
                     />
-                    <FieldError errors={[errors.experience?.[index]?.location]} />
+                    <FieldError errors={[errors.json?.experience?.[index]?.location]} />
                   </Field>
                 </div>
                 <Field>
                   <FieldLabel>Description</FieldLabel>
                   <Input
-                    {...register(`experience.${index}.description`)}
+                    {...register(`json.experience.${index}.description`)}
                     placeholder="Ex. Worked as a software engineer on the frontend team, building user interfaces for web applications."
                     className="bg-background"
                   />
-                  <FieldError errors={[errors.experience?.[index]?.description]} />
+                  <FieldError errors={[errors.json?.experience?.[index]?.description]} />
                 </Field>
                 <Field className="col-span-2">
                   <FieldLabel>Highlights</FieldLabel>
                   <Controller
-                    name={`experience.${index}.highlights`}
+                    name={`json.experience.${index}.highlights`}
                     control={control}
                     render={({ field }) => (
                       <Textarea
@@ -339,7 +338,7 @@ function ExperienceTab() {
                   <Field className="w-44">
                     <FieldLabel>Start Date</FieldLabel>
                     <Controller
-                      name={`experience.${index}.startDate`}
+                      name={`json.experience.${index}.startDate`}
                       control={control}
                       render={({ field }) => (
                         <DatePickerSimple
@@ -352,12 +351,12 @@ function ExperienceTab() {
                         />
                       )}
                     />
-                    <FieldError errors={[errors.experience?.[index]?.startDate]} />
+                    <FieldError errors={[errors.json?.experience?.[index]?.startDate]} />
                   </Field>
                   <Field className="w-44">
                     <FieldLabel>End Date</FieldLabel>
                     <Controller
-                      name={`experience.${index}.endDate`}
+                      name={`json.experience.${index}.endDate`}
                       control={control}
                       render={({ field }) => (
                         <DatePickerSimple
@@ -370,7 +369,7 @@ function ExperienceTab() {
                         />
                       )}
                     />
-                    <FieldError errors={[errors.experience?.[index]?.endDate]} />
+                    <FieldError errors={[errors.json?.experience?.[index]?.endDate]} />
                   </Field>
                 </div>
               </FieldGroup>
@@ -388,8 +387,8 @@ function EducationTab() {
     control,
     formState: { errors },
   } = useFormContext();
-  const { fields, append, remove } = useFieldArray<IResumeJsonInput, 'education'>({
-    name: 'education',
+  const { fields, append, remove } = useFieldArray<ICreateResumeDtoInput, 'json.education'>({
+    name: 'json.education',
   });
 
   return (
@@ -421,7 +420,7 @@ function EducationTab() {
                 <Field className="w-44">
                   <FieldLabel>Graduation Date</FieldLabel>
                   <Controller
-                    name={`education.${index}.graduationDate`}
+                    name={`json.education.${index}.graduationDate`}
                     control={control}
                     render={({ field }) => (
                       <DatePickerSimple
@@ -434,7 +433,7 @@ function EducationTab() {
                       />
                     )}
                   />
-                  <FieldError errors={[errors.education?.[index]?.graduationDate]} />
+                  <FieldError errors={[errors.json?.education?.[index]?.graduationDate]} />
                 </Field>
               </CardTitle>
               <CardAction>
@@ -449,30 +448,30 @@ function EducationTab() {
                   <Field>
                     <FieldLabel>Degree</FieldLabel>
                     <Input
-                      {...register(`education.${index}.degree`)}
+                      {...register(`json.education.${index}.degree`)}
                       placeholder="Ex. Bachelor of Science"
                       className="bg-background"
                     />
-                    <FieldError errors={[errors.education?.[index]?.degree]} />
+                    <FieldError errors={[errors.json?.education?.[index]?.degree]} />
                   </Field>
                   <Field>
                     <FieldLabel>Field of Study</FieldLabel>
                     <Input
-                      {...register(`education.${index}.field`)}
+                      {...register(`json.education.${index}.field`)}
                       placeholder="Ex. Computer Science"
                       className="bg-background"
                     />
-                    <FieldError errors={[errors.education?.[index]?.field]} />
+                    <FieldError errors={[errors.json?.education?.[index]?.field]} />
                   </Field>
                 </div>
                 <Field>
                   <FieldLabel>Institution</FieldLabel>
                   <Input
-                    {...register(`education.${index}.institution`)}
+                    {...register(`json.education.${index}.institution`)}
                     placeholder="Ex. Stanford University"
                     className="bg-background"
                   />
-                  <FieldError errors={[errors.education?.[index]?.institution]} />
+                  <FieldError errors={[errors.json?.education?.[index]?.institution]} />
                 </Field>
               </FieldGroup>
             </CardContent>
@@ -489,8 +488,8 @@ function ProjectsTab() {
     control,
     formState: { errors },
   } = useFormContext();
-  const { fields, append, remove } = useFieldArray<IResumeJsonInput, 'projects'>({
-    name: 'projects',
+  const { fields, append, remove } = useFieldArray<ICreateResumeDtoInput, 'json.projects'>({
+    name: 'json.projects',
   });
 
   return (
@@ -521,11 +520,11 @@ function ProjectsTab() {
                 <Field className="w-64">
                   <FieldLabel>Project Title</FieldLabel>
                   <Input
-                    {...register(`projects.${index}.title`)}
+                    {...register(`json.projects.${index}.title`)}
                     placeholder="Ex. Software Engineer"
                     className="bg-background"
                   />
-                  <FieldError errors={[errors.projects?.[index]?.title]} />
+                  <FieldError errors={[errors.json?.projects?.[index]?.title]} />
                 </Field>
               </CardTitle>
               <CardAction>
@@ -539,16 +538,16 @@ function ProjectsTab() {
                 <Field className="col-span-2">
                   <FieldLabel>Description</FieldLabel>
                   <Input
-                    {...register(`projects.${index}.description`)}
+                    {...register(`json.projects.${index}.description`)}
                     placeholder="Ex. Developed a web application for managing tasks"
                     className="bg-background"
                   />
-                  <FieldError errors={[errors.projects?.[index]?.description]} />
+                  <FieldError errors={[errors.json?.projects?.[index]?.description]} />
                 </Field>
                 <Field className="col-span-2">
                   <FieldLabel>Highlights</FieldLabel>
                   <Controller
-                    name={`projects.${index}.highlights`}
+                    name={`json.projects.${index}.highlights`}
                     control={control}
                     render={({ field }) => (
                       <Textarea
@@ -563,7 +562,7 @@ function ProjectsTab() {
                 <Field>
                   <FieldLabel>Technologies</FieldLabel>
                   <Controller
-                    name={`projects.${index}.technologies`}
+                    name={`json.projects.${index}.technologies`}
                     control={control}
                     render={({ field }) => (
                       <MultiSelect {...field} items={['React.js', 'Nuxt.js']} />
@@ -573,11 +572,11 @@ function ProjectsTab() {
                 <Field>
                   <FieldLabel>URL</FieldLabel>
                   <Input
-                    {...register(`projects.${index}.url`)}
+                    {...register(`json.projects.${index}.url`)}
                     placeholder="Ex. https://github.com/user/project"
                     className="bg-background"
                   />
-                  <FieldError errors={[errors.projects?.[index]?.url]} />
+                  <FieldError errors={[errors.json?.projects?.[index]?.url]} />
                 </Field>
               </FieldGroup>
             </CardContent>
@@ -606,13 +605,13 @@ function SummaryTab() {
 
         <Field>
           <div className="relative">
-            <Textarea className="min-h-44 max-h-64" {...register('summary')} />
+            <Textarea className="min-h-44 max-h-64" {...register('json.summary')} />
             <Button className="absolute bottom-2 right-2" variant="secondary" size="icon-lg">
               {/* TODO!: implement this AI summary feature in the backend */}
               <PencilSparklesIcon />
             </Button>
           </div>
-          <FieldError errors={[errors.summary]} />
+          <FieldError errors={[errors.json?.summary]} />
         </Field>
       </FieldSet>
     </FieldGroup>
@@ -648,7 +647,8 @@ export function ResumeForm({ type, data, id }: ResumeFormProps) {
   });
   const {
     handleSubmit,
-    formState: { errors },
+    reset,
+    formState: { errors, isSubmitting },
   } = methods;
 
   const onSubmit: SubmitHandler<ICreateResumeDto> = async (formData, event) => {
@@ -733,11 +733,14 @@ export function ResumeForm({ type, data, id }: ResumeFormProps) {
               <ProgressLabel>Progress</ProgressLabel>
               <ProgressValue />
             </Progress>
-            <div className="flex gap-2">
-              <Button type="reset" variant="secondary">
+            <div className="flex gap-2 items-center">
+              {isSubmitting && <LoaderCircle className="size-4 animate-spin" />}
+              <Button type="reset" onClick={() => reset()} variant="secondary">
                 Reset
               </Button>
-              <Button type="submit">{type === 'new' ? 'Save' : 'Update'}</Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {type === 'new' ? 'Save' : 'Update'}
+              </Button>
             </div>
           </div>
         </form>

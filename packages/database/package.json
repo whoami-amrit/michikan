@@ -6,7 +6,7 @@
   "module": "dist/esm/browser.js",
   "description": "prisma package for michikan web app",
   "scripts": {
-    "build": "tsc -b",
+    "build": "tsc -b -f",
     "db:generate": "dotenv-run -- prisma generate",
     "db:migrate": "dotenv-run -- prisma migrate dev",
     "db:deploy": "dotenv-run -- prisma migrate deploy",

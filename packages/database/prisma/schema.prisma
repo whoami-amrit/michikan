@@ -36,6 +36,18 @@ enum Provider {
   LOCAL
 }
 
+enum WorkSetting {
+  REMOTE
+  HYBRID
+  ONSITE
+}
+
+enum ExperienceLevel {
+  JUNIOR
+  MID
+  SENIOR
+}
+
 model Resume {
   id                  Int                  @id @default(autoincrement())
   name                String
@@ -46,6 +58,7 @@ model Resume {
   user                User                 @relation(fields: [userId], references: [id])
   userId              Int
   resumeRenderWorkers ResumeRenderWorker[]
+  analyses            Analysis[]
   jobs                Job[]
 
   @@index([userId])
@@ -67,6 +80,7 @@ model User {
   resumeRenderWorkers ResumeRenderWorker[]
   jobs                Job[]
   noClutter           Boolean              @default(true)
+  analyses            Analysis[]
 }
 
 model Account {
@@ -124,16 +138,25 @@ model ResumeRenderWorker {
   updatedAt DateTime @updatedAt
 }
 
-model AnalysisWorker {
+model Analysis {
   id Int @id @default(autoincrement())
 
-  jobId Int
-  job   Job @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  title String?
 
-  status WorkerStatus @default(PENDING)
+  jobDescription String?
 
-  error    String?
-  analysis Json?
+  userId Int
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  resumeId Int
+  resume   Resume @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+
+  jobId Int?
+  job   Job? @relation(fields: [jobId], references: [id], onDelete: SetNull)
+
+  status WorkerStatus
+  error  String?
+  report Json?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -142,23 +165,31 @@ model AnalysisWorker {
 model Job {
   id Int @id @default(autoincrement())
 
-  resumeId Int?
-  resume   Resume? @relation(fields: [resumeId], references: [id], onDelete: SetNull)
-
   userId Int
   user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  analysisWorkers AnalysisWorker[]
-
-  status JobStatus @default(NOT_APPLIED)
-
-  // unsaved will get removed after 30 days unless user wants to retain them
-  saved Boolean @default(false)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
   jobDescription String
+  company        String
+  title          String
+  status         JobStatus @default(NOT_APPLIED)
 
-  title String?
+  // Optional meta information that can be derived during analysis
+  workSetting     WorkSetting?
+  experienceLevel ExperienceLevel?
+  minCompensation Int?
+  maxCompensation Int?
+  currency        String?
+  applicationUrl  String? // Moved from meta-tracking
+
+  // Notes or Interview logs of the job
+  notes String?
+
+  analyses Analysis[]
+
+  submittedResumeId Int?
+  submittedResume   Resume? @relation(fields: [submittedResumeId], references: [id], onDelete: SetNull)
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  dateApplied DateTime?
 }
