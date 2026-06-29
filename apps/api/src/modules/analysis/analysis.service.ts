@@ -52,4 +52,13 @@ export class AnalysisService {
       },
     });
   }
+
+  async get(userId: User['id'], analysisId: number) {
+    return this.prismaService.analysis.findUnique({
+      where: {
+        id: analysisId,
+        userId,
+      },
+    });
+  }
 }
