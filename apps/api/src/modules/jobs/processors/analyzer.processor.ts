@@ -1,5 +1,4 @@
 import { JD_ANALYSIS_QUEUE_NAME, JD_ANALYZER_JOB_NAME } from '@common/constants';
-import { GoogleGenAI, ThinkingLevel } from '@google/genai';
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Injectable, Logger } from '@nestjs/common';
 import { Job, UnrecoverableError } from 'bullmq';
@@ -12,6 +11,7 @@ import { PrismaService } from 'src/infra/database/prisma.service';
 import z from 'zod';
 
 import { IJdAnalysis } from '../types';
+import { AiService } from './ai.service';
 
 export const RequirementMatchSchema = z.object({
   requirement: z.string(),
@@ -34,14 +34,16 @@ export const ResumeMatchOutputSchema = z.object({
   summary: z.string(),
 });
 
+type IResumeMatchOutput = z.infer<typeof ResumeMatchOutputSchema>;
+
 @Injectable()
 @Processor(JD_ANALYSIS_QUEUE_NAME)
-export class JobDescriptionAnalyzerProcessor extends WorkerHost {
-  private readonly logger = new Logger(JobDescriptionAnalyzerProcessor.name);
+export class AnalyzerService extends WorkerHost {
+  private readonly logger = new Logger(AnalyzerService.name);
   private readonly template: TemplateDelegate;
 
   constructor(
-    private readonly googleGenAI: GoogleGenAI,
+    private readonly geminiService: AiService,
     private readonly prismaService: PrismaService,
   ) {
     super();
@@ -122,29 +124,28 @@ export class JobDescriptionAnalyzerProcessor extends WorkerHost {
         data: { status: 'IN_PROGRESS' },
       });
 
-      this.logger.debug({ prompt });
+      const response = await this.geminiService.execute<IResumeMatchOutput>(
+        prompt,
+        ResumeMatchOutputSchema,
+      );
 
-      const response = await this.googleGenAI.models.generateContent({
-        model: 'gemini-3-flash-preview',
-        contents: prompt,
-        config: {
-          responseMimeType: 'application/json',
-          responseSchema: z.toJSONSchema(ResumeMatchOutputSchema),
-          thinkingConfig: {
-            thinkingLevel: ThinkingLevel.MEDIUM,
+      if (response === null) {
+        await this.prismaService.analysis.update({
+          where: { id: analysisId },
+          data: {
+            status: 'FAILED',
+            error: 'Failed to get response from Gemini API or parse the response',
           },
-        },
-      });
+        });
 
-      if (!response.text) {
-        throw new Error('No response from Google GenAI');
+        return;
       }
 
       await this.prismaService.analysis.update({
         where: { id: analysisId },
         data: {
           status: 'COMPLETED',
-          report: ResumeMatchOutputSchema.parse(JSON.parse(response.text)),
+          report: response,
         },
       });
     } catch (error) {
