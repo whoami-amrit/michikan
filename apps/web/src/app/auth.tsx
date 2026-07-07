@@ -1,9 +1,8 @@
-import ky, { isHTTPError } from 'ky';
+import ky from 'ky';
 import type { SubmitEvent } from 'react';
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { useSearchParams } from 'react-router';
-import type { IProblemDetails } from 'shared';
 import { toast } from 'sonner';
 import useSWRMutation from 'swr/mutation';
 
@@ -29,13 +28,8 @@ export const VerifyEmailPage = () => {
   useEffect(() => {
     trigger()
       .then(() => api.get('/auth/refresh'))
-      .catch((err) => {
-        if (isHTTPError(err)) {
-          const problemDetails = err.data as IProblemDetails;
-          toast.error(<ErrorToast problem={problemDetails} />);
-        }
-
-        console.log(err);
+      .catch((err: unknown) => {
+        toast.error(<ErrorToast error={err} />);
       });
   }, [trigger]);
 
@@ -81,11 +75,8 @@ export function AuthFormPage({ type }: { type: 'login' | 'signup' }) {
       json,
     })
       .then(() => navigate('/analysis'))
-      .catch((err) => {
-        if (isHTTPError(err)) {
-          const problemDetails = err.data as IProblemDetails;
-          toast.error(<ErrorToast problem={problemDetails} />);
-        }
+      .catch((err: unknown) => {
+        toast.error(<ErrorToast error={err} />);
       });
   };
 

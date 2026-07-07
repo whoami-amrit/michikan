@@ -1,6 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Job, JobStatus, Resume } from 'db';
-import { isHTTPError } from 'ky';
 import { FolderOpen, LoaderCircle, PlusIcon, SquareArrowOutUpRightIcon } from 'lucide-react';
 import { Controller, FormProvider, SubmitHandler, useForm, useFormContext } from 'react-hook-form';
 import { NavLink, useNavigate } from 'react-router';
@@ -9,7 +8,6 @@ import {
   ICreateJobDto,
   ICreateJobDtoInput,
   IGetResumesResponse,
-  IProblemDetails,
   IUpdateJobDto,
 } from 'shared';
 import { toast } from 'sonner';
@@ -243,12 +241,7 @@ export function JobForm({ type, data, id }: JobFormProps) {
         json: formData,
       });
     } catch (error) {
-      if (isHTTPError(error)) {
-        const problemDetails = error.data as IProblemDetails;
-        toast.error(<ErrorToast problem={problemDetails} />);
-      }
-
-      toast.error('An error occurred while saving the job. Please try again. ' + String(error));
+      toast.error(<ErrorToast error={error} />);
     }
   };
 

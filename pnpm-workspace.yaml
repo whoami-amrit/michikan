@@ -2,7 +2,7 @@ packages:
   - 'apps/*'
   - 'packages/*'
 allowBuilds:
-  '@google/genai': false
+  '@google/genai': true
   '@prisma/engines': false
   bcrypt: false
   esbuild: false

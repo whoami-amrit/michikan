@@ -1,6 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Resume } from 'db';
-import { isHTTPError } from 'ky';
 import { AlertCircle, LoaderCircle, PencilSparklesIcon, PlusIcon, XIcon } from 'lucide-react';
 import {
   Controller,
@@ -11,13 +10,7 @@ import {
   useFormContext as useRHFFormContext,
 } from 'react-hook-form';
 import { useNavigate } from 'react-router';
-import {
-  CreateResumeSchema,
-  ICreateResumeDto,
-  ICreateResumeDtoInput,
-  IProblemDetails,
-  IResumeJson,
-} from 'shared';
+import { CreateResumeSchema, ICreateResumeDto, ICreateResumeDtoInput, IResumeJson } from 'shared';
 import { toast } from 'sonner';
 
 import { ErrorToast } from '@/components/error-toast';
@@ -670,12 +663,7 @@ export function ResumeForm({ type, data, id }: ResumeFormProps) {
         json: formData,
       });
     } catch (error) {
-      if (isHTTPError(error)) {
-        const problemDetails = error.data as IProblemDetails;
-        toast.error(<ErrorToast problem={problemDetails} />);
-      }
-
-      toast.error('An error occurred while saving the resume. Please try again. ' + String(error));
+      toast.error(<ErrorToast error={error} />);
     }
   };
 

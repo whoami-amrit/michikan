@@ -9,7 +9,6 @@ import {
   ICreateAnalysisDto,
   ICreateAnalysisDtoInput,
   IGetResumesResponse,
-  IProblemDetails,
 } from 'shared';
 import { toast } from 'sonner';
 import useSWR from 'swr';
@@ -152,7 +151,7 @@ export default function AnalysisPage() {
       void navigate(`/analysis/${id}`);
     } catch (error) {
       console.error('Error creating analysis:', error);
-      toast.error(<ErrorToast problem={error as IProblemDetails} />);
+      toast.error(<ErrorToast error={error} />);
     }
   };
 

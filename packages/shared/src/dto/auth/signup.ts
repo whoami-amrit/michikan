@@ -1,12 +1,11 @@
 import { z } from 'zod';
 
-import { emailSchema, nameSchema } from '../../common.zod';
+import { CreateUserDto } from '../users/create';
 import { passwordSchema } from './common';
 
 const schema = z.object({
-  email: emailSchema,
+  userInfo: CreateUserDto,
   password: passwordSchema,
-  name: nameSchema,
 });
 
 export type ISignupDto = z.infer<typeof schema>;

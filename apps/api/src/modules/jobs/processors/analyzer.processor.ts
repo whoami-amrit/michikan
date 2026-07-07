@@ -13,25 +13,26 @@ import z from 'zod';
 import { IJdAnalysis } from '../types';
 import { AiService } from './ai.service';
 
-export const RequirementMatchSchema = z.object({
-  requirement: z.string(),
-  status: z.enum(['MET', 'PARTIAL', 'MISSING']),
-  evidence: z.string(), // direct quote from resume, or "none"
-});
-
-export const JdRequirementsSchema = z.object({
-  required: z.array(z.string()),
-  preferred: z.array(z.string()),
-});
-
 export const ResumeMatchOutputSchema = z.object({
-  shouldApply: z.enum(['definitely', 'worth a try', 'no']),
-  matchScore: z.number().int().min(0).max(100),
-  jdRequirements: JdRequirementsSchema,
-  requirementMatches: z.array(RequirementMatchSchema),
-  strengths: z.array(z.string()).max(3),
-  gaps: z.array(z.string()).max(3),
-  summary: z.string(),
+  jobTitle: z.string(),
+  companyName: z.string(),
+  workSetting: z.enum(['REMOTE', 'ONSITE', 'HYBRID', 'UNKNOWN']),
+  experienceLevel: z.enum(['JUNIOR', 'MID', 'SENIOR', 'STAFF_PLUS', 'UNKNOWN']),
+  salaryMin: z.number().nullable(),
+  salaryMax: z.number().nullable(),
+  currency: z.string().nullable(),
+  salaryPeriod: z.enum(['YEARLY', 'MONTHLY', 'HOURLY', 'UNKNOWN']),
+  requiredSkills: z.array(z.string()),
+  preferredSkills: z.array(z.string()),
+  stackSkills: z.array(z.string()),
+  matchedRequiredSkills: z.array(z.string()),
+  missingRequiredSkills: z.array(z.string()),
+  matchedPreferredSkills: z.array(z.string()),
+  missingPreferredSkills: z.array(z.string()),
+  matchedStackSkills: z.array(z.string()),
+  candidateExperienceLevel: z.enum(['JUNIOR', 'MID', 'SENIOR', 'STAFF_PLUS']),
+  matchScore: z.number().int().min(0).max(100).nullable(),
+  summary: z.string().nonempty(),
 });
 
 type IResumeMatchOutput = z.infer<typeof ResumeMatchOutputSchema>;
@@ -43,7 +44,7 @@ export class AnalyzerService extends WorkerHost {
   private readonly template: TemplateDelegate;
 
   constructor(
-    private readonly geminiService: AiService,
+    private readonly aiService: AiService,
     private readonly prismaService: PrismaService,
   ) {
     super();
@@ -85,6 +86,7 @@ export class AnalyzerService extends WorkerHost {
       where: { id: analysisId },
       include: {
         resume: true,
+        user: true,
         ...(isCreatedFromJob
           ? {
               job: {
@@ -115,7 +117,12 @@ export class AnalyzerService extends WorkerHost {
 
     const prompt = this.template({
       jobDescription,
-      resumeJson: JSON.stringify(analysisJob.resume.json),
+      candidateInfo: {
+        yearsOfExperience: analysisJob.user.yearsOfExperience,
+        preferredWorkSetting: analysisJob.user.preferredWorkSetting,
+        salaryExpectation: analysisJob.user.salaryExpectation,
+        resume: analysisJob.resume.json,
+      },
     });
 
     try {
@@ -124,7 +131,7 @@ export class AnalyzerService extends WorkerHost {
         data: { status: 'IN_PROGRESS' },
       });
 
-      const response = await this.geminiService.execute<IResumeMatchOutput>(
+      const response = await this.aiService.execute<IResumeMatchOutput>(
         prompt,
         ResumeMatchOutputSchema,
       );
@@ -135,6 +142,7 @@ export class AnalyzerService extends WorkerHost {
           data: {
             status: 'FAILED',
             error: 'Failed to get response from Gemini API or parse the response',
+            title: `Analysis against ${analysisJob.resume.name}`,
           },
         });
 
@@ -146,6 +154,7 @@ export class AnalyzerService extends WorkerHost {
         data: {
           status: 'COMPLETED',
           report: response,
+          title: `${response.jobTitle} at ${response.companyName}`,
         },
       });
     } catch (error) {

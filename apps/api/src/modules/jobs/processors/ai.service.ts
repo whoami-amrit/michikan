@@ -1,37 +1,49 @@
-import { Injectable, Logger } from '@nestjs/common';
-import ky from 'ky';
+import aiConfig, { type IAIConfig } from '@config/ai.config';
+import { GoogleGenAI } from '@google/genai';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import z, { ZodType } from 'zod';
-
-const aiService = ky.create({
-  prefix: 'ai/api',
-  keepalive: true,
-});
 
 @Injectable()
 export class AiService {
   private readonly logger = new Logger(AiService.name);
+  private readonly aiService: GoogleGenAI;
 
-  async execute<T>(prompt: string, zodSchema: ZodType<T>): Promise<T | null> {
+  constructor(@Inject(aiConfig.KEY) private readonly config: IAIConfig) {
+    this.aiService = new GoogleGenAI({
+      apiKey: this.config.geminiApiKey,
+    });
+  }
+
+  async execute<T>(prompt: string, zodSchema: ZodType<T>) {
     try {
-      const response = await aiService.get('generate', {
-        body: JSON.stringify({ prompt, model: 'qwen3.5:0.8b', format: z.toJSONSchema(zodSchema) }),
+      const response = await this.aiService.interactions.create({
+        model: 'gemini-2.5-flash-lite',
+        input: prompt,
+        response_format: {
+          type: 'text',
+          mime_type: 'application/json',
+          schema: z.toJSONSchema(zodSchema),
+        },
+        generation_config: {
+          temperature: 0.2,
+          max_output_tokens: 2000,
+        },
       });
 
-      if (!response.text) {
-        throw new Error('No response text received from Gemini API');
+      if (!response.output_text) {
+        this.logger.error('AI response text is empty');
+        return null;
       }
 
-      const result = zodSchema.safeParse({});
+      const parsedJson = JSON.parse(response.output_text) as unknown;
+      const validatedData = zodSchema.safeParse(parsedJson);
 
-      if (result.success) {
-        return result.data;
+      if (!validatedData.success) {
+        this.logger.error('AI response validation failed', validatedData.error);
+        return null;
       }
 
-      this.logger.error(
-        `Failed to parse Gemini API response: ${JSON.stringify(z.flattenError(result.error))}`,
-      );
-
-      return null;
+      return validatedData.data;
     } catch (error) {
       this.logger.error(
         `Error executing AI analysis: ${error instanceof Error ? error.message : String(error)}`,
