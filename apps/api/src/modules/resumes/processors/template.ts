@@ -61,7 +61,7 @@ right=0.5in]{geometry}              % specify right page margin
 \begin{document}
 
 % name
-\centerline{\Huge John Doe}
+\centerline{\Huge ${escapeLatex(data.personalInfo.name)}}
 
 \vspace{5pt}
 
