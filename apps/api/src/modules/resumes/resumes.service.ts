@@ -1,8 +1,9 @@
 import { createHash } from 'node:crypto';
 
 import { RENDER_PDF_JOB_NAME, RENDER_QUEUE_NAME } from '@common/constants';
+import appConfig, { type IAppConfig } from '@config/app.config';
 import { InjectQueue } from '@nestjs/bullmq';
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { Queue } from 'bullmq';
 import { Resume } from 'db';
 import {
@@ -19,10 +20,13 @@ import { IRenderPdfWorker } from './types';
 
 @Injectable()
 export class ResumeService {
+  private readonly logger = new Logger(ResumeService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly s3Service: S3Service,
     @InjectQueue(RENDER_QUEUE_NAME) private readonly renderQueue: Queue<IRenderPdfWorker>,
+    @Inject(appConfig.KEY) private readonly config: IAppConfig,
   ) {}
 
   create(userId: number, createResumeDto: ICreateResumeDto): Promise<Resume> {
@@ -109,6 +113,11 @@ export class ResumeService {
   }
 
   private async checkPreviousSuccessRenderJob(resume: Resume, userId: number) {
+    if (this.config.env === 'development') {
+      this.logger.debug('Skipping check for previous successful render job in development mode');
+      return null;
+    }
+
     const latestSourceHash = this.createHashOfResumeJson(resume);
 
     const previousJob = await this.prisma.resumeRenderWorker.findFirst({
@@ -135,10 +144,6 @@ export class ResumeService {
     const response: IRenderStatusResponse = {
       status: renderJob.status,
     };
-
-    if (renderJob.status === 'FAILED' && renderJob.error) {
-      response.error = renderJob.error;
-    }
 
     if (renderJob.status === 'COMPLETED' && renderJob.storageKey) {
       response.downloadUrl = await this.s3Service.getObjectSignedUrl(

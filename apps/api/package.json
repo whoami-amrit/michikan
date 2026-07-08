@@ -41,7 +41,6 @@
     "bullmq": "^5.76.6",
     "db": "workspace:*",
     "escape-latex": "^1.2.0",
-    "handlebars": "^4.7.9",
     "helmet": "^8.1.0",
     "ky": "^2.0.2",
     "nestjs-pino": "^4.6.1",

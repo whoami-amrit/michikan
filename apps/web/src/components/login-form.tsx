@@ -67,7 +67,7 @@ export function LoginForm() {
               Forgot your password?
             </a>
           </div>
-          <Input {...register('password')} placeholder="••••••••" />
+          <Input {...register('password')} type="password" />
           <FieldError errors={[errors.password]} />
         </Field>
         <Field>

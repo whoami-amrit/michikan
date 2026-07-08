@@ -117,9 +117,6 @@ const ExperienceEntrySchema = z
         .optional(),
     ),
     isCurrentRole: z.boolean().default(false),
-    description: zodSafeString.pipe(
-      z.string().max(1000, 'Description must be less than 1000 characters').optional(),
-    ),
     highlights: z
       .array(z.string().trim().max(500, 'Highlight must be less than 500 characters'))
       .min(1, 'At least one highlight is required')
@@ -149,9 +146,6 @@ const ProjectEntrySchema = z.object({
     .trim()
     .min(1, 'Project title is required')
     .max(100, 'Project title must be less than 100 characters'),
-  description: zodSafeString.pipe(
-    z.string().max(1000, 'Description must be less than 1000 characters').optional(),
-  ),
   url: zodSafeString.pipe(
     z
       .url('Invalid project URL')
@@ -178,7 +172,7 @@ const EducationEntrySchema = z.object({
     .trim()
     .min(1, 'Degree is required')
     .max(50, 'Degree must be less than 50 characters'),
-  field: zodSafeString.pipe(z.string().max(50, 'Field must be less than 50 characters').optional()),
+  field: z.string().max(50, 'Field must be less than 50 characters'),
   graduationDate: z
     .string()
     .trim()

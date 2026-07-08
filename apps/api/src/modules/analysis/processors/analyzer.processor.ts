@@ -3,15 +3,12 @@ import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Injectable, Logger } from '@nestjs/common';
 import { Job, UnrecoverableError } from 'bullmq';
 import { error } from 'console';
-import { readFileSync } from 'fs';
-import type { TemplateDelegate } from 'handlebars';
-import Handlebars from 'handlebars';
-import path from 'path';
 import { PrismaService } from 'src/infra/database/prisma.service';
 import z from 'zod';
 
-import { IJdAnalysis } from '../types';
+import { IJdAnalysis } from '../../jobs/types';
 import { AiService } from './ai.service';
+import { getPrompt } from './template';
 
 export const ResumeMatchOutputSchema = z.object({
   jobTitle: z.string(),
@@ -41,27 +38,12 @@ type IResumeMatchOutput = z.infer<typeof ResumeMatchOutputSchema>;
 @Processor(JD_ANALYSIS_QUEUE_NAME)
 export class AnalyzerService extends WorkerHost {
   private readonly logger = new Logger(AnalyzerService.name);
-  private readonly template: TemplateDelegate;
 
   constructor(
     private readonly aiService: AiService,
     private readonly prismaService: PrismaService,
   ) {
     super();
-
-    try {
-      const templateSource = readFileSync(
-        path.join(process.cwd(), 'src', 'assets', 'jd-evaluation.template.hbs'),
-        'utf-8',
-      );
-      this.template = Handlebars.compile(templateSource);
-    } catch (error) {
-      this.logger.error(
-        'Failed to initialize jd match template',
-        error instanceof Error ? error.stack : { error },
-      );
-      throw new UnrecoverableError('Failed to initialize jd match template');
-    }
   }
 
   async process(job: Job<IJdAnalysis>) {
@@ -75,7 +57,7 @@ export class AnalyzerService extends WorkerHost {
         this.logger.warn('Received JD evaluation job with unknown name: ' + name);
         await this.prismaService.analysis.update({
           where: { id: data.analysisId },
-          data: { status: 'FAILED', error: 'Unknown job name' },
+          data: { status: 'FAILED' },
         });
         throw new UnrecoverableError('Unknown job name');
     }
@@ -113,16 +95,13 @@ export class AnalyzerService extends WorkerHost {
 
     const jobDescription = isCreatedFromJob
       ? analysisJob.job!.jobDescription
-      : analysisJob.jobDescription;
+      : analysisJob.jobDescription!;
 
-    const prompt = this.template({
-      jobDescription,
-      candidateInfo: {
-        yearsOfExperience: analysisJob.user.yearsOfExperience,
-        preferredWorkSetting: analysisJob.user.preferredWorkSetting,
-        salaryExpectation: analysisJob.user.salaryExpectation,
-        resume: analysisJob.resume.json,
-      },
+    const prompt = getPrompt(jobDescription, {
+      yearsOfExperience: analysisJob.user.yearsOfExperience,
+      preferredWorkSetting: analysisJob.user.preferredWorkSetting,
+      salaryExpectation: analysisJob.user.salaryExpectation,
+      resume: analysisJob.resume.json,
     });
 
     try {
@@ -141,7 +120,6 @@ export class AnalyzerService extends WorkerHost {
           where: { id: analysisId },
           data: {
             status: 'FAILED',
-            error: 'Failed to get response from Gemini API or parse the response',
             title: `Analysis against ${analysisJob.resume.name}`,
           },
         });

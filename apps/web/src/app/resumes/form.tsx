@@ -253,7 +253,6 @@ function ExperienceTab() {
                 startDate: '',
                 endDate: '',
                 location: '',
-                description: '',
               })
             }
           >
@@ -303,15 +302,6 @@ function ExperienceTab() {
                     <FieldError errors={[errors.json?.experience?.[index]?.location]} />
                   </Field>
                 </div>
-                <Field>
-                  <FieldLabel>Description</FieldLabel>
-                  <Input
-                    {...register(`json.experience.${index}.description`)}
-                    placeholder="Ex. Worked as a software engineer on the frontend team, building user interfaces for web applications."
-                    className="bg-background"
-                  />
-                  <FieldError errors={[errors.json?.experience?.[index]?.description]} />
-                </Field>
                 <Field className="col-span-2">
                   <FieldLabel>Highlights</FieldLabel>
                   <Controller
@@ -495,7 +485,6 @@ function ProjectsTab() {
             onClick={() =>
               append({
                 title: '',
-                description: '',
                 url: '',
                 highlights: [],
                 technologies: [],
@@ -528,15 +517,6 @@ function ProjectsTab() {
             </CardHeader>
             <CardContent>
               <FieldGroup className="grid grid-cols-2">
-                <Field className="col-span-2">
-                  <FieldLabel>Description</FieldLabel>
-                  <Input
-                    {...register(`json.projects.${index}.description`)}
-                    placeholder="Ex. Developed a web application for managing tasks"
-                    className="bg-background"
-                  />
-                  <FieldError errors={[errors.json?.projects?.[index]?.description]} />
-                </Field>
                 <Field className="col-span-2">
                   <FieldLabel>Highlights</FieldLabel>
                   <Controller

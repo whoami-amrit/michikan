@@ -133,7 +133,7 @@ function PersonalInfo({ errors }: { errors: FieldErrors<ISignupDto> }) {
       </Field>
       <Field>
         <FieldLabel htmlFor="password">Password</FieldLabel>
-        <Input {...register('password')} className="bg-background" />
+        <Input {...register('password')} type="password" className="bg-background" />
         {errors.password ? (
           <FieldError errors={[errors.password]} />
         ) : (
@@ -237,7 +237,13 @@ export function SignupForm() {
 
           <Field>
             {section === 'userInfo' ? (
-              <Button type="button" onClick={() => setSection('workInfo')}>
+              <Button
+                type="button"
+                onClick={() => {
+                  setSection('workInfo');
+                }}
+                disabled={!!(errors.userInfo?.email ?? errors.userInfo?.name ?? errors.password)}
+              >
                 Next <ArrowRightIcon />
               </Button>
             ) : (

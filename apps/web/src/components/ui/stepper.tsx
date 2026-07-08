@@ -16,16 +16,10 @@ const getStepConnectorBackgroundColor = (state: IStep['state']) => {
 };
 
 const getStepIconForegroundColor = (state: IStep['state']) => {
-  if (state === 'error') {
-    return 'text-destructive-foreground';
+  if (state === 'inactive') {
+    return 'text-muted-foreground';
   }
-  if (state === 'active') {
-    return 'text-primary-foreground';
-  }
-  if (state === 'completed') {
-    return 'text-primary-foreground';
-  }
-  return 'text-muted-foreground';
+  return 'text-primary-foreground';
 };
 
 const getStepIconBackgroundColor = (state: IStep['state']) => {

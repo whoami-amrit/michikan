@@ -14,12 +14,6 @@
       "entryFile": "worker.main.js",
       "compilerOptions": {
         "deleteOutDir": true,
-        "assets": [
-          {
-            "include": "assets/**",
-            "watchAssets": true
-          }
-        ],
         "tsConfigPath": "tsconfig.worker.json"
       }
     }

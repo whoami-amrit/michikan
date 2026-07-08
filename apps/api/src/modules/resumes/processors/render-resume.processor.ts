@@ -1,27 +1,24 @@
-import { AccessDenied, NoSuchBucket } from '@aws-sdk/client-s3';
 import { RENDER_PDF_JOB_NAME, RENDER_QUEUE_NAME } from '@common/constants';
+import appConfig, { type IAppConfig } from '@config/app.config';
 import { Processor, WorkerHost } from '@nestjs/bullmq';
-import { Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { Job, UnrecoverableError } from 'bullmq';
 import { spawn } from 'child_process';
 import { Prisma } from 'db';
-import escapeLatex from 'escape-latex';
-import { mkdirSync, readFileSync } from 'fs';
+import { mkdirSync } from 'fs';
 import * as fs from 'fs/promises';
-import type { TemplateDelegate } from 'handlebars';
-import HandleBars from 'handlebars';
 import path from 'path';
+import { IResumeJson, ResumeJsonSchema } from 'shared';
 import { PrismaService } from 'src/infra/database/prisma.service';
 import { S3Service } from 'src/infra/storage/s3.service';
 
 import { IRenderPdfWorker } from '../types';
-import { RenderErrorEnum, RenderErrors } from './render-resume.errors';
+import { getResumeTex } from './template';
 
 @Injectable()
 @Processor(RENDER_QUEUE_NAME)
 export class RenderResumeProcessor extends WorkerHost {
   private readonly logger = new Logger(RenderResumeProcessor.name);
-  private readonly template: TemplateDelegate;
   private readonly renderOutputPath = process.env.RENDER_OUTPUT_PATH ?? '/tmp/michikan-renders';
   private readonly TEX_FILE_NAME = 'resume.tex';
   private readonly PDF_FILE_NAME = 'resume.pdf';
@@ -29,20 +26,12 @@ export class RenderResumeProcessor extends WorkerHost {
   constructor(
     private readonly prisma: PrismaService,
     private readonly s3Service: S3Service,
+    @Inject(appConfig.KEY) private readonly config: IAppConfig,
   ) {
     super();
 
-    this.registerHandlebarsHelpers();
-
     try {
       mkdirSync(this.renderOutputPath, { recursive: true });
-
-      const resumeTemplate = readFileSync(
-        path.join(process.cwd(), 'src', 'assets', 'render-resume.template.hbs'),
-        'utf-8',
-      );
-
-      this.template = HandleBars.compile(resumeTemplate);
     } catch (error) {
       this.logger.error(
         'Failed to initialize resume render template',
@@ -50,50 +39,6 @@ export class RenderResumeProcessor extends WorkerHost {
       );
       throw new UnrecoverableError('Failed to initialize resume render template');
     }
-  }
-
-  private registerHandlebarsHelpers() {
-    HandleBars.registerHelper('commaJoin', (arr: string[]) => {
-      this.logger.debug(`Joining array with commas: ${JSON.stringify(arr)}`);
-      if (!Array.isArray(arr)) {
-        return '';
-      }
-      return arr.join(', ');
-    });
-
-    HandleBars.registerHelper('formatDate', (date: string) => {
-      if (!date) {
-        return '';
-      }
-      const d = new Date(date);
-      const month = d.toLocaleString('default', { month: 'short' });
-      const year = d.getFullYear();
-      return `${month} ${year}`;
-    });
-
-    HandleBars.registerHelper('getPublicProfileUrlLabel', (url: string) => {
-      this.logger.debug(`Extracting label from URL: ${url}`);
-
-      if (!url) {
-        return '';
-      }
-
-      const { hostname, pathname } = new URL(url);
-
-      if (/.*(github|gitlab).*/.test(hostname)) {
-        return `${hostname.replace('www.', '')}/${pathname.split('/')[1]}`;
-      }
-
-      if (/.*linkedin.*/.test(hostname)) {
-        return `${hostname.replace('www.', '')}/${pathname.split('/')[2]}`;
-      }
-
-      return hostname.replace('www.', '');
-    });
-
-    HandleBars.registerHelper('escape', (text: string) =>
-      escapeLatex(text, { preserveFormatting: false }),
-    );
   }
 
   async process({ name, data }: Job<IRenderPdfWorker>) {
@@ -104,7 +49,7 @@ export class RenderResumeProcessor extends WorkerHost {
       default:
         this.logger.warn('Received job with unknown name: ' + name);
 
-        await this.updateJobStatus(data.workerId, { status: 'FAILED', error: 'Unknown job name' });
+        await this.updateJobStatus(data.workerId, { status: 'FAILED' });
 
         throw new UnrecoverableError('Unknown job name');
     }
@@ -123,8 +68,10 @@ export class RenderResumeProcessor extends WorkerHost {
         },
       });
 
+      const parsedJson = ResumeJsonSchema.parse(job!.resume.json);
+
       // already checked job existence in updateJobStatus
-      await this.writeLatexToFile(texFilePath, job!.resume.json);
+      await this.writeLatexToFile(texFilePath, parsedJson);
 
       await this.compilePdfLatex(workDir);
 
@@ -136,14 +83,11 @@ export class RenderResumeProcessor extends WorkerHost {
 
       await this.cleanupLocalJobDir(workDir);
     } catch (error) {
-      if (error instanceof RenderErrors) {
-        await this.updateJobStatus(workerId, { status: 'FAILED', error: String(error) });
-      } else {
-        await this.updateJobStatus(workerId, {
-          status: 'FAILED',
-          error: RenderErrors.getMessageForErrorType(RenderErrorEnum.UNKNOWN_ERROR),
-        });
-      }
+      this.logger.error(error, error instanceof Error ? error.stack : { error });
+
+      await this.updateJobStatus(workerId, {
+        status: 'FAILED',
+      });
 
       throw error;
     }
@@ -154,36 +98,23 @@ export class RenderResumeProcessor extends WorkerHost {
   ): Promise<{ workDir: string; texFilePath: string; pdfFilePath: string }> {
     const workDir = path.join(this.renderOutputPath, String(workerId));
 
-    try {
-      await fs.mkdir(workDir, { recursive: true });
+    await fs.mkdir(workDir, { recursive: true });
 
-      return {
-        workDir,
-        texFilePath: path.join(workDir, this.TEX_FILE_NAME),
-        pdfFilePath: path.join(workDir, this.PDF_FILE_NAME),
-      };
-    } catch (error) {
-      throw new RenderErrors(RenderErrorEnum.FAILED_CREATE_DIRECTORY, error as Error);
-    }
+    return {
+      workDir,
+      texFilePath: path.join(workDir, this.TEX_FILE_NAME),
+      pdfFilePath: path.join(workDir, this.PDF_FILE_NAME),
+    };
   }
 
-  private async writeLatexToFile(texFilePath: string, json: unknown): Promise<void> {
-    try {
-      const latexSource = this.template(json);
-      await fs.writeFile(texFilePath, latexSource, 'utf-8');
-      this.logger.debug(`Successfully wrote LaTeX source to file: ${texFilePath}`);
-    } catch (error) {
-      this.logger.debug(error);
-      throw new RenderErrors(RenderErrorEnum.FAILED_RENDER_LATEX, error as Error);
-    }
+  private async writeLatexToFile(texFilePath: string, json: IResumeJson): Promise<void> {
+    const latexSource = getResumeTex(json);
+    await fs.writeFile(texFilePath, latexSource, 'utf-8');
+    this.logger.debug(`Successfully wrote LaTeX source to file: ${texFilePath}`);
   }
 
   private async verifyPdfExists(pdfFilePath: string): Promise<void> {
-    try {
-      await fs.access(pdfFilePath);
-    } catch (error) {
-      throw new RenderErrors(RenderErrorEnum.PDF_OUTPUT_NOT_FOUND, error as Error);
-    }
+    await fs.access(pdfFilePath);
   }
 
   private async uploadPdfAndGetStorageKey(workerId: number, pdfFilePath: string): Promise<string> {
@@ -191,28 +122,19 @@ export class RenderResumeProcessor extends WorkerHost {
     const readStream = fileBuffer.createReadStream();
     const s3Key = `${workerId}:resume.pdf`;
 
-    try {
-      await this.s3Service.uploadFile(s3Key, readStream);
+    await this.s3Service.uploadFile(s3Key, readStream);
 
-      this.logger.debug(`Successfully uploaded rendered PDF to S3 with key: ${s3Key}`);
+    this.logger.debug(`Successfully uploaded rendered PDF to S3 with key: ${s3Key}`);
 
-      return s3Key;
-    } catch (error) {
-      let errorType = RenderErrorEnum.S3_UPLOAD_FAILED;
-
-      if (error instanceof AccessDenied) {
-        errorType = RenderErrorEnum.S3_CREDENTIALS_INVALID;
-      }
-
-      if (error instanceof NoSuchBucket) {
-        errorType = RenderErrorEnum.S3_BUCKET_NOT_FOUND;
-      }
-
-      throw new RenderErrors(errorType, error as Error);
-    }
+    return s3Key;
   }
 
   private async cleanupLocalJobDir(workDir: string): Promise<void> {
+    if (this.config.env === 'development') {
+      this.logger.debug(`Skipping cleanup of local job directory in development mode: ${workDir}`);
+      return;
+    }
+
     try {
       await fs.rm(workDir, { recursive: true });
     } catch (err) {
@@ -251,25 +173,20 @@ export class RenderResumeProcessor extends WorkerHost {
         clearTimeout(timer);
 
         if (timedOut) {
-          reject(new RenderErrors(RenderErrorEnum.PDF_COMPILATION_TIMEOUT, undefined));
+          reject(new Error('pdf render timed out'));
           return;
         }
 
         if (code === 0) {
           resolve();
         } else {
-          reject(new RenderErrors(RenderErrorEnum.PDF_COMPILATION_FAILED, undefined));
+          reject(new Error('Failed to compile PDF'));
         }
       });
 
       process.on('error', (err) => {
         clearTimeout(timer);
-
-        if ('code' in err && err.code === 'ENOENT') {
-          reject(new RenderErrors(RenderErrorEnum.PDFLATEX_NOT_FOUND, err));
-        }
-
-        reject(new RenderErrors(RenderErrorEnum.PDF_COMPILATION_FAILED, err));
+        reject(err);
       });
     });
   }
