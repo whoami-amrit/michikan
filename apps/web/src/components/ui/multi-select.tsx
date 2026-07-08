@@ -1,4 +1,5 @@
-import { ComponentProps, Fragment } from 'react';
+import { PlusIcon } from 'lucide-react';
+import { ComponentProps, Fragment, useState } from 'react';
 
 import {
   Combobox,
@@ -13,23 +14,46 @@ import {
   useComboboxAnchor,
 } from '@/components/ui/combobox';
 
+import { Button } from './button';
+
 function MultiSelect({
+  items,
   onChange,
+  creatable,
   ...props
 }: {
+  items: string[];
   onChange: (value: string[]) => void;
+  creatable?: true;
 } & ComponentProps<typeof Combobox<string, true>>) {
   const anchor = useComboboxAnchor();
+  const [options, setOptions] = useState<string[]>(items);
+  const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
+  const [input, setInput] = useState<string>('');
+
+  const onValueChange = (value: string[]) => {
+    setSelectedOptions(value);
+    onChange(value);
+  };
+
+  const addOption = () => {
+    if (input?.trim().length && !options.includes(input)) {
+      setOptions((prev) => prev && [...prev, input]);
+      onValueChange([...selectedOptions, input]);
+    }
+    setInput('');
+  };
 
   return (
     <Combobox<string, true>
       {...props}
+      items={options}
       multiple
       autoHighlight
-      onValueChange={(values, event) => {
-        console.log('values', values, 'event', event);
-        onChange(values);
-      }}
+      inputValue={input}
+      onInputValueChange={(value) => setInput(value)}
+      value={selectedOptions}
+      onValueChange={onValueChange}
     >
       <ComboboxChips ref={anchor} className="w-full">
         <ComboboxValue>
@@ -38,7 +62,16 @@ function MultiSelect({
               {values.map((value: string) => (
                 <ComboboxChip key={value}>{value}</ComboboxChip>
               ))}
-              <ComboboxChipsInput />
+              <ComboboxChipsInput
+                onKeyDown={(e) => {
+                  e.stopPropagation();
+
+                  if (creatable && e.key === 'Enter') {
+                    e.preventDefault();
+                    addOption();
+                  }
+                }}
+              />
             </Fragment>
           )}
         </ComboboxValue>
@@ -52,6 +85,14 @@ function MultiSelect({
             </ComboboxItem>
           )}
         </ComboboxList>
+        {creatable && !!input.trim().length && (
+          <div className="flex w-full p-2">
+            <Button variant="outline" size="sm" className="w-full" onClick={addOption}>
+              <PlusIcon />
+              Add <span className="truncate">&quot;{input}&quot;</span>
+            </Button>
+          </div>
+        )}
       </ComboboxContent>
     </Combobox>
   );

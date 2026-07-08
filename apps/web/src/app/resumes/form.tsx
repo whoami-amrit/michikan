@@ -224,7 +224,9 @@ function SkillsTab() {
               <Controller
                 name={`json.skills.${index}.skills`}
                 control={control}
-                render={({ field }) => <MultiSelect {...field} items={['React.js', 'Nuxt.js']} />}
+                render={({ field }) => (
+                  <MultiSelect creatable {...field} items={['React.js', 'Nuxt.js']} />
+                )}
               />
               <FieldError errors={[errors.json?.skills?.[index]?.skills]} />
             </Field>
@@ -737,10 +739,12 @@ export function ResumeForm({ type, data, id }: ResumeFormProps) {
             <Field>
               <FieldLabel>Name</FieldLabel>
               <Input {...methods.register('name')} placeholder="Enter resume name" />
+              <FieldError errors={[errors.name]} />
             </Field>
             <Field className="col-span-2">
               <FieldLabel>Description</FieldLabel>
               <Input {...methods.register('description')} placeholder="Enter resume description" />
+              <FieldError errors={[errors.description]} />
             </Field>
           </FieldGroup>
           <Tabs className="gap-8 grow" defaultValue={TabKeys.PersonalInfo}>
