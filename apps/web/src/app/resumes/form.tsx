@@ -1,6 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Resume } from 'db';
-import { AlertCircle, LoaderCircle, PencilSparklesIcon, PlusIcon, XIcon } from 'lucide-react';
+import { AlertCircle, FileDown, PencilSparklesIcon, PlusIcon, XIcon } from 'lucide-react';
+import { useState } from 'react';
 import {
   Controller,
   FormProvider,
@@ -10,8 +11,17 @@ import {
   useFormContext as useRHFFormContext,
 } from 'react-hook-form';
 import { useNavigate } from 'react-router';
-import { CreateResumeSchema, ICreateResumeDto, ICreateResumeDtoInput, IResumeJson } from 'shared';
+import {
+  CreateResumeSchema,
+  ICreateRenderWorkerResponse,
+  ICreateResumeDto,
+  ICreateResumeDtoInput,
+  ICreateWorkerResponse,
+  IRenderStatusResponse,
+  IResumeJson,
+} from 'shared';
 import { toast } from 'sonner';
+import useSWR from 'swr';
 
 import { ErrorToast } from '@/components/error-toast';
 import { Button } from '@/components/ui/button';
@@ -30,6 +40,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { MultiSelect } from '@/components/ui/multi-select';
 import { Progress, ProgressLabel, ProgressValue } from '@/components/ui/progress';
+import { Spinner } from '@/components/ui/spinner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { api } from '@/lib/utils';
@@ -561,6 +572,8 @@ function ProjectsTab() {
 }
 
 function SummaryTab() {
+  // todo: this is supposed to be for staff engineers (very senior people) or who have made a career switch or explain a gap in your career
+  // todo: refer r/EngineeringResume wiki for all the good to haves & etc
   const {
     register,
     formState: { errors },
@@ -588,6 +601,71 @@ function SummaryTab() {
         </Field>
       </FieldSet>
     </FieldGroup>
+  );
+}
+
+const download = (url: string) => {
+  const link = document.createElement('a');
+  link.href = url;
+  link.setAttribute('download', `resume-${new Date().toISOString()}.pdf`);
+  document.body.appendChild(link);
+  link.click();
+};
+
+function DownloadButton({ id }: { id: string }) {
+  const [workerInfo, setWorkerInfo] = useState<ICreateRenderWorkerResponse>();
+  const [progress, setProgress] = useState<'pending' | 'completed' | 'failed'>();
+
+  useSWR(`/resumes/worker/${id}`, {
+    refreshInterval: 500,
+    isOnline: () => progress === 'pending',
+    fetcher: async () => {
+      if (!workerInfo) {
+        return;
+      }
+
+      if (workerInfo.status === 'COMPLETED') {
+        download(workerInfo.downloadUrl!);
+        return;
+      }
+
+      const response = await api
+        .get(`/resumes/worker/${workerInfo.workerId}`)
+        .json<IRenderStatusResponse>();
+
+      if (response.status === 'FAILED') {
+        toast.error(<ErrorToast />);
+        setProgress('failed');
+        return;
+      }
+
+      if (response.status !== 'COMPLETED') {
+        return;
+      }
+
+      toast.success('Resume ready for download');
+      download(response.downloadUrl!);
+      setProgress('completed');
+    },
+  });
+
+  return (
+    <Button
+      variant="outline"
+      // eslint-disable-next-line @typescript-eslint/no-misused-promises
+      onClick={async () => {
+        try {
+          setWorkerInfo(await api.post(`/resumes/${id}/render`).json<ICreateWorkerResponse>());
+          setProgress('pending');
+          toast.success('Resume download started! Please wait...');
+        } catch (error) {
+          toast.error(<ErrorToast error={error} />);
+        }
+      }}
+    >
+      {progress === 'pending' ? <Spinner className="size-4" /> : <FileDown />}
+      Download
+    </Button>
   );
 }
 
@@ -697,12 +775,15 @@ export function ResumeForm({ type, data, id }: ResumeFormProps) {
             {
               // TODO!: implement this feature
             }
-            <Progress value={50} className="w-76 gap-2">
-              <ProgressLabel>Progress</ProgressLabel>
-              <ProgressValue />
-            </Progress>
+            {type === 'new' && (
+              <Progress value={50} className="w-76 gap-2">
+                <ProgressLabel>Progress</ProgressLabel>
+                <ProgressValue />
+              </Progress>
+            )}
+            {type === 'edit' && <DownloadButton id={id} />}
             <div className="flex gap-2 items-center">
-              {isSubmitting && <LoaderCircle className="size-4 animate-spin" />}
+              {isSubmitting && <Spinner className="size-4" />}
               <Button type="reset" onClick={() => reset()} variant="secondary">
                 Reset
               </Button>

@@ -33,7 +33,7 @@ export class ResumeController {
     return await this.resumeService.renderPdf(jobId, user.sub);
   }
 
-  @Get('worker/:id/status')
+  @Get('worker/:id')
   async getRenderStatus(
     @Param('id', ParseIntPipe) resumeId: number,
     @CurrentUser() user: IJwtAccessPayload,

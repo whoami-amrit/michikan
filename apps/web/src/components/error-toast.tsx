@@ -1,7 +1,7 @@
 import { isHTTPError } from 'ky';
 import type { IProblemDetails } from 'shared';
 
-export const ErrorToast = ({ error }: { error: unknown }) => {
+export const ErrorToast = ({ error }: { error?: unknown }) => {
   if (!isHTTPError(error)) {
     return <h1 className="text-sm font-bold text-red-600">Something went wrong :/</h1>;
   }

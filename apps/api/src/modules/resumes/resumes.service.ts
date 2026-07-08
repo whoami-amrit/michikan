@@ -7,8 +7,8 @@ import { Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { Queue } from 'bullmq';
 import { Resume } from 'db';
 import {
+  ICreateRenderWorkerResponse,
   ICreateResumeDto,
-  ICreateWorkerResponse,
   IGetResumesResponse,
   IRenderStatusResponse,
   IUpdateResumeDto,
@@ -71,7 +71,7 @@ export class ResumeService {
     });
   }
 
-  async renderPdf(resumeId: number, userId: number): Promise<ICreateWorkerResponse> {
+  async renderPdf(resumeId: number, userId: number): Promise<ICreateRenderWorkerResponse> {
     const resume = await this.prisma.resume.findUnique({
       where: { id: resumeId, userId },
     });
@@ -86,6 +86,10 @@ export class ResumeService {
       return {
         workerId: previousSuccessJob.id,
         status: previousSuccessJob.status,
+        downloadUrl: await this.s3Service.getObjectSignedUrl(
+          previousSuccessJob.storageKey!,
+          'filename',
+        ),
       };
     }
 
@@ -128,30 +132,25 @@ export class ResumeService {
       },
     });
 
-    return previousJob?.sourceHash === latestSourceHash ? previousJob : null;
+    return previousJob?.sourceHash === latestSourceHash && previousJob.storageKey
+      ? previousJob
+      : null;
   }
 
   async getRenderStatus(workerId: number, userId: number): Promise<IRenderStatusResponse> {
     const renderJob = await this.prisma.resumeRenderWorker.findUnique({
       where: { id: workerId, userId },
-      include: { resume: true },
     });
 
     if (!renderJob) {
       throw new NotFoundException('Render job not found');
     }
 
-    const response: IRenderStatusResponse = {
-      status: renderJob.status,
+    return {
+      ...renderJob,
+      ...(renderJob.status === 'COMPLETED' && renderJob.storageKey
+        ? { downloadUrl: await this.s3Service.getObjectSignedUrl(renderJob.storageKey, 'filename') }
+        : {}),
     };
-
-    if (renderJob.status === 'COMPLETED' && renderJob.storageKey) {
-      response.downloadUrl = await this.s3Service.getObjectSignedUrl(
-        renderJob.storageKey,
-        'filename',
-      );
-    }
-
-    return response;
   }
 }
