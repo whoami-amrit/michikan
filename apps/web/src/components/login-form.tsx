@@ -1,13 +1,48 @@
-import { NavLink } from 'react-router';
+import ky from 'ky';
+import { LoaderCircleIcon } from 'lucide-react';
+import { SubmitHandler, useForm } from 'react-hook-form';
+import { NavLink, useNavigate } from 'react-router';
+import { ILoginDto } from 'shared';
+import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
-import { Field, FieldDescription, FieldGroup, FieldLabel } from '@/components/ui/field';
+import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
-import { cn } from '@/lib/utils';
+import { API_PREFIX } from '@/lib/utils';
 
-export function LoginForm({ className, ...props }: React.ComponentProps<'form'>) {
+import { ErrorToast } from './error-toast';
+
+export function LoginForm() {
+  const navigate = useNavigate();
+
+  const methods = useForm<ILoginDto>({
+    mode: 'onBlur',
+    defaultValues: {
+      email: '',
+      password: '',
+    },
+  });
+  const {
+    formState: { errors, isSubmitting },
+    register,
+    handleSubmit,
+  } = methods;
+
+  const onSubmit: SubmitHandler<ILoginDto> = async (data) => {
+    try {
+      // NOTE: api has a retry hook that will refresh the token if it is expired
+      // and redirect to /login; so we should use ky directly here otherwise it
+      // will cause a page reload
+      await ky.post(`${API_PREFIX}/auth/login`, { json: data });
+      await navigate('/analysis');
+    } catch (error) {
+      toast.error(<ErrorToast error={error} />);
+    }
+  };
+
   return (
-    <form className={cn('flex flex-col gap-6', className)} {...props}>
+    // eslint-disable-next-line @typescript-eslint/no-misused-promises
+    <form className="flex flex-col gap-6" onSubmit={handleSubmit(onSubmit)}>
       <FieldGroup>
         <div className="flex flex-col items-center gap-1 text-center">
           <h1 className="text-2xl font-bold">Login to your account</h1>
@@ -17,19 +52,27 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'form'>)
         </div>
         <Field>
           <FieldLabel htmlFor="email">Email</FieldLabel>
-          <Input id="email" name="email" type="email" placeholder="m@example.com" required />
+          <Input {...register('email')} placeholder="m@example.com" />
+          <FieldError errors={[errors.email]} />
         </Field>
         <Field>
           <div className="flex items-center">
             <FieldLabel htmlFor="password">Password</FieldLabel>
+            {
+              // todo: handle forgot password case
+            }
             <a href="#" className="ml-auto text-sm underline-offset-4 hover:underline">
               Forgot your password?
             </a>
           </div>
-          <Input id="password" name="password" type="password" required />
+          <Input {...register('password')} placeholder="••••••••" />
+          <FieldError errors={[errors.password]} />
         </Field>
         <Field>
-          <Button type="submit">Login</Button>
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting && <LoaderCircleIcon className="size-4 animate-spin" />}
+            Login
+          </Button>
           <FieldDescription className="text-center">
             Don&apos;t have an account?{' '}
             <NavLink to="/signup" className="underline underline-offset-4">

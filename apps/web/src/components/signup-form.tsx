@@ -1,4 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
+import ky from 'ky';
 import { ArrowRightIcon, BriefcaseIcon, LoaderCircleIcon, UserIcon } from 'lucide-react';
 import { useState } from 'react';
 import {
@@ -16,7 +17,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
-import { api, cn } from '@/lib/utils';
+import { API_PREFIX } from '@/lib/utils';
 
 import { ErrorToast } from './error-toast';
 import {
@@ -175,7 +176,7 @@ const getWorkInfoStepState = (section: SectionType, errors: FieldErrors<ISignupD
   return 'active';
 };
 
-export function SignupForm({ className }: React.ComponentProps<'form'>) {
+export function SignupForm() {
   const methods = useForm<ISignupDto>({
     mode: 'onBlur',
     resolver: zodResolver(SignupSchema),
@@ -191,7 +192,7 @@ export function SignupForm({ className }: React.ComponentProps<'form'>) {
 
   const onSubmit: SubmitHandler<ISignupDto> = async (data) => {
     try {
-      await api.post('/auth/signup', { json: data });
+      await ky.post(`${API_PREFIX}/auth/signup`, { json: data });
       await navigate('/analysis');
     } catch (error) {
       toast.error(<ErrorToast error={error} />);
@@ -203,7 +204,7 @@ export function SignupForm({ className }: React.ComponentProps<'form'>) {
       <form
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
         onSubmit={handleSubmit(onSubmit)}
-        className={cn('flex flex-col gap-6', className)}
+        className="flex flex-col gap-6"
       >
         <FieldGroup>
           <div className="flex flex-col items-center gap-1 text-center">

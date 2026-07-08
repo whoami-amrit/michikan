@@ -1,7 +1,4 @@
-import ky from 'ky';
-import type { SubmitEvent } from 'react';
 import { useEffect } from 'react';
-import { useNavigate } from 'react-router';
 import { useSearchParams } from 'react-router';
 import { toast } from 'sonner';
 import useSWRMutation from 'swr/mutation';
@@ -11,8 +8,10 @@ import MichikanIcon from '@/assets/michikan-icon.svg?react';
 import { ErrorToast } from '@/components/error-toast';
 import { LoginForm } from '@/components/login-form';
 import { SignupForm } from '@/components/signup-form';
-import { api, API_PREFIX } from '@/lib/utils';
+import { api } from '@/lib/utils';
 
+// todo: we can have a center spaced layout with redirecting to dashboard in 5 seconds
+// todo: a beautiful bouquet for successful verification or something
 export const VerifyEmailPage = () => {
   const [params] = useSearchParams();
 
@@ -44,42 +43,7 @@ export const VerifyEmailPage = () => {
   return <div>Email verified successfully!</div>;
 };
 
-const getLoginPayload = (formData: FormData) => ({
-  email: formData.get('email') as string,
-  password: formData.get('password') as string,
-});
-
-const getSignupPayload = (formData: FormData) => ({
-  name: formData.get('name') as string,
-  email: formData.get('email') as string,
-  password: formData.get('password') as string,
-});
-
 export function AuthFormPage({ type }: { type: 'login' | 'signup' }) {
-  const navigate = useNavigate();
-
-  const onSubmit = (e: SubmitEvent<HTMLFormElement>) => {
-    // prevent refresh
-    e.preventDefault();
-
-    const formData = new FormData(e.currentTarget);
-
-    if (type === 'signup' && formData.get('password') !== formData.get('confirm-password')) {
-      toast.error('Passwords do not match');
-      return;
-    }
-
-    const json = (type === 'login' ? getLoginPayload : getSignupPayload)(formData);
-
-    ky.post(`${API_PREFIX}/auth/${type}`, {
-      json,
-    })
-      .then(() => navigate('/analysis'))
-      .catch((err: unknown) => {
-        toast.error(<ErrorToast error={err} />);
-      });
-  };
-
   return (
     <div className="grid min-h-svh lg:grid-cols-2">
       <div className="flex flex-col gap-4 p-6 md:p-10">
@@ -92,13 +56,7 @@ export function AuthFormPage({ type }: { type: 'login' | 'signup' }) {
           </a>
         </div>
         <div className="flex flex-1 items-center justify-center">
-          <div className="w-full max-w-xs">
-            {type === 'login' ? (
-              <LoginForm onSubmit={onSubmit} />
-            ) : (
-              <SignupForm onSubmit={onSubmit} />
-            )}
-          </div>
+          <div className="w-full max-w-xs">{type === 'login' ? <LoginForm /> : <SignupForm />}</div>
         </div>
       </div>
       <div className="relative hidden bg-muted lg:block">
