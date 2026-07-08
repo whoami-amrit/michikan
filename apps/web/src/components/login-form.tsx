@@ -1,8 +1,9 @@
+import { zodResolver } from '@hookform/resolvers/zod';
 import ky from 'ky';
 import { LoaderCircleIcon } from 'lucide-react';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import { NavLink, useNavigate } from 'react-router';
-import { ILoginDto } from 'shared';
+import { ILoginDto, LoginSchema } from 'shared';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
@@ -21,6 +22,7 @@ export function LoginForm() {
       email: '',
       password: '',
     },
+    resolver: zodResolver(LoginSchema),
   });
   const {
     formState: { errors, isSubmitting },
