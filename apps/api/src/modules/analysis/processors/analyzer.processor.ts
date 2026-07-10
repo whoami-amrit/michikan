@@ -3,36 +3,12 @@ import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Injectable, Logger } from '@nestjs/common';
 import { Job, UnrecoverableError } from 'bullmq';
 import { error } from 'console';
-import { PrismaService } from 'src/infra/database/prisma.service';
-import z from 'zod';
+import { AnalysisReportSchema, IAnalysisReport } from 'shared';
 
+import { PrismaService } from '../../../infra/database/prisma.service';
 import { IJdAnalysis } from '../../jobs/types';
 import { AiService } from './ai.service';
 import { getPrompt } from './template';
-
-export const ResumeMatchOutputSchema = z.object({
-  jobTitle: z.string(),
-  companyName: z.string(),
-  workSetting: z.enum(['REMOTE', 'ONSITE', 'HYBRID', 'UNKNOWN']),
-  experienceLevel: z.enum(['JUNIOR', 'MID', 'SENIOR', 'STAFF_PLUS', 'UNKNOWN']),
-  salaryMin: z.number().nullable(),
-  salaryMax: z.number().nullable(),
-  currency: z.string().nullable(),
-  salaryPeriod: z.enum(['YEARLY', 'MONTHLY', 'HOURLY', 'UNKNOWN']),
-  requiredSkills: z.array(z.string()),
-  preferredSkills: z.array(z.string()),
-  stackSkills: z.array(z.string()),
-  matchedRequiredSkills: z.array(z.string()),
-  missingRequiredSkills: z.array(z.string()),
-  matchedPreferredSkills: z.array(z.string()),
-  missingPreferredSkills: z.array(z.string()),
-  matchedStackSkills: z.array(z.string()),
-  candidateExperienceLevel: z.enum(['JUNIOR', 'MID', 'SENIOR', 'STAFF_PLUS']),
-  matchScore: z.number().int().min(0).max(100).nullable(),
-  summary: z.string().nonempty(),
-});
-
-type IResumeMatchOutput = z.infer<typeof ResumeMatchOutputSchema>;
 
 @Injectable()
 @Processor(JD_ANALYSIS_QUEUE_NAME)
@@ -71,12 +47,12 @@ export class AnalyzerService extends WorkerHost {
         user: true,
         ...(isCreatedFromJob
           ? {
-              job: {
-                select: {
-                  jobDescription: true,
-                },
+            job: {
+              select: {
+                jobDescription: true,
               },
-            }
+            },
+          }
           : {}),
       },
     });
@@ -110,10 +86,11 @@ export class AnalyzerService extends WorkerHost {
         data: { status: 'IN_PROGRESS' },
       });
 
-      const response = await this.aiService.execute<IResumeMatchOutput>(
+      const response = await this.aiService.execute<IAnalysisReport>(
         prompt,
-        ResumeMatchOutputSchema,
+        AnalysisReportSchema,
       );
+
 
       if (response === null) {
         await this.prismaService.analysis.update({

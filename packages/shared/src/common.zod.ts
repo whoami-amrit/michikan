@@ -179,7 +179,7 @@ const EducationEntrySchema = z.object({
     .refine((date) => !isNaN(Date.parse(date)), 'Invalid graduation date'),
 });
 
-const schema = z.object({
+const ResumeJsonSchema = z.object({
   personalInfo: PersonalInfoSchema,
   skills: z.array(SkillEntrySchema).max(10, 'Maximum 10 skill categories').optional(),
   experience: z.array(ExperienceEntrySchema).max(20, 'Maximum 20 experience entries').optional(),
@@ -190,4 +190,27 @@ const schema = z.object({
   ),
 });
 
-export { schema as ResumeJsonSchema };
+const RequirementMatchSchema = z.object({
+  requirement: z.string(),
+  status: z.enum(['MET', 'PARTIAL', 'MISSING']),
+  evidence: z.string(), // direct quote from resume, or "none"
+});
+
+const JdRequirementsSchema = z.object({
+  required: z.array(z.string()),
+  preferred: z.array(z.string()),
+});
+
+const AnalysisReportSchema = z.object({
+  shouldApply: z.enum(['definitely', 'worth a try', 'no']),
+  jobTitle: z.string().max(250),
+  companyName: z.string().max(250),
+  matchScore: z.number().int().min(0).max(100),
+  jdRequirements: JdRequirementsSchema,
+  requirementMatches: z.array(RequirementMatchSchema),
+  strengths: z.array(z.string()).max(3),
+  gaps: z.array(z.string()).max(3),
+  summary: z.string(),
+});
+
+export { AnalysisReportSchema, ResumeJsonSchema };

@@ -4,8 +4,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Queue } from 'bullmq';
 import { Job, User, WorkerStatus } from 'db';
 import { ICreateJobDto, IUpdateJobDto } from 'shared';
-import { PrismaService } from 'src/infra/database/prisma.service';
 
+import { PrismaService } from '../../infra/database/prisma.service';
 import { IJdAnalysis } from './types';
 
 @Injectable()

@@ -7,10 +7,10 @@ import type { Session, User } from 'db';
 import { Provider } from 'db';
 import type { Request, Response } from 'express';
 import { ILoginDto, ISignupDto } from 'shared';
-import { PrismaService } from 'src/infra/database/prisma.service';
-import { SesService } from 'src/infra/email/ses.service';
 
 import { IJwtAccessPayload } from '../../common/types/jwt-payload.interface';
+import { PrismaService } from '../../infra/database/prisma.service';
+import { SesService } from '../../infra/email/ses.service';
 import {
   ACCESS_TOKEN_COOKIE_NAME,
   BCRYPT_SALT_ROUNDS,

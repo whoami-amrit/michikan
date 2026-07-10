@@ -13,9 +13,9 @@ import {
   IRenderStatusResponse,
   IUpdateResumeDto,
 } from 'shared';
-import { PrismaService } from 'src/infra/database/prisma.service';
-import { S3Service } from 'src/infra/storage/s3.service';
 
+import { PrismaService } from '../../infra/database/prisma.service';
+import { S3Service } from '../../infra/storage/s3.service';
 import { IRenderPdfWorker } from './types';
 
 @Injectable()
