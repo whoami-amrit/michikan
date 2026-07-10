@@ -21,10 +21,11 @@ export class JobsService {
     const job = await this.prismaService.job.create({
       data: {
         company: body.company,
-        title: body.title,
+        role: body.role,
         jobDescription: body.jobDescription,
-        applicationUrl: body.applicationUrl,
+        applyLink: body.applyLink,
         status: body.status,
+        source: body.source,
         ...(body.shouldAnalyzeOptions.should
           ? {
               analyses: {

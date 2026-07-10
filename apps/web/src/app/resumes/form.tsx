@@ -116,15 +116,6 @@ function PersonalInfoTab() {
             <FieldError errors={[errors.json?.personalInfo?.github]} />
           </Field>
           <Field>
-            <FieldLabel>LinkedIn</FieldLabel>
-            <Input
-              {...register('json.personalInfo.linkedin')}
-              placeholder="https://linkedin.com/in/username"
-              className="bg-background"
-            />
-            <FieldError errors={[errors.json?.personalInfo?.linkedin]} />
-          </Field>
-          <Field>
             <FieldLabel>Phone</FieldLabel>
             <Input
               {...register('json.personalInfo.phone')}
@@ -148,26 +139,15 @@ function PersonalInfoTab() {
           <br /> Or - URL: <code className="inline">https://my-site-12345.netlify.app</code> →
           Label: <code className="inline">my-site.dev</code>
         </FieldDescription>
-        <FieldGroup className="grid-cols-2 grid gap-4">
-          <Field>
-            <FieldLabel>Url</FieldLabel>
-            <Input
-              {...register('json.personalInfo.portfolio.url')}
-              placeholder="https://your-portfolio.com"
-              className="bg-background"
-            />
-            <FieldError errors={[errors.json?.personalInfo?.portfolio?.url]} />
-          </Field>
-          <Field>
-            <FieldLabel>Label</FieldLabel>
-            <Input
-              {...register('json.personalInfo.portfolio.label')}
-              placeholder="A label for your portfolio link"
-              className="bg-background"
-            />
-            <FieldError errors={[errors.json?.personalInfo?.portfolio?.label]} />
-          </Field>
-        </FieldGroup>
+        <Field>
+          <FieldLabel>Portfolio</FieldLabel>
+          <Input
+            {...register('json.personalInfo.portfolio')}
+            placeholder="https://your-portfolio.com"
+            className="bg-background"
+          />
+          <FieldError errors={[errors.json?.personalInfo?.portfolio]} />
+        </Field>
       </FieldSet>
     </FieldGroup>
   );
@@ -684,7 +664,6 @@ export function ResumeForm({ type, data, id }: ResumeFormProps) {
                 name: '',
                 email: '',
                 github: '',
-                linkedin: '',
                 phone: '',
               },
               skills: [],

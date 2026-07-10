@@ -202,13 +202,13 @@ export function JobForm({ type, data, id }: JobFormProps) {
     defaultValues:
       type === 'new'
         ? {
-            applicationUrl: '',
+            applyLink: '',
             company: '',
             jobDescription: '',
             shouldAnalyzeOptions: {
               should: false,
             },
-            title: '',
+            role: '',
             status: JobStatus.NOT_APPLIED,
           }
         : data,
@@ -269,8 +269,8 @@ export function JobForm({ type, data, id }: JobFormProps) {
                 <div className="grid-cols-2 grid gap-4">
                   <Field>
                     <FieldLabel>Title</FieldLabel>
-                    <Input {...methods.register('title')} placeholder="Ex. Software Engineer" />
-                    <FieldError errors={[errors.title]} />
+                    <Input {...methods.register('role')} placeholder="Ex. Software Engineer" />
+                    <FieldError errors={[errors.role]} />
                   </Field>
                   <Field>
                     <FieldLabel>Company</FieldLabel>
@@ -321,10 +321,10 @@ export function JobForm({ type, data, id }: JobFormProps) {
                   <Field className="col-span-2">
                     <FieldLabel>Application URL</FieldLabel>
                     <Input
-                      {...methods.register('applicationUrl')}
+                      {...methods.register('applyLink')}
                       placeholder="Ex. https://company.com/jobs/123"
                     />
-                    <FieldError errors={[errors.applicationUrl]} />
+                    <FieldError errors={[errors.applyLink]} />
                   </Field>
                 </div>
               </FieldGroup>

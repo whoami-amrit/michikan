@@ -172,16 +172,10 @@ model Job {
 
   jobDescription String
   company        String
-  title          String
+  role           String
   status         JobStatus @default(NOT_APPLIED)
-
-  // Optional meta information that can be derived during analysis
-  workSetting     WorkSetting?
-  experienceLevel ExperienceLevel?
-  minCompensation Int?
-  maxCompensation Int?
-  currency        String?
-  applicationUrl  String? // Moved from meta-tracking
+  applyLink      String?
+  source         String
 
   // Notes or Interview logs of the job
   notes String?

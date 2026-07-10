@@ -34,41 +34,19 @@ const PersonalInfoSchema = z.object({
   github: zodSafeString.pipe(
     z.url('Invalid GitHub URL').max(500, 'GitHub URL must be less than 500 characters').optional(),
   ),
-  linkedin: zodSafeString.pipe(
+  portfolio: zodSafeString.pipe(
     z
-      .url('Invalid LinkedIn URL')
-      .max(500, 'LinkedIn URL must be less than 500 characters')
-      .optional(),
-  ),
-  portfolio: z.preprocess(
-    (value: Record<string, unknown>) => {
-      if (typeof value !== 'object' || value === null) {
-        return value;
-      }
-
-      if (value.url === '' && value.label === '') {
-        return undefined;
-      }
-
-      return value;
-    },
-    z
-      .object({
-        url: z
-          .url('Invalid portfolio URL')
-          .max(500, 'Portfolio URL must be less than 500 characters'),
-        label: z
-          .string()
-          .trim()
-          .min(1, 'Label is required')
-          .max(50, 'Label must be less than 50 characters'),
-      })
+      .url('Invalid Portfolio URL')
+      .max(500, 'Portfolio URL must be less than 500 characters')
       .optional(),
   ),
   phone: zodSafeString.pipe(
     z
       .string()
-      .regex(/^\+?[\d\s\-()]{10,}$/, 'Invalid phone number')
+      .regex(
+        /(?:([+]\d{1,4})[-.\s]?)?(?:[(](\d{1,3})[)][-.\s]?)?(\d{1,4})[-.\s]?(\d{1,4})[-.\s]?(\d{1,9})/g,
+        'Invalid phone number',
+      )
       .max(20, 'Phone number must be less than 20 characters')
       .optional(),
   ),

@@ -34,7 +34,7 @@ export function EditJobPage() {
       label: 'Jobs',
     },
     {
-      label: `Edit "${jobDetail?.title ?? ''}"`,
+      label: `Edit "${jobDetail?.role ?? ''}"`,
       isLoading,
     },
   ]);

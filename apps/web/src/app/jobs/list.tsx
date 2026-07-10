@@ -74,7 +74,7 @@ export default function JobsPage() {
                   }}
                   key={job.id}
                 >
-                  <TableCell>{job.title}</TableCell>
+                  <TableCell>{job.role}</TableCell>
                   <TableCell>{job.status}</TableCell>
                   <TableCell>{new Date(job.updatedAt).toLocaleDateString()}</TableCell>
                 </TableRow>

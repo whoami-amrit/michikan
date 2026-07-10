@@ -8,15 +8,7 @@ const getPublicProfileUrlLabel = (url: string) => {
 
   const { hostname, pathname } = new URL(url);
 
-  if (/.*(github|gitlab).*/.test(hostname)) {
-    return `${hostname.replace('www.', '')}/${pathname.split('/')[1]}`;
-  }
-
-  if (/.*linkedin.*/.test(hostname)) {
-    return `${hostname.replace('www.', '')}/in/${pathname.split('/')[2]}`;
-  }
-
-  return hostname.replace('www.', '');
+  return `${hostname.replace('www.', '')}${pathname}`;
 };
 
 const formatDate = (date: string) => {
@@ -66,7 +58,7 @@ right=0.5in]{geometry}              % specify right page margin
 \vspace{5pt}
 
 % contact information
-\centerline{\href{mailto:${data.personalInfo.email}}{${data.personalInfo.email}} ${data.personalInfo.portfolio ? String.raw`| \href{${data.personalInfo.portfolio.url}}{${data.personalInfo.portfolio.label}}` : ''} ${data.personalInfo.github ? String.raw`| \href{${data.personalInfo.github}}{${getPublicProfileUrlLabel(data.personalInfo.github)}}` : ''} ${data.personalInfo.linkedin ? String.raw`| \href{${data.personalInfo.linkedin}}{${getPublicProfileUrlLabel(data.personalInfo.linkedin)}}` : ''}}
+\centerline{\href{mailto:${data.personalInfo.email}}{${data.personalInfo.email}} ${data.personalInfo.github ? String.raw`| \href{${data.personalInfo.github}}{${getPublicProfileUrlLabel(data.personalInfo.github)}}` : ''} ${data.personalInfo.portfolio ? String.raw`| \href{${data.personalInfo.portfolio}}{${getPublicProfileUrlLabel(data.personalInfo.portfolio)}}` : ''} ${data.personalInfo.phone ? String.raw`| ${data.personalInfo.phone}` : ''}}
 
 \vspace{-10pt}
 
