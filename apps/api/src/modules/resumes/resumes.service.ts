@@ -1,6 +1,11 @@
 import { createHash } from 'node:crypto';
 
-import { RENDER_PDF_JOB_NAME, RENDER_QUEUE_NAME } from '@common/constants';
+import {
+  ANALYSER_QUEUE_NAME,
+  RENDER_PDF_JOB_NAME,
+  RENDER_QUEUE_NAME,
+  RESUME_ANALYZER_JOB_NAME,
+} from '@common/constants';
 import appConfig, { type IAppConfig } from '@config/app.config';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
@@ -16,6 +21,7 @@ import {
 
 import { PrismaService } from '../../infra/database/prisma.service';
 import { S3Service } from '../../infra/storage/s3.service';
+import { IAnalyzerJobData } from '../jobs/types';
 import { IRenderPdfWorker } from './types';
 
 @Injectable()
@@ -26,11 +32,13 @@ export class ResumeService {
     private readonly prisma: PrismaService,
     private readonly s3Service: S3Service,
     @InjectQueue(RENDER_QUEUE_NAME) private readonly renderQueue: Queue<IRenderPdfWorker>,
+    @InjectQueue(ANALYSER_QUEUE_NAME) private readonly analyserQueue: Queue<IAnalyzerJobData>,
     @Inject(appConfig.KEY) private readonly config: IAppConfig,
   ) {}
 
-  create(userId: number, createResumeDto: ICreateResumeDto): Promise<Resume> {
-    return this.prisma.resume.create({
+  async create(userId: number, createResumeDto: ICreateResumeDto): Promise<Resume> {
+    // todo: limit to 1 for free user?
+    const resume = await this.prisma.resume.create({
       data: {
         json: createResumeDto.json,
         name: createResumeDto.name,
@@ -38,6 +46,13 @@ export class ResumeService {
         userId,
       },
     });
+
+    await this.analyserQueue.add(ANALYSER_QUEUE_NAME, {
+      type: RESUME_ANALYZER_JOB_NAME,
+      resumeId: resume.id,
+    });
+
+    return resume;
   }
 
   update(resumeId: number, userId: number, updateResumeDto: IUpdateResumeDto): Promise<Resume> {
@@ -72,6 +87,7 @@ export class ResumeService {
   }
 
   async renderPdf(resumeId: number, userId: number): Promise<ICreateRenderWorkerResponse> {
+    // todo: limit to 5 per week
     const resume = await this.prisma.resume.findUnique({
       where: { id: resumeId, userId },
     });

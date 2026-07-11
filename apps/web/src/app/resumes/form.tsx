@@ -440,15 +440,30 @@ function EducationTab() {
                     <FieldError errors={[errors.json?.education?.[index]?.field]} />
                   </Field>
                 </div>
-                <Field>
-                  <FieldLabel>Institution</FieldLabel>
-                  <Input
-                    {...register(`json.education.${index}.institution`)}
-                    placeholder="Ex. Stanford University"
-                    className="bg-background"
-                  />
-                  <FieldError errors={[errors.json?.education?.[index]?.institution]} />
-                </Field>
+                <div className="grid gird-cols-3 gap-4">
+                  <Field className="col-span-2">
+                    <FieldLabel>Institution</FieldLabel>
+                    <Input
+                      {...register(`json.education.${index}.institution`)}
+                      placeholder="Ex. Stanford University"
+                      className="bg-background"
+                    />
+                    <FieldError errors={[errors.json?.education?.[index]?.institution]} />
+                  </Field>
+                  <Field>
+                    <FieldLabel>GPA or CGPA</FieldLabel>
+                    <Input
+                      {...register(`json.education.${index}.gpa`)}
+                      placeholder="3.75/4 or 9/10"
+                      className="bg-background"
+                    />
+                    <FieldDescription>
+                      Mention only if 3.75/4+ or 9/10+; drop it once you have real full-time
+                      experience unless it's outstanding
+                    </FieldDescription>
+                    <FieldError errors={[errors.json?.education?.[index]?.gpa]} />
+                  </Field>
+                </div>
               </FieldGroup>
             </CardContent>
           </Card>

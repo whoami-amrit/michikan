@@ -1,4 +1,4 @@
-import { COMMON_BULL_QUEUE_OPTIONS, JD_ANALYSIS_QUEUE_NAME } from '@common/constants';
+import { ANALYSER_QUEUE_NAME, COMMON_BULL_QUEUE_OPTIONS } from '@common/constants';
 import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
 
@@ -8,7 +8,7 @@ import { AnalysisService } from './analysis.service';
 @Module({
   imports: [
     BullModule.registerQueue({
-      name: JD_ANALYSIS_QUEUE_NAME,
+      name: ANALYSER_QUEUE_NAME,
       ...COMMON_BULL_QUEUE_OPTIONS,
     }),
   ],

@@ -155,6 +155,7 @@ const EducationEntrySchema = z.object({
     .string()
     .trim()
     .refine((date) => !isNaN(Date.parse(date)), 'Invalid graduation date'),
+  gpa: z.number().optional(),
 });
 
 const ResumeJsonSchema = z.object({

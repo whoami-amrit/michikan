@@ -9,8 +9,10 @@ export const ALLOW_UNVERIFIED_TAG = 'allowUnverified';
 export const RENDER_QUEUE_NAME = 'resumes';
 export const RENDER_PDF_JOB_NAME = 'render-pdf';
 
-export const JD_ANALYSIS_QUEUE_NAME = 'analysis';
-export const JD_ANALYZER_JOB_NAME = 'jd-analyzer';
+export const ANALYSER_QUEUE_NAME = 'analysis';
+export const JOB_FIT_ANALYZER_JOB_NAME = 'job-fit-analyzer' as const;
+export const RESUME_ANALYZER_JOB_NAME = 'resume-analyzer' as const;
+export const JOB_AT_A_GLANCE_JOB_NAME = 'job-at-a-glance' as const;
 
 export const COMMON_BULL_QUEUE_OPTIONS: Omit<RegisterQueueOptions, 'name'> = {
   defaultJobOptions: {

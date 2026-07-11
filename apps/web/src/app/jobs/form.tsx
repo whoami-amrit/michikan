@@ -287,7 +287,7 @@ export function JobForm({ type, data, id }: JobFormProps) {
                   />
                   <FieldError errors={[errors.jobDescription]} />
                 </Field>
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-2 gap-4">
                   <Field>
                     <FieldLabel>Status</FieldLabel>
                     <Controller
@@ -318,15 +318,23 @@ export function JobForm({ type, data, id }: JobFormProps) {
                     />
                     <FieldError errors={[errors.status]} />
                   </Field>
-                  <Field className="col-span-2">
-                    <FieldLabel>Application URL</FieldLabel>
+                  <Field>
+                    <FieldLabel>Source</FieldLabel>
                     <Input
-                      {...methods.register('applyLink')}
-                      placeholder="Ex. https://company.com/jobs/123"
+                      {...methods.register('source')}
+                      placeholder="Ex. Linkedin, Naukri, etc"
                     />
-                    <FieldError errors={[errors.applyLink]} />
+                    <FieldError errors={[errors.source]} />
                   </Field>
                 </div>
+                <Field>
+                  <FieldLabel>Apply Link</FieldLabel>
+                  <Input
+                    {...methods.register('applyLink')}
+                    placeholder="Ex. https://company.com/jobs/123"
+                  />
+                  <FieldError errors={[errors.applyLink]} />
+                </Field>
               </FieldGroup>
             </FieldSet>
             <FieldSeparator />

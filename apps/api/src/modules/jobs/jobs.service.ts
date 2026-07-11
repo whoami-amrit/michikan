@@ -1,4 +1,8 @@
-import { JD_ANALYSIS_QUEUE_NAME } from '@common/constants';
+import {
+  ANALYSER_QUEUE_NAME,
+  JOB_AT_A_GLANCE_JOB_NAME,
+  JOB_FIT_ANALYZER_JOB_NAME,
+} from '@common/constants';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Injectable, Logger } from '@nestjs/common';
 import { Queue } from 'bullmq';
@@ -6,7 +10,7 @@ import { Job, User, WorkerStatus } from 'db';
 import { ICreateJobDto, IUpdateJobDto } from 'shared';
 
 import { PrismaService } from '../../infra/database/prisma.service';
-import { IJdAnalysis } from './types';
+import { IAnalyzerJobData } from './types';
 
 @Injectable()
 export class JobsService {
@@ -14,10 +18,11 @@ export class JobsService {
 
   constructor(
     private readonly prismaService: PrismaService,
-    @InjectQueue(JD_ANALYSIS_QUEUE_NAME) private readonly analysisQueue: Queue<IJdAnalysis>,
+    @InjectQueue(ANALYSER_QUEUE_NAME) private readonly analysisQueue: Queue<IAnalyzerJobData>,
   ) {}
 
   async create(body: ICreateJobDto, userId: User['id']): Promise<Job> {
+    // todo: should I limit the number of jobs?
     const job = await this.prismaService.job.create({
       data: {
         company: body.company,
@@ -64,11 +69,17 @@ export class JobsService {
     if (body.shouldAnalyzeOptions.should) {
       this.logger.debug(`Job ${job.id} created with analysis, adding to queue`);
 
-      await this.analysisQueue.add(JD_ANALYSIS_QUEUE_NAME, {
+      await this.analysisQueue.add(ANALYSER_QUEUE_NAME, {
+        type: JOB_FIT_ANALYZER_JOB_NAME,
         analysisId: job.analyses[0].id,
         isCreatedFromJob: true,
       });
     }
+
+    await this.analysisQueue.add(ANALYSER_QUEUE_NAME, {
+      type: JOB_AT_A_GLANCE_JOB_NAME,
+      jobId: job.id,
+    });
 
     return job;
   }

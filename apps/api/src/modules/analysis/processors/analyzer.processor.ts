@@ -1,4 +1,9 @@
-import { JD_ANALYSIS_QUEUE_NAME, JD_ANALYZER_JOB_NAME } from '@common/constants';
+import {
+  ANALYSER_QUEUE_NAME,
+  JOB_AT_A_GLANCE_JOB_NAME,
+  JOB_FIT_ANALYZER_JOB_NAME,
+  RESUME_ANALYZER_JOB_NAME,
+} from '@common/constants';
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Injectable, Logger } from '@nestjs/common';
 import { Job, UnrecoverableError } from 'bullmq';
@@ -6,12 +11,12 @@ import { error } from 'console';
 import { AnalysisReportSchema, IAnalysisReport } from 'shared';
 
 import { PrismaService } from '../../../infra/database/prisma.service';
-import { IJdAnalysis } from '../../jobs/types';
+import { IAnalyzerJobData } from '../../jobs/types';
 import { AiService } from './ai.service';
-import { getPrompt } from './template';
+import { getJobFitAnalyzerTemplate } from './template';
 
 @Injectable()
-@Processor(JD_ANALYSIS_QUEUE_NAME)
+@Processor(ANALYSER_QUEUE_NAME)
 export class AnalyzerService extends WorkerHost {
   private readonly logger = new Logger(AnalyzerService.name);
 
@@ -22,24 +27,40 @@ export class AnalyzerService extends WorkerHost {
     super();
   }
 
-  async process(job: Job<IJdAnalysis>) {
-    const { name, data } = job;
+  async process(job: Job<IAnalyzerJobData>) {
+    const { data } = job;
+    const { type: name } = data;
 
     switch (name) {
-      case JD_ANALYZER_JOB_NAME:
-        await this.handleJDMatch(data);
+      case JOB_FIT_ANALYZER_JOB_NAME:
+        await this.handleJobFitAnalysis(data);
+        break;
+      case RESUME_ANALYZER_JOB_NAME:
+        this.handleResumeAnalysis(data);
+        break;
+      case JOB_AT_A_GLANCE_JOB_NAME:
+        this.handleJobAtAGlance(data);
         break;
       default:
-        this.logger.warn('Received JD evaluation job with unknown name: ' + name);
-        await this.prismaService.analysis.update({
-          where: { id: data.analysisId },
-          data: { status: 'FAILED' },
-        });
+        this.logger.error('Received analysis job with unknown name: ' + (name as string));
         throw new UnrecoverableError('Unknown job name');
     }
   }
 
-  private async handleJDMatch({ analysisId, isCreatedFromJob }: IJdAnalysis) {
+  private handleJobAtAGlance(data: IAnalyzerJobData & { type: typeof JOB_AT_A_GLANCE_JOB_NAME }) {
+    // todo: implement this method
+    console.log(data);
+  }
+
+  private handleResumeAnalysis(data: IAnalyzerJobData & { type: typeof RESUME_ANALYZER_JOB_NAME }) {
+    // todo: implement this method
+    console.log(data);
+  }
+
+  private async handleJobFitAnalysis({
+    analysisId,
+    isCreatedFromJob,
+  }: IAnalyzerJobData & { type: typeof JOB_FIT_ANALYZER_JOB_NAME }) {
     const analysisJob = await this.prismaService.analysis.findUnique({
       where: { id: analysisId },
       include: {
@@ -47,12 +68,12 @@ export class AnalyzerService extends WorkerHost {
         user: true,
         ...(isCreatedFromJob
           ? {
-            job: {
-              select: {
-                jobDescription: true,
+              job: {
+                select: {
+                  jobDescription: true,
+                },
               },
-            },
-          }
+            }
           : {}),
       },
     });
@@ -73,12 +94,10 @@ export class AnalyzerService extends WorkerHost {
       ? analysisJob.job!.jobDescription
       : analysisJob.jobDescription!;
 
-    const prompt = getPrompt(jobDescription, {
-      yearsOfExperience: analysisJob.user.yearsOfExperience,
-      preferredWorkSetting: analysisJob.user.preferredWorkSetting,
-      salaryExpectation: analysisJob.user.salaryExpectation,
-      resume: analysisJob.resume.json,
-    });
+    const prompt = getJobFitAnalyzerTemplate(
+      jobDescription,
+      JSON.stringify(analysisJob.resume.json, null, 2),
+    );
 
     try {
       await this.prismaService.analysis.update({
@@ -86,11 +105,7 @@ export class AnalyzerService extends WorkerHost {
         data: { status: 'IN_PROGRESS' },
       });
 
-      const response = await this.aiService.execute<IAnalysisReport>(
-        prompt,
-        AnalysisReportSchema,
-      );
-
+      const response = await this.aiService.execute<IAnalysisReport>(prompt, AnalysisReportSchema);
 
       if (response === null) {
         await this.prismaService.analysis.update({

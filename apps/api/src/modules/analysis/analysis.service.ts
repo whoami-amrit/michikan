@@ -1,4 +1,4 @@
-import { JD_ANALYSIS_QUEUE_NAME, JD_ANALYZER_JOB_NAME } from '@common/constants';
+import { ANALYSER_QUEUE_NAME, JOB_FIT_ANALYZER_JOB_NAME } from '@common/constants';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Injectable } from '@nestjs/common';
 import { Queue } from 'bullmq';
@@ -6,13 +6,13 @@ import { User, WorkerStatus } from 'db';
 import { ICreateAnalysisDto } from 'shared';
 
 import { PrismaService } from '../../infra/database/prisma.service';
-import { IJdAnalysis } from '../jobs/types';
+import { IAnalyzerJobData } from '../jobs/types';
 
 @Injectable()
 export class AnalysisService {
   constructor(
     private readonly prismaService: PrismaService,
-    @InjectQueue(JD_ANALYSIS_QUEUE_NAME) private readonly analysisQueue: Queue<IJdAnalysis>,
+    @InjectQueue(ANALYSER_QUEUE_NAME) private readonly analysisQueue: Queue<IAnalyzerJobData>,
   ) {}
 
   async create(data: ICreateAnalysisDto, userId: User['id']) {
@@ -33,7 +33,8 @@ export class AnalysisService {
       },
     });
 
-    await this.analysisQueue.add(JD_ANALYZER_JOB_NAME, {
+    await this.analysisQueue.add(JOB_FIT_ANALYZER_JOB_NAME, {
+      type: JOB_FIT_ANALYZER_JOB_NAME,
       analysisId: analysis.id,
       isCreatedFromJob: false,
     });
