@@ -2,7 +2,7 @@ import { ANALYSER_QUEUE_NAME, JOB_FIT_ANALYZER_JOB_NAME } from '@common/constant
 import { InjectQueue } from '@nestjs/bullmq';
 import { Injectable } from '@nestjs/common';
 import { Queue } from 'bullmq';
-import { User, WorkerStatus } from 'db';
+import { User } from 'db';
 import { ICreateAnalysisDto } from 'shared';
 
 import { PrismaService } from '../../infra/database/prisma.service';
@@ -16,9 +16,8 @@ export class AnalysisService {
   ) {}
 
   async create(data: ICreateAnalysisDto, userId: User['id']) {
-    const analysis = await this.prismaService.analysis.create({
+    const analysis = await this.prismaService.jobFitAnalysis.create({
       data: {
-        status: WorkerStatus.PENDING,
         jobDescription: data.jobDescription,
         resume: {
           connect: {
@@ -43,7 +42,7 @@ export class AnalysisService {
   }
 
   async getAll(userId: User['id']) {
-    return this.prismaService.analysis.findMany({
+    return this.prismaService.jobFitAnalysis.findMany({
       where: {
         userId,
       },
@@ -55,7 +54,7 @@ export class AnalysisService {
   }
 
   async get(userId: User['id'], analysisId: number) {
-    return this.prismaService.analysis.findUnique({
+    return this.prismaService.jobFitAnalysis.findUnique({
       where: {
         id: analysisId,
         userId,

@@ -1,11 +1,20 @@
 -- CreateEnum
-CREATE TYPE "WorkerStatus" AS ENUM ('PENDING', 'IN_PROGRESS', 'COMPLETED', 'FAILED');
+CREATE TYPE "WorkerStatus" AS ENUM ('IN_PROGRESS', 'COMPLETED', 'FAILED');
 
 -- CreateEnum
 CREATE TYPE "JobStatus" AS ENUM ('NOT_APPLIED', 'APPLIED', 'NOT_SHORTLISTED', 'SHORTLISTED', 'INTERVIEW_ONGOING', 'REJECTED', 'ACCEPTED');
 
 -- CreateEnum
 CREATE TYPE "Provider" AS ENUM ('GOOGLE', 'GITHUB', 'LOCAL');
+
+-- CreateEnum
+CREATE TYPE "WorkSetting" AS ENUM ('REMOTE', 'HYBRID', 'ONSITE');
+
+-- CreateEnum
+CREATE TYPE "ExperienceLevel" AS ENUM ('JUNIOR', 'MID', 'SENIOR');
+
+-- CreateEnum
+CREATE TYPE "ReportGenerationStatus" AS ENUM ('GENERATING', 'DONE', 'FAILED');
 
 -- CreateTable
 CREATE TABLE "Resume" (
@@ -16,6 +25,8 @@ CREATE TABLE "Resume" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
     "userId" INTEGER NOT NULL,
+    "analysisReport" TEXT,
+    "analysisReportGenerateStatus" "ReportGenerationStatus" NOT NULL DEFAULT 'GENERATING',
 
     CONSTRAINT "Resume_pkey" PRIMARY KEY ("id")
 );
@@ -28,6 +39,9 @@ CREATE TABLE "User" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
     "avatar" TEXT,
+    "yearsOfExperience" TEXT NOT NULL,
+    "preferredWorkSetting" "WorkSetting" NOT NULL,
+    "salaryExpectation" TEXT NOT NULL,
     "activeResumeUserId" INTEGER,
     "noClutter" BOOLEAN NOT NULL DEFAULT true,
 
@@ -61,44 +75,53 @@ CREATE TABLE "Session" (
 );
 
 -- CreateTable
-CREATE TABLE "ResumeRenderJob" (
+CREATE TABLE "ResumeRenderWorker" (
     "id" SERIAL NOT NULL,
     "resumeId" INTEGER NOT NULL,
     "userId" INTEGER NOT NULL,
-    "status" "WorkerStatus" NOT NULL,
+    "status" "WorkerStatus" NOT NULL DEFAULT 'IN_PROGRESS',
     "sourceHash" TEXT NOT NULL,
     "storageKey" TEXT,
-    "error" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "ResumeRenderJob_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "ResumeRenderWorker_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
-CREATE TABLE "AnalysisJob" (
+CREATE TABLE "JobFitAnalysis" (
     "id" SERIAL NOT NULL,
-    "jobApplicationId" INTEGER NOT NULL,
-    "status" "WorkerStatus" NOT NULL DEFAULT 'PENDING',
-    "error" TEXT,
-    "analysis" JSONB,
+    "title" TEXT,
+    "jobDescription" TEXT,
+    "userId" INTEGER NOT NULL,
+    "resumeId" INTEGER NOT NULL,
+    "jobId" INTEGER,
+    "status" "WorkerStatus" NOT NULL DEFAULT 'IN_PROGRESS',
+    "report" JSONB,
+    "text" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "AnalysisJob_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "JobFitAnalysis_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "Job" (
     "id" SERIAL NOT NULL,
-    "resumeId" INTEGER,
     "userId" INTEGER NOT NULL,
+    "jobDescription" TEXT NOT NULL,
+    "company" TEXT NOT NULL,
+    "role" TEXT NOT NULL,
     "status" "JobStatus" NOT NULL DEFAULT 'NOT_APPLIED',
-    "saved" BOOLEAN NOT NULL DEFAULT false,
+    "applyLink" TEXT,
+    "source" TEXT NOT NULL,
+    "notes" TEXT,
+    "submittedResumeId" INTEGER,
+    "atAGlance" TEXT,
+    "atAGlanceGenerateStatus" "ReportGenerationStatus" NOT NULL DEFAULT 'GENERATING',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "jobDescription" TEXT NOT NULL,
-    "title" TEXT,
+    "dateApplied" TIMESTAMP(3),
 
     CONSTRAINT "Job_pkey" PRIMARY KEY ("id")
 );
@@ -131,16 +154,22 @@ ALTER TABLE "Session" ADD CONSTRAINT "Session_userId_fkey" FOREIGN KEY ("userId"
 ALTER TABLE "Session" ADD CONSTRAINT "Session_accountProvider_userId_fkey" FOREIGN KEY ("accountProvider", "userId") REFERENCES "Account"("provider", "userId") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "ResumeRenderJob" ADD CONSTRAINT "ResumeRenderJob_resumeId_fkey" FOREIGN KEY ("resumeId") REFERENCES "Resume"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "ResumeRenderWorker" ADD CONSTRAINT "ResumeRenderWorker_resumeId_fkey" FOREIGN KEY ("resumeId") REFERENCES "Resume"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "ResumeRenderJob" ADD CONSTRAINT "ResumeRenderJob_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "ResumeRenderWorker" ADD CONSTRAINT "ResumeRenderWorker_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "AnalysisJob" ADD CONSTRAINT "AnalysisJob_jobApplicationId_fkey" FOREIGN KEY ("jobApplicationId") REFERENCES "Job"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "JobFitAnalysis" ADD CONSTRAINT "JobFitAnalysis_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Job" ADD CONSTRAINT "Job_resumeId_fkey" FOREIGN KEY ("resumeId") REFERENCES "Resume"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "JobFitAnalysis" ADD CONSTRAINT "JobFitAnalysis_resumeId_fkey" FOREIGN KEY ("resumeId") REFERENCES "Resume"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "JobFitAnalysis" ADD CONSTRAINT "JobFitAnalysis_jobId_fkey" FOREIGN KEY ("jobId") REFERENCES "Job"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Job" ADD CONSTRAINT "Job_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Job" ADD CONSTRAINT "Job_submittedResumeId_fkey" FOREIGN KEY ("submittedResumeId") REFERENCES "Resume"("id") ON DELETE SET NULL ON UPDATE CASCADE;

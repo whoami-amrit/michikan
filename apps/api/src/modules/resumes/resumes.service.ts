@@ -111,7 +111,6 @@ export class ResumeService {
 
     const resumeRenderJob = await this.prisma.resumeRenderWorker.create({
       data: {
-        status: 'PENDING',
         sourceHash: this.createHashOfResumeJson(resume),
         resumeId,
         userId,

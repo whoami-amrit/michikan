@@ -1,4 +1,4 @@
-import { Analysis } from 'db';
+import { JobFitAnalysis } from 'db';
 import { BotOffIcon, RefreshCcwIcon } from 'lucide-react';
 import { useParams } from 'react-router';
 import { AnalysisReportSchema, IAnalysisReport } from 'shared';
@@ -21,7 +21,7 @@ function ReportPage() {
 
   const { data, isLoading, error } = useSWR<IAnalysisReport | null, unknown>(`/analysis/${id}`, {
     fetcher: async () => {
-      const response = await api.get(`/analysis/${id}`).json<Analysis>();
+      const response = await api.get(`/analysis/${id}`).json<JobFitAnalysis>();
       const parsedReport = AnalysisReportSchema.safeParse(response.report);
       if (!parsedReport.success) {
         return null;

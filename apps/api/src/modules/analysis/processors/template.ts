@@ -1,4 +1,4 @@
-export const getJobFitAnalyzerTemplate = (jobDescription: string, resume: string) => String.raw`
+const getJobFitAnalyzerTemplate = (jobDescription: string, resume: string) => String.raw`
 You are my job-fit analyst for software/tech roles (SWE, Data Science, ML). I will give you my resume as JSON (personalInfo, skills, experience, projects, education, summary) and a job description. Your job is to compare them and tell me exactly what's missing, what's weak, and what to change — not to critique my resume in general (assume general quality issues are handled elsewhere). Reference resume entries in plain English (e.g. "your second work experience entry, TechCorp, third bullet") and quote/paraphrase the specific JD line you're matching against.
 
 ## 1. Requirement extraction
@@ -47,7 +47,7 @@ ${resume}
 ${jobDescription}
 `;
 
-export const getResumeAnalysisPrompt = (resume: string) => String.raw`
+const getResumeAnalysisPrompt = (resume: string) => String.raw`
 You are my resume mentor for software/tech roles (SWE, Data Science, ML). Your standards come from the r/EngineeringResumes wiki (US/Canada tech hiring norms). I will give you resume data as JSON matching a known schema (personalInfo, skills, experience, projects, education, summary). Give direct, specific feedback — reference the exact entry in plain English (e.g. "In your second work experience entry, TechCorp, the third bullet point...") rather than vague generalities. Do not consider any target job in this review — this is a general quality/compliance pass, not a fit assessment.
 
 ## 0. What NOT to evaluate here
@@ -115,3 +115,41 @@ At the end of a full review, explicitly list which of the optional wiki-relevant
 **Now here's my resume JSON:** [paste below]
 ${resume}
 `;
+
+const getJobAtAGlancePrompt = (jobDescription: string) => String.raw`
+You are summarizing a job description for someone actively applying to multiple jobs and tracking them in a spreadsheet. Your output is a compact, scannable brief — not an analysis, not a fit assessment, just the facts extracted and organized so nothing important has to be re-read from the original JD later. Do not add opinions, don't assess whether this is a good job, don't compare it to other jobs. Just extract and organize.
+
+## Rules
+- **If the JD doesn't state something, omit that field entirely.** Don't write "Not specified," don't leave a blank line, don't mention it at all — just skip straight to the next field that does have data. Never guess or infer a number/fact that isn't there.
+- Keep every field genuinely brief. This is a lookup reference, not a rewrite of the JD.
+- Preserve exact figures (years of experience, salary numbers, headcount) as stated — don't round or paraphrase numbers.
+- Separate "required" from "preferred" wherever the JD distinguishes them; if the JD doesn't distinguish, list under Required and note "(JD does not distinguish required/preferred)".
+
+## Output format (include only the fields that have real data — skip the rest)
+
+**Seniority Level:** [Entry / Mid / Senior / Staff+ — only include if stated or strongly implied by YoE/title, and mark as "(inferred)" if implied rather than stated]
+**Employment Type:** [Full-time / Contract / Internship]
+**Location:** [city/region + Remote/Hybrid/Onsite]
+**Years of Experience Required:** [exact figure or range as stated]
+**Education Requirement:** [degree level + field]
+
+**Required Skills/Qualifications:**
+- [bullet list, short phrases, not full sentences — pull directly from the "required" section]
+
+**Preferred Skills/Qualifications:**
+- [same format, from "preferred/nice-to-have" section — omit this whole block if the JD has none]
+
+**Key Responsibilities:**
+- [the actual day-to-day, not the mission statement — compress the responsibilities section, don't copy verbatim, max 2-4 points]
+
+**Salary/Compensation:** [range as stated]
+**Visa/Clearance/Citizenship Requirements:** [only if explicitly mentioned]
+**Other Notable Details:** [anything unusual worth flagging in one line — e.g. unusual interview process mentioned, relocation required, on-call expectations, equity mentioned — omit entirely if there's nothing notable]
+
+---
+
+**Job description:** [paste below]
+${jobDescription}
+`;
+
+export { getJobAtAGlancePrompt, getJobFitAnalyzerTemplate, getResumeAnalysisPrompt };

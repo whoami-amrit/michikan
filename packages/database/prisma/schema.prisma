@@ -14,7 +14,6 @@ datasource db {
 }
 
 enum WorkerStatus {
-  PENDING
   IN_PROGRESS
   COMPLETED
   FAILED
@@ -49,7 +48,6 @@ enum ExperienceLevel {
 }
 
 enum ReportGenerationStatus {
-  NOT_RUN
   GENERATING
   DONE
   FAILED
@@ -65,11 +63,11 @@ model Resume {
   user                User                 @relation(fields: [userId], references: [id])
   userId              Int
   resumeRenderWorkers ResumeRenderWorker[]
-  analyses            Analysis[]
+  jobFitAnalyses      JobFitAnalysis[]
   jobs                Job[]
 
   analysisReport               String?
-  analysisReportGenerateStatus ReportGenerationStatus @default(NOT_RUN)
+  analysisReportGenerateStatus ReportGenerationStatus @default(GENERATING)
 
   @@index([userId])
 }
@@ -93,7 +91,7 @@ model User {
   resumeRenderWorkers  ResumeRenderWorker[]
   jobs                 Job[]
   noClutter            Boolean              @default(true)
-  analyses             Analysis[]
+  jobFitAnalyses       JobFitAnalysis[]
 }
 
 model Account {
@@ -141,7 +139,7 @@ model ResumeRenderWorker {
   userId   Int
   user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  status     WorkerStatus
+  status     WorkerStatus @default(IN_PROGRESS)
   sourceHash String
 
   storageKey String?
@@ -150,7 +148,7 @@ model ResumeRenderWorker {
   updatedAt DateTime @updatedAt
 }
 
-model Analysis {
+model JobFitAnalysis {
   id Int @id @default(autoincrement())
 
   title String?
@@ -166,7 +164,7 @@ model Analysis {
   jobId Int?
   job   Job? @relation(fields: [jobId], references: [id], onDelete: SetNull)
 
-  status WorkerStatus
+  status WorkerStatus @default(IN_PROGRESS)
   report Json?
   text   String?
 
@@ -190,13 +188,13 @@ model Job {
   // Notes or Interview logs of the job
   notes String?
 
-  analyses Analysis[]
+  jobFitAnalyses JobFitAnalysis[]
 
   submittedResumeId Int?
   submittedResume   Resume? @relation(fields: [submittedResumeId], references: [id], onDelete: SetNull)
 
   atAGlance               String?
-  atAGlanceGenerateStatus ReportGenerationStatus @default(NOT_RUN)
+  atAGlanceGenerateStatus ReportGenerationStatus @default(GENERATING)
 
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt

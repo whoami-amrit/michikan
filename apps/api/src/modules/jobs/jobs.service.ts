@@ -6,7 +6,7 @@ import {
 import { InjectQueue } from '@nestjs/bullmq';
 import { Injectable, Logger } from '@nestjs/common';
 import { Queue } from 'bullmq';
-import { Job, User, WorkerStatus } from 'db';
+import { Job, User } from 'db';
 import { ICreateJobDto, IUpdateJobDto } from 'shared';
 
 import { PrismaService } from '../../infra/database/prisma.service';
@@ -33,9 +33,8 @@ export class JobsService {
         source: body.source,
         ...(body.shouldAnalyzeOptions.should
           ? {
-              analyses: {
+              jobFitAnalyses: {
                 create: {
-                  status: WorkerStatus.PENDING,
                   resume: {
                     connect: {
                       id: body.shouldAnalyzeOptions.resumeId!,
@@ -57,7 +56,7 @@ export class JobsService {
         },
       },
       include: {
-        analyses: {
+        jobFitAnalyses: {
           select: {
             id: true,
             status: true,
@@ -71,7 +70,7 @@ export class JobsService {
 
       await this.analysisQueue.add(ANALYSER_QUEUE_NAME, {
         type: JOB_FIT_ANALYZER_JOB_NAME,
-        analysisId: job.analyses[0].id,
+        analysisId: job.jobFitAnalyses[0].id,
         isCreatedFromJob: true,
       });
     }
@@ -101,7 +100,7 @@ export class JobsService {
     return this.prismaService.job.findUnique({
       where: { id: jobId, userId },
       include: {
-        analyses: true,
+        jobFitAnalyses: true,
       },
     });
   }
@@ -110,7 +109,7 @@ export class JobsService {
     return this.prismaService.job.findMany({
       where: { userId },
       include: {
-        analyses: {
+        jobFitAnalyses: {
           select: {
             id: true,
             status: true,

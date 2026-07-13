@@ -8,12 +8,16 @@ import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Injectable, Logger } from '@nestjs/common';
 import { Job, UnrecoverableError } from 'bullmq';
 import { error } from 'console';
-import { AnalysisReportSchema, IAnalysisReport } from 'shared';
+import { ReportGenerationStatus } from 'db';
 
 import { PrismaService } from '../../../infra/database/prisma.service';
 import { IAnalyzerJobData } from '../../jobs/types';
 import { AiService } from './ai.service';
-import { getJobFitAnalyzerTemplate } from './template';
+import {
+  getJobAtAGlancePrompt,
+  getJobFitAnalyzerTemplate,
+  getResumeAnalysisPrompt,
+} from './template';
 
 @Injectable()
 @Processor(ANALYSER_QUEUE_NAME)
@@ -36,10 +40,10 @@ export class AnalyzerService extends WorkerHost {
         await this.handleJobFitAnalysis(data);
         break;
       case RESUME_ANALYZER_JOB_NAME:
-        this.handleResumeAnalysis(data);
+        await this.handleResumeAnalysis(data);
         break;
       case JOB_AT_A_GLANCE_JOB_NAME:
-        this.handleJobAtAGlance(data);
+        await this.handleJobAtAGlance(data);
         break;
       default:
         this.logger.error('Received analysis job with unknown name: ' + (name as string));
@@ -47,21 +51,91 @@ export class AnalyzerService extends WorkerHost {
     }
   }
 
-  private handleJobAtAGlance(data: IAnalyzerJobData & { type: typeof JOB_AT_A_GLANCE_JOB_NAME }) {
-    // todo: implement this method
-    console.log(data);
+  private async handleJobAtAGlance({
+    jobId,
+  }: IAnalyzerJobData & { type: typeof JOB_AT_A_GLANCE_JOB_NAME }) {
+    const job = await this.prismaService.job.findUnique({ where: { id: jobId } });
+
+    if (!job) {
+      const errorString = `No job for this job id ${jobId}`;
+      this.logger.error(errorString, error instanceof Error ? error.stack : undefined);
+      throw new UnrecoverableError(errorString);
+    }
+
+    const prompt = getJobAtAGlancePrompt(job.jobDescription);
+
+    try {
+      const response = await this.aiService.execute(prompt);
+
+      await this.prismaService.job.update({
+        where: { id: jobId },
+        data: {
+          atAGlanceGenerateStatus: ReportGenerationStatus.DONE,
+          atAGlance: response,
+        },
+      });
+    } catch (error) {
+      this.logger.error(
+        `Failed to generate at a glance for Job: ${String(error)}`,
+        error instanceof Error ? error.stack : { error },
+      );
+
+      await this.prismaService.job.update({
+        where: { id: jobId },
+        data: {
+          atAGlanceGenerateStatus: ReportGenerationStatus.FAILED,
+        },
+      });
+
+      throw error;
+    }
   }
 
-  private handleResumeAnalysis(data: IAnalyzerJobData & { type: typeof RESUME_ANALYZER_JOB_NAME }) {
-    // todo: implement this method
-    console.log(data);
+  private async handleResumeAnalysis({
+    resumeId,
+  }: IAnalyzerJobData & { type: typeof RESUME_ANALYZER_JOB_NAME }) {
+    const resume = await this.prismaService.resume.findUnique({ where: { id: resumeId } });
+
+    if (!resume) {
+      const errorString = `No resume for this job id ${resumeId}`;
+      this.logger.error(errorString, error instanceof Error ? error.stack : undefined);
+      throw new UnrecoverableError(errorString);
+    }
+
+    const prompt = getResumeAnalysisPrompt(JSON.stringify(resume, null, 2));
+
+    try {
+      const response = await this.aiService.execute(prompt);
+
+      await this.prismaService.resume.update({
+        where: { id: resumeId },
+        data: {
+          analysisReportGenerateStatus: ReportGenerationStatus.DONE,
+          analysisReport: response,
+        },
+      });
+    } catch (error) {
+      this.logger.error(
+        `Failed to analyse resume: ${String(error)}`,
+        error instanceof Error ? error.stack : { error },
+      );
+
+      await this.prismaService.resume.update({
+        where: { id: resumeId },
+        data: {
+          analysisReportGenerateStatus: ReportGenerationStatus.FAILED,
+        },
+      });
+
+      throw error;
+    }
   }
 
   private async handleJobFitAnalysis({
     analysisId,
     isCreatedFromJob,
   }: IAnalyzerJobData & { type: typeof JOB_FIT_ANALYZER_JOB_NAME }) {
-    const analysisJob = await this.prismaService.analysis.findUnique({
+    const analysisJob = await this.prismaService.jobFitAnalysis.findUnique({
       where: { id: analysisId },
       include: {
         resume: true,
@@ -100,37 +174,20 @@ export class AnalyzerService extends WorkerHost {
     );
 
     try {
-      await this.prismaService.analysis.update({
-        where: { id: analysisId },
-        data: { status: 'IN_PROGRESS' },
-      });
+      const response = await this.aiService.execute(prompt);
 
-      const response = await this.aiService.execute<IAnalysisReport>(prompt, AnalysisReportSchema);
-
-      if (response === null) {
-        await this.prismaService.analysis.update({
-          where: { id: analysisId },
-          data: {
-            status: 'FAILED',
-            title: `Analysis against ${analysisJob.resume.name}`,
-          },
-        });
-
-        return;
-      }
-
-      await this.prismaService.analysis.update({
+      await this.prismaService.jobFitAnalysis.update({
         where: { id: analysisId },
         data: {
           status: 'COMPLETED',
           report: response,
-          title: `${response.jobTitle} at ${response.companyName}`,
+          title: `Job fit analysis ${analysisJob.createdAt.toLocaleDateString()} [r/${analysisJob.resume.name}]`,
         },
       });
     } catch (error) {
       this.logger.error('Failed to evaluate JD', error instanceof Error ? error.stack : { error });
 
-      await this.prismaService.analysis.update({
+      await this.prismaService.jobFitAnalysis.update({
         where: { id: analysisId },
         data: { status: 'FAILED' },
       });

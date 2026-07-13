@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Analysis } from 'db';
+import { JobFitAnalysis } from 'db';
 import { CheckIcon, FileTextIcon, SearchIcon, SendIcon } from 'lucide-react';
 import { MouseEvent, useRef, useState } from 'react';
 import { FormProvider, SubmitHandler, useController, useForm } from 'react-hook-form';
@@ -116,7 +116,7 @@ function ResumeSelectPopover() {
 
 export default function AnalysisPage() {
   const { data, isLoading } = useSWR('analysis', async () =>
-    api.get('/analysis').json<Analysis[]>(),
+    api.get('/analysis').json<JobFitAnalysis[]>(),
   );
 
   const methods = useForm<ICreateAnalysisDtoInput, unknown, ICreateAnalysisDto>({
@@ -147,7 +147,7 @@ export default function AnalysisPage() {
 
   const onSubmit: SubmitHandler<ICreateAnalysisDto> = async (formData) => {
     try {
-      const { id } = await api.post('/analysis', { json: formData }).json<Analysis>();
+      const { id } = await api.post('/analysis', { json: formData }).json<JobFitAnalysis>();
       void navigate(`/analysis/${id}`);
     } catch (error) {
       console.error('Error creating analysis:', error);
