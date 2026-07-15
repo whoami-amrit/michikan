@@ -6,7 +6,7 @@ import {
   SparklesIcon,
 } from 'lucide-react';
 
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -35,7 +35,6 @@ export function NavUser() {
             render={<SidebarMenuButton size="lg" className="aria-expanded:bg-muted" />}
           >
             <Avatar>
-              <AvatarImage src={user.avatar ?? undefined} alt={user.name ?? undefined} />
               <AvatarFallback>{user.name.toUpperCase().charAt(0)}</AvatarFallback>
             </Avatar>
             <div className="grid flex-1 text-left text-sm leading-tight">

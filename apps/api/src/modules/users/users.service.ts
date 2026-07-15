@@ -23,7 +23,6 @@ export class UsersService {
       email: user.email,
       name: user.name,
       createdAt: user.createdAt,
-      avatar: user.avatar,
       plan,
       verified,
     };

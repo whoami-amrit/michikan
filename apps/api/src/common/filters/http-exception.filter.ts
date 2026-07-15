@@ -44,7 +44,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
       return {
         status: HttpStatus.BAD_REQUEST,
         title: 'Invalid data provided',
-        detail: zodError.issues.map((err) => `${err.path.join('.')} - ${err.message}`),
+        detail: zodError.issues?.map((err) => `${err.path.join('.')} - ${err.message}`),
       };
     }
 

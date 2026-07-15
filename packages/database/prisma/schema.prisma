@@ -75,23 +75,18 @@ model Resume {
 // NOTE: for 1 - 1 relationship simply add @unique to the foreign key field
 
 model User {
-  id                   Int                  @id @default(autoincrement())
-  email                String               @unique
-  name                 String
-  createdAt            DateTime             @default(now())
-  updatedAt            DateTime             @updatedAt
-  avatar               String?
-  yearsOfExperience    String // e.g 10 Year(s) or 1 Year(s) & 11 Month(s) or 0 Year(s) & 6 Month(s)
-  preferredWorkSetting WorkSetting
-  salaryExpectation    String // e.g. "100k-120k USD Per Annum" or "60-80 USD Per Hour"
-  resumes              Resume[] // 1 to n relationship with Resume
-  accounts             Account[] // 1 to 1 relationship with Account
-  sessions             Session[] // 1 to n relationship with Session
-  activeResumeUserId   Int?
-  resumeRenderWorkers  ResumeRenderWorker[]
-  jobs                 Job[]
-  noClutter            Boolean              @default(true)
-  jobFitAnalyses       JobFitAnalysis[]
+  id                Int      @id @default(autoincrement())
+  email             String   @unique
+  name              String
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  resumes  Resume[] // 1 to n relationship with Resume
+  accounts Account[] // 1 to 1 relationship with Account
+  sessions Session[] // 1 to n relationship with Session
+  resumeRenderWorkers ResumeRenderWorker[]
+  jobs                Job[]
+  jobFitAnalyses JobFitAnalysis[]
 }
 
 model Account {

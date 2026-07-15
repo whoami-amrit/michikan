@@ -109,68 +109,64 @@ export function ResumeDetailPage() {
   ]);
 
   return (
-    <div className="flex flex-col w-full">
+    <div className="flex flex-col w-full items-center">
       <AppHeader crumbs={crumbs}>
         <DownloadButton id={id!} />
       </AppHeader>
 
       {isLoading || detail === undefined ? (
-        <div className="flex justify-center">
-          <div className="flex flex-col gap-8 max-w-2xl grow">
-            <div className="flex flex-col gap-2 w-full">
-              <Skeleton className="w-1/2 h-4" />
-              <Skeleton className="w-full h-6" />
-            </div>
-            <div className="flex flex-col gap-2 w-full">
-              <Skeleton className="w-1/2 h-4" />
-              <Skeleton className="w-full h-6" />
-            </div>
-            <div className="flex flex-col gap-2 w-full">
-              <Skeleton className="w-1/2 h-4" />
-              <Skeleton className="w-full h-6" />
-            </div>
-            <div className="flex flex-col gap-2 w-full">
-              <Skeleton className="w-1/2 h-4" />
-              <Skeleton className="w-full h-6" />
-            </div>
-            <div className="flex flex-col gap-2 w-full">
-              <Skeleton className="w-1/2 h-4" />
-              <Skeleton className="w-full h-6" />
-            </div>
+        <div className="flex flex-col gap-8 max-w-2xl grow w-full">
+          <div className="flex flex-col gap-2 w-full">
+            <Skeleton className="w-1/2 h-4" />
+            <Skeleton className="w-full h-6" />
+          </div>
+          <div className="flex flex-col gap-2 w-full">
+            <Skeleton className="w-1/2 h-4" />
+            <Skeleton className="w-full h-6" />
+          </div>
+          <div className="flex flex-col gap-2 w-full">
+            <Skeleton className="w-1/2 h-4" />
+            <Skeleton className="w-full h-6" />
+          </div>
+          <div className="flex flex-col gap-2 w-full">
+            <Skeleton className="w-1/2 h-4" />
+            <Skeleton className="w-full h-6" />
+          </div>
+          <div className="flex flex-col gap-2 w-full">
+            <Skeleton className="w-1/2 h-4" />
+            <Skeleton className="w-full h-6" />
           </div>
         </div>
       ) : (
-        <div className="flex justify-center content-center grow">
-          <div className="flex flex-col grow max-w-2xl lg:px-0 px-6">
-            <Tabs className="gap-8 grow">
-              <TabsList>
-                <TabsTrigger value="analysis">
-                  <BrainCircuit /> Analysis
-                </TabsTrigger>
-                <TabsTrigger value="edit">
-                  <PencilIcon /> Edit
-                </TabsTrigger>
-              </TabsList>
-              <TabsContent
-                value="analysis"
-                className="typeset typeset-doc"
-                dangerouslySetInnerHTML={{
-                  __html: dompurify.sanitize(marked(detail.analysisReport ?? '', { async: false })),
+        <div className="flex flex-col grow max-w-2xl lg:px-0 px-6 w-full">
+          <Tabs className="gap-8 grow">
+            <TabsList>
+              <TabsTrigger value="analysis">
+                <BrainCircuit /> Analysis
+              </TabsTrigger>
+              <TabsTrigger value="edit">
+                <PencilIcon /> Edit
+              </TabsTrigger>
+            </TabsList>
+            <TabsContent
+              value="analysis"
+              className="typeset typeset-doc"
+              dangerouslySetInnerHTML={{
+                __html: dompurify.sanitize(marked(detail.analysisReport ?? '', { async: false })),
+              }}
+            />
+            <TabsContent value="edit" className="flex flex-col">
+              <ResumeForm
+                type="edit"
+                data={{
+                  json: detail.json as IResumeJson,
+                  name: detail.name,
+                  description: detail.description ?? undefined,
                 }}
+                id={id!}
               />
-              <TabsContent value="edit" className="flex flex-col">
-                <ResumeForm
-                  type="edit"
-                  data={{
-                    json: detail.json as IResumeJson,
-                    name: detail.name,
-                    description: detail.description ?? undefined,
-                  }}
-                  id={id!}
-                />
-              </TabsContent>
-            </Tabs>
-          </div>
+            </TabsContent>
+          </Tabs>
         </div>
       )}
     </div>

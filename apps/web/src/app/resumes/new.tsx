@@ -14,10 +14,12 @@ export function NewResumePage() {
   ]);
 
   return (
-    <div className="flex flex-col w-full">
+    <div className="flex flex-col w-full items-center">
       <AppHeader crumbs={crumbs} />
 
-      <ResumeForm type="new" />
+      <div className="flex flex-col gap-8 grow max-w-2xl w-full">
+        <ResumeForm type="new" />
+      </div>
     </div>
   );
 }

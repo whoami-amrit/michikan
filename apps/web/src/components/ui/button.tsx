@@ -1,5 +1,6 @@
 import { Button as ButtonPrimitive } from '@base-ui/react/button';
 import { cva, type VariantProps } from 'class-variance-authority';
+import { AnchorHTMLAttributes, DetailedHTMLProps } from 'react';
 
 import { cn } from '@/lib/utils';
 
@@ -57,5 +58,21 @@ function Button({
   );
 }
 
+function ButtonLink({
+  size = 'default',
+  className,
+  ...props
+}: Pick<VariantProps<typeof buttonVariants>, 'size'> &
+  DetailedHTMLProps<AnchorHTMLAttributes<HTMLAnchorElement>, HTMLAnchorElement>) {
+  return (
+    <a
+      className={cn(buttonVariants({ variant: 'link', size, className }))}
+      {...props}
+      referrerPolicy="no-referrer"
+      target="_blank"
+    />
+  );
+}
+
 // eslint-disable-next-line react-refresh/only-export-components
-export { Button, buttonVariants };
+export { Button, ButtonLink, buttonVariants };

@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Resume } from 'db';
-import { AlertCircle, PencilSparklesIcon, PlusIcon, XIcon } from 'lucide-react';
+import { AlertCircle, PlusIcon, XIcon } from 'lucide-react';
 import {
   Controller,
   FormProvider,
@@ -219,7 +219,81 @@ function ExperienceTab() {
     <FieldGroup>
       <FieldSet>
         <FieldLegend>Experience</FieldLegend>
-        <FieldDescription>Add your non-internship work experience.</FieldDescription>
+        <FieldDescription>
+          List your roles in reverse chronological order, and write each highlight using one of
+          three tried-and-tested formats: STAR (Situation, Task, Action, Result), XYZ ("Accomplished
+          [X] as measured by [Y], by doing [Z]"), or CAR (Challenge, Action, Result). Whichever you
+          use, the goal is the same — show what you did, how you did it, and the measurable outcome,
+          ideally with the metric placed early in the sentence for maximum impact. New to these
+          formats? Here's where to start: <br />
+          <br />
+          <ul className="list-disc list-inside">
+            <li>
+              STAR method:&nbsp;
+              <a
+                href="https://www.levels.fyi/blog/applying-star-method-resumes.html"
+                className="text-primary hover:underline-offset-4 hover:underline"
+                referrerPolicy="no-referrer"
+                target="_blank"
+              >
+                levels.fyi guide
+              </a>
+              ,&nbsp;
+              <a
+                href="https://resumegenius.com/blog/resume-help/star-method-resume"
+                className="text-primary hover:underline-offset-4 hover:underline"
+                referrerPolicy="no-referrer"
+                target="_blank"
+              >
+                Resume Genius guide
+              </a>
+            </li>
+            <li>
+              XYZ method:&nbsp;
+              <a
+                href="https://www.inc.com/bill-murphy-jr/google-recruiters-say-these-5-resume-tips-including-x-y-z-formula-will-improve-your-odds-of-getting-hired-at-google.html"
+                className="text-primary hover:underline-offset-4 hover:underline"
+                referrerPolicy="no-referrer"
+                target="_blank"
+              >
+                Google's recruiting team on the X-Y-Z formula
+              </a>
+              , &nbsp;
+              <a
+                href="https://elevenrecruiting.com/create-an-effective-resume-xyz-resume-format/"
+                className="text-primary hover:underline-offset-4 hover:underline"
+                referrerPolicy="no-referrer"
+                target="_blank"
+              >
+                Eleven Recruiting guide
+              </a>
+            </li>
+            <li>
+              CAR method:&nbsp;
+              <a
+                href="https://ca.indeed.com/career-advice/resumes-cover-letters/challenge-action-result-resume"
+                className="text-primary hover:underline-offset-4 hover:underline"
+                referrerPolicy="no-referrer"
+                target="_blank"
+              >
+                Indeed guide
+              </a>
+              , &nbsp;
+              <a
+                href="https://www.topresume.com/career-advice/how-to-get-more-results-with-a-car-resume"
+                className="text-primary hover:underline-offset-4 hover:underline"
+                referrerPolicy="no-referrer"
+                target="_blank"
+              >
+                Top Resume guide
+              </a>
+            </li>
+          </ul>
+          <br />
+          Once you've drafted your bullets, run them through Quillbot to paraphrase and tighten the
+          wording — great for cutting a bullet down to one clean sentence without losing the
+          substance
+        </FieldDescription>
         <div className="flex justify-end">
           <Button
             onClick={() =>
@@ -292,6 +366,11 @@ function ExperienceTab() {
                     className="max-h-44"
                     {...register(`json.experience.${index}.highlights`)}
                   />
+                  <FieldDescription>
+                    Each new line becomes its own bullet point on your resume — so give every
+                    accomplishment its own line. Skip filler; one sharp, quantified line beats three
+                    vague ones.
+                  </FieldDescription>
                 </Field>
                 <div className="flex gap-4">
                   <Field className="w-44">
@@ -355,7 +434,9 @@ function EducationTab() {
       <FieldSet>
         <FieldLegend>Education</FieldLegend>
         <FieldDescription>
-          Add details of your educational background. Your most recent and relevant qualifications.
+          List degrees in reverse chronological order, most recent or highest first. Skip high
+          school once you have a completed degree, and leave out coursework unless it's unusual or
+          highly specialized for the role you're targeting.
         </FieldDescription>
         <div className="flex justify-end">
           <Button
@@ -449,7 +530,7 @@ function EducationTab() {
                     />
                     <FieldDescription>
                       Mention only if 3.75/4+ or 9/10+; drop it once you have real full-time
-                      experience unless it's outstanding
+                      experience unless it's outstanding.
                     </FieldDescription>
                     <FieldError errors={[errors.json?.education?.[index]?.specialRemark]} />
                   </Field>
@@ -476,7 +557,18 @@ function ProjectsTab() {
     <FieldGroup>
       <FieldSet>
         <FieldLegend>Projects</FieldLegend>
-        <FieldDescription>Add your relevant projects.</FieldDescription>
+        <FieldDescription>
+          This section is for real, self-directed work — personal projects, student teams,
+          open-source contributions — not assignments or projects from a job (those belong in
+          Experience). Only include something here if it actually solves a problem and has real
+          usage, even if that "user" is just you using it regularly; skip tutorial walkthroughs or
+          one-off class exercises you haven't touched since submitting them.
+          <br />
+          <br />
+          Write each highlight the same way you would for Experience — one accomplishment per line,
+          action verb first, with a measurable result. This is your chance to show initiative the
+          rest of your resume might not capture.
+        </FieldDescription>
         <div className="flex justify-end">
           <Button
             onClick={() =>
@@ -520,6 +612,10 @@ function ProjectsTab() {
                     className="max-h-44"
                     {...register(`json.projects.${index}.highlights`)}
                   />
+                  <FieldDescription>
+                    Each new line becomes its own bullet point on your resume. Order them from most
+                    impressive and relevant to least.
+                  </FieldDescription>
                 </Field>
                 <Field>
                   <FieldLabel>Technologies</FieldLabel>
@@ -556,19 +652,13 @@ function SummaryTab() {
       <FieldSet>
         <FieldLegend>Summary</FieldLegend>
         <FieldDescription>
-          Provide a brief summary of your professional background, skills, and career goals. This
-          section should be concise and highlight your key strengths and achievements. Or you could
-          let our AI assist you in writing a summary as per the details you have provided so far.
+          Only for senior/staff candidates, career changers, or explaining a gap — skip otherwise.
+          Keep to 1–2 sentences focused on scope of impact, the pivot, or the gap — not generic
+          traits like "hardworking" or "team player".
         </FieldDescription>
 
         <Field>
-          <div className="relative">
-            <Textarea className="min-h-44 max-h-64" {...register('json.summary')} />
-            <Button className="absolute bottom-2 right-2" variant="secondary" size="icon-lg">
-              {/* TODO!: implement this AI summary feature in the backend */}
-              <PencilSparklesIcon />
-            </Button>
-          </div>
+          <Textarea className="min-h-44 max-h-64" {...register('json.summary')} />
           <FieldError errors={[errors.json?.summary]} />
         </Field>
       </FieldSet>
