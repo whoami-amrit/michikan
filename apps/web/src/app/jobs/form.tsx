@@ -1,7 +1,14 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Job, JobStatus, Resume } from 'db';
 import { FolderOpen, LoaderCircle, PlusIcon, SquareArrowOutUpRightIcon } from 'lucide-react';
-import { Controller, FormProvider, SubmitHandler, useForm, useFormContext } from 'react-hook-form';
+import {
+  Controller,
+  FormProvider,
+  SubmitHandler,
+  useForm,
+  useFormContext,
+  useWatch,
+} from 'react-hook-form';
 import { NavLink, useNavigate } from 'react-router';
 import {
   CreateJobSchema,
@@ -15,7 +22,6 @@ import useSWR from 'swr';
 
 import { ErrorToast } from '@/components/error-toast';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
 import {
   Combobox,
   ComboboxContent,
@@ -39,7 +45,6 @@ import {
   FieldGroup,
   FieldLabel,
   FieldLegend,
-  FieldSeparator,
   FieldSet,
 } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
@@ -105,7 +110,7 @@ function ResumesCombobox({
       value={value ? String(value) : undefined}
       items={resumeOptions ?? []}
     >
-      <ComboboxInput className="w-full max-w-80" placeholder="Select a resume for analysis">
+      <ComboboxInput className="w-full" placeholder="Select a resume for analysis">
         <InputGroupAddon>
           {isLoading && <LoaderCircle className="size-3 animate-spin" />}
         </InputGroupAddon>
@@ -144,55 +149,25 @@ function ResumesCombobox({
   );
 }
 
-function AIAnalysisFieldSet() {
+function SubmittedResumeField() {
   const {
     control,
-    getValues,
     formState: { errors },
-  } = useFormContext<ICreateJobDtoInput>();
-
-  const checked = getValues('shouldAnalyzeOptions.should');
+  } = useFormContext<ICreateJobDto>();
+  const status = useWatch<ICreateJobDto>({ control, name: 'status' });
 
   return (
-    <FieldSet>
-      <FieldLegend>AI Analysis</FieldLegend>
-      <FieldDescription>
-        You will have to select a resume for the analysis to run against. Use this feature to get a
-        better understanding of how your resume matches the job description and what you can do to
-        improve your chances of getting an interview.
-      </FieldDescription>
-      <FieldGroup>
-        <Field orientation="horizontal">
-          <Controller
-            name="shouldAnalyzeOptions.should"
-            control={control}
-            render={({ field }) => (
-              <Checkbox
-                checked={field.value}
-                onCheckedChange={field.onChange}
-                id="job-analysis"
-                name="job-analysis"
-              />
-            )}
-          />
-
-          <FieldLabel htmlFor="job-analysis" className="font-normal">
-            Let our AI analyze this job
-          </FieldLabel>
-        </Field>
-        {checked && (
-          <Field>
-            <FieldLabel>Resume</FieldLabel>
-            <Controller
-              control={control}
-              name="shouldAnalyzeOptions.resumeId"
-              render={({ field }) => <ResumesCombobox {...field} />}
-            />
-            <FieldError errors={[errors.shouldAnalyzeOptions?.resumeId]} />
-          </Field>
-        )}
-      </FieldGroup>
-    </FieldSet>
+    status !== JobStatus.NOT_APPLIED && (
+      <Field>
+        <FieldLabel>Submitted Resume</FieldLabel>
+        <Controller
+          name="submittedResumeId"
+          control={control}
+          render={({ field }) => <ResumesCombobox {...field} />}
+        />
+        <FieldError errors={[errors.submittedResumeId]} />
+      </Field>
+    )
   );
 }
 
@@ -205,11 +180,9 @@ export function JobForm({ type, data, id }: JobFormProps) {
             applyLink: '',
             company: '',
             jobDescription: '',
-            shouldAnalyzeOptions: {
-              should: false,
-            },
             role: '',
             status: JobStatus.NOT_APPLIED,
+            submittedResumeId: undefined,
           }
         : data,
     mode: 'onBlur',
@@ -268,7 +241,7 @@ export function JobForm({ type, data, id }: JobFormProps) {
               <FieldGroup>
                 <div className="grid-cols-2 grid gap-4">
                   <Field>
-                    <FieldLabel>Title</FieldLabel>
+                    <FieldLabel required>Role</FieldLabel>
                     <Input {...methods.register('role')} placeholder="Ex. Software Engineer" />
                     <FieldError errors={[errors.role]} />
                   </Field>
@@ -327,18 +300,19 @@ export function JobForm({ type, data, id }: JobFormProps) {
                     <FieldError errors={[errors.source]} />
                   </Field>
                 </div>
-                <Field>
-                  <FieldLabel>Apply Link</FieldLabel>
-                  <Input
-                    {...methods.register('applyLink')}
-                    placeholder="Ex. https://company.com/jobs/123"
-                  />
-                  <FieldError errors={[errors.applyLink]} />
-                </Field>
+                <div className="flex gap-4">
+                  <SubmittedResumeField />
+                  <Field className="grow">
+                    <FieldLabel>Apply Link</FieldLabel>
+                    <Input
+                      {...methods.register('applyLink')}
+                      placeholder="Ex. https://company.com/jobs/123"
+                    />
+                    <FieldError errors={[errors.applyLink]} />
+                  </Field>
+                </div>
               </FieldGroup>
             </FieldSet>
-            <FieldSeparator />
-            <AIAnalysisFieldSet />
           </FieldGroup>
 
           {

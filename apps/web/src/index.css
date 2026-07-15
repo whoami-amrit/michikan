@@ -3,6 +3,8 @@
 @import 'shadcn/tailwind.css';
 @import '@fontsource-variable/inter';
 @import '@fontsource-variable/ibm-plex-sans';
+@import '@fontsource-variable/geist-mono';
+@import './typeset.css';
 
 @custom-variant dark (&:is(.dark *));
 

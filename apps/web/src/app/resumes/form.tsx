@@ -1,7 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Resume } from 'db';
-import { AlertCircle, FileDown, PencilSparklesIcon, PlusIcon, XIcon } from 'lucide-react';
-import { useState } from 'react';
+import { AlertCircle, PencilSparklesIcon, PlusIcon, XIcon } from 'lucide-react';
 import {
   Controller,
   FormProvider,
@@ -11,17 +10,8 @@ import {
   useFormContext as useRHFFormContext,
 } from 'react-hook-form';
 import { useNavigate } from 'react-router';
-import {
-  CreateResumeSchema,
-  ICreateRenderWorkerResponse,
-  ICreateResumeDto,
-  ICreateResumeDtoInput,
-  ICreateWorkerResponse,
-  IRenderStatusResponse,
-  IResumeJson,
-} from 'shared';
+import { CreateResumeSchema, ICreateResumeDto, ICreateResumeDtoInput, IResumeJson } from 'shared';
 import { toast } from 'sonner';
-import useSWR from 'swr';
 
 import { ErrorToast } from '@/components/error-toast';
 import { Button } from '@/components/ui/button';
@@ -38,7 +28,6 @@ import {
   FieldSet,
 } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
-import { MultiSelect } from '@/components/ui/multi-select';
 import { Progress, ProgressLabel, ProgressValue } from '@/components/ui/progress';
 import { Spinner } from '@/components/ui/spinner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -88,7 +77,7 @@ function PersonalInfoTab() {
       <FieldSet>
         <FieldGroup className="grid-cols-2 grid gap-4">
           <Field>
-            <FieldLabel>Name</FieldLabel>
+            <FieldLabel required>Name</FieldLabel>
             <Input
               {...register('json.personalInfo.name')}
               type="text"
@@ -98,7 +87,7 @@ function PersonalInfoTab() {
             <FieldError errors={[errors.json?.personalInfo?.name]} />
           </Field>
           <Field>
-            <FieldLabel>Email</FieldLabel>
+            <FieldLabel required>Email</FieldLabel>
             <Input
               {...register('json.personalInfo.email')}
               placeholder="hello@world.me"
@@ -156,7 +145,6 @@ function PersonalInfoTab() {
 function SkillsTab() {
   const {
     register,
-    control,
     formState: { errors },
   } = useFormContext();
   const { fields, append, remove } = useFieldArray<ICreateResumeDtoInput, 'json.skills'>({
@@ -175,7 +163,7 @@ function SkillsTab() {
           <code className="inline">Node.js, NestJS, PostgreSQL, Redis</code>
         </FieldDescription>
         <div className="flex justify-end">
-          <Button onClick={() => append({ category: '', skills: [] })}>
+          <Button onClick={() => append({ category: '', skills: '' })}>
             <PlusIcon />
             Add Category
           </Button>
@@ -183,10 +171,10 @@ function SkillsTab() {
         {!!fields.length && (
           <FieldGroup className="flex-row gap-4">
             <Field className="w-50 shrink-0">
-              <FieldLabel>Category</FieldLabel>
+              <FieldLabel required>Category</FieldLabel>
             </Field>
             <Field className="grow">
-              <FieldLabel>Skills</FieldLabel>
+              <FieldLabel required>Skills</FieldLabel>
             </Field>
           </FieldGroup>
         )}
@@ -201,12 +189,9 @@ function SkillsTab() {
               <FieldError errors={[errors.json?.skills?.[index]?.category]} />
             </Field>
             <Field className="grow">
-              <Controller
-                name={`json.skills.${index}.skills`}
-                control={control}
-                render={({ field }) => (
-                  <MultiSelect creatable {...field} items={['React.js', 'Nuxt.js']} />
-                )}
+              <Input
+                {...register(`json.skills.${index}.skills`)}
+                placeholder="React.js, Vite, Javascript, HTML, CSS"
               />
               <FieldError errors={[errors.json?.skills?.[index]?.skills]} />
             </Field>
@@ -241,7 +226,7 @@ function ExperienceTab() {
               append({
                 title: '',
                 company: '',
-                highlights: [],
+                highlights: '',
                 isCurrentRole: false,
                 startDate: '',
                 endDate: '',
@@ -258,17 +243,23 @@ function ExperienceTab() {
             <CardHeader>
               <CardTitle>
                 <Field className="w-64">
-                  <FieldLabel>Job Title</FieldLabel>
+                  <FieldLabel required>Company</FieldLabel>
                   <Input
-                    {...register(`json.experience.${index}.title`)}
-                    placeholder="Ex. Software Engineer"
+                    {...register(`json.experience.${index}.company`)}
+                    placeholder="Ex. Google"
                     className="bg-background"
+                    tabIndex={0}
                   />
-                  <FieldError errors={[errors.json?.experience?.[index]?.title]} />
+                  <FieldError errors={[errors.json?.experience?.[index]?.company]} />
                 </Field>
               </CardTitle>
               <CardAction>
-                <Button variant="destructive" size="icon-sm" onClick={() => remove(index)}>
+                <Button
+                  variant="destructive"
+                  size="icon-sm"
+                  onClick={() => remove(index)}
+                  tabIndex={1}
+                >
                   <XIcon />
                 </Button>
               </CardAction>
@@ -277,13 +268,13 @@ function ExperienceTab() {
               <FieldGroup>
                 <div className="grid grid-cols-2 gap-4">
                   <Field>
-                    <FieldLabel>Company</FieldLabel>
+                    <FieldLabel required>Job Title</FieldLabel>
                     <Input
-                      {...register(`json.experience.${index}.company`)}
-                      placeholder="Ex. Google"
+                      {...register(`json.experience.${index}.title`)}
+                      placeholder="Ex. Software Engineer"
                       className="bg-background"
                     />
-                    <FieldError errors={[errors.json?.experience?.[index]?.company]} />
+                    <FieldError errors={[errors.json?.experience?.[index]?.title]} />
                   </Field>
                   <Field>
                     <FieldLabel>Location</FieldLabel>
@@ -296,23 +287,15 @@ function ExperienceTab() {
                   </Field>
                 </div>
                 <Field className="col-span-2">
-                  <FieldLabel>Highlights</FieldLabel>
-                  <Controller
-                    name={`json.experience.${index}.highlights`}
-                    control={control}
-                    render={({ field }) => (
-                      <Textarea
-                        className="max-h-44"
-                        {...field}
-                        value={field.value?.join?.('\n')}
-                        onChange={(e) => field.onChange(e.target.value.split('\n'))}
-                      />
-                    )}
+                  <FieldLabel required>Highlights</FieldLabel>
+                  <Textarea
+                    className="max-h-44"
+                    {...register(`json.experience.${index}.highlights`)}
                   />
                 </Field>
                 <div className="flex gap-4">
                   <Field className="w-44">
-                    <FieldLabel>Start Date</FieldLabel>
+                    <FieldLabel required>Start Date</FieldLabel>
                     <Controller
                       name={`json.experience.${index}.startDate`}
                       control={control}
@@ -382,6 +365,7 @@ function EducationTab() {
                 field: '',
                 institution: '',
                 graduationDate: '',
+                specialRemark: undefined,
               })
             }
           >
@@ -394,7 +378,7 @@ function EducationTab() {
             <CardHeader>
               <CardTitle>
                 <Field className="w-44">
-                  <FieldLabel>Graduation Date</FieldLabel>
+                  <FieldLabel required>Graduation Date</FieldLabel>
                   <Controller
                     name={`json.education.${index}.graduationDate`}
                     control={control}
@@ -413,7 +397,12 @@ function EducationTab() {
                 </Field>
               </CardTitle>
               <CardAction>
-                <Button variant="destructive" size="icon-sm" onClick={() => remove(index)}>
+                <Button
+                  variant="destructive"
+                  size="icon-sm"
+                  onClick={() => remove(index)}
+                  tabIndex={1}
+                >
                   <XIcon />
                 </Button>
               </CardAction>
@@ -422,16 +411,17 @@ function EducationTab() {
               <FieldGroup>
                 <div className="grid grid-cols-2 gap-4">
                   <Field>
-                    <FieldLabel>Degree</FieldLabel>
+                    <FieldLabel required>Degree</FieldLabel>
                     <Input
                       {...register(`json.education.${index}.degree`)}
                       placeholder="Ex. Bachelor of Science"
                       className="bg-background"
+                      tabIndex={0}
                     />
                     <FieldError errors={[errors.json?.education?.[index]?.degree]} />
                   </Field>
                   <Field>
-                    <FieldLabel>Field of Study</FieldLabel>
+                    <FieldLabel required>Field of Study</FieldLabel>
                     <Input
                       {...register(`json.education.${index}.field`)}
                       placeholder="Ex. Computer Science"
@@ -442,7 +432,7 @@ function EducationTab() {
                 </div>
                 <div className="grid gird-cols-3 gap-4">
                   <Field className="col-span-2">
-                    <FieldLabel>Institution</FieldLabel>
+                    <FieldLabel required>Institution</FieldLabel>
                     <Input
                       {...register(`json.education.${index}.institution`)}
                       placeholder="Ex. Stanford University"
@@ -451,9 +441,9 @@ function EducationTab() {
                     <FieldError errors={[errors.json?.education?.[index]?.institution]} />
                   </Field>
                   <Field>
-                    <FieldLabel>GPA or CGPA</FieldLabel>
+                    <FieldLabel>GPA or CGPA or Special Remark</FieldLabel>
                     <Input
-                      {...register(`json.education.${index}.gpa`)}
+                      {...register(`json.education.${index}.specialRemark`)}
                       placeholder="3.75/4 or 9/10"
                       className="bg-background"
                     />
@@ -461,7 +451,7 @@ function EducationTab() {
                       Mention only if 3.75/4+ or 9/10+; drop it once you have real full-time
                       experience unless it's outstanding
                     </FieldDescription>
-                    <FieldError errors={[errors.json?.education?.[index]?.gpa]} />
+                    <FieldError errors={[errors.json?.education?.[index]?.specialRemark]} />
                   </Field>
                 </div>
               </FieldGroup>
@@ -476,7 +466,6 @@ function EducationTab() {
 function ProjectsTab() {
   const {
     register,
-    control,
     formState: { errors },
   } = useFormContext();
   const { fields, append, remove } = useFieldArray<ICreateResumeDtoInput, 'json.projects'>({
@@ -494,8 +483,8 @@ function ProjectsTab() {
               append({
                 title: '',
                 url: '',
-                highlights: [],
-                technologies: [],
+                highlights: '',
+                technologies: '',
               })
             }
           >
@@ -508,7 +497,7 @@ function ProjectsTab() {
             <CardHeader>
               <CardTitle>
                 <Field className="w-64">
-                  <FieldLabel>Project Title</FieldLabel>
+                  <FieldLabel required>Project Title</FieldLabel>
                   <Input
                     {...register(`json.projects.${index}.title`)}
                     placeholder="Ex. Software Engineer"
@@ -526,29 +515,15 @@ function ProjectsTab() {
             <CardContent>
               <FieldGroup className="grid grid-cols-2">
                 <Field className="col-span-2">
-                  <FieldLabel>Highlights</FieldLabel>
-                  <Controller
-                    name={`json.projects.${index}.highlights`}
-                    control={control}
-                    render={({ field }) => (
-                      <Textarea
-                        className="max-h-44"
-                        {...field}
-                        value={field.value?.join?.('\n')}
-                        onChange={(e) => field.onChange(e.target.value.split('\n'))}
-                      />
-                    )}
+                  <FieldLabel required>Highlights</FieldLabel>
+                  <Textarea
+                    className="max-h-44"
+                    {...register(`json.projects.${index}.highlights`)}
                   />
                 </Field>
                 <Field>
                   <FieldLabel>Technologies</FieldLabel>
-                  <Controller
-                    name={`json.projects.${index}.technologies`}
-                    control={control}
-                    render={({ field }) => (
-                      <MultiSelect {...field} items={['React.js', 'Nuxt.js']} />
-                    )}
-                  />
+                  <Input {...register(`json.projects.${index}.technologies`)} />
                 </Field>
                 <Field>
                   <FieldLabel>URL</FieldLabel>
@@ -598,71 +573,6 @@ function SummaryTab() {
         </Field>
       </FieldSet>
     </FieldGroup>
-  );
-}
-
-const download = (url: string) => {
-  const link = document.createElement('a');
-  link.href = url;
-  link.setAttribute('download', `resume-${new Date().toISOString()}.pdf`);
-  document.body.appendChild(link);
-  link.click();
-};
-
-function DownloadButton({ id }: { id: string }) {
-  const [workerInfo, setWorkerInfo] = useState<ICreateRenderWorkerResponse>();
-  const [progress, setProgress] = useState<'pending' | 'completed' | 'failed'>();
-
-  useSWR(`/resumes/worker/${id}`, {
-    refreshInterval: 500,
-    isOnline: () => progress === 'pending',
-    fetcher: async () => {
-      if (!workerInfo) {
-        return;
-      }
-
-      if (workerInfo.status === 'COMPLETED') {
-        download(workerInfo.downloadUrl!);
-        return;
-      }
-
-      const response = await api
-        .get(`/resumes/worker/${workerInfo.workerId}`)
-        .json<IRenderStatusResponse>();
-
-      if (response.status === 'FAILED') {
-        toast.error(<ErrorToast />);
-        setProgress('failed');
-        return;
-      }
-
-      if (response.status !== 'COMPLETED') {
-        return;
-      }
-
-      toast.success('Resume ready for download');
-      download(response.downloadUrl!);
-      setProgress('completed');
-    },
-  });
-
-  return (
-    <Button
-      variant="outline"
-      // eslint-disable-next-line @typescript-eslint/no-misused-promises
-      onClick={async () => {
-        try {
-          setWorkerInfo(await api.post(`/resumes/${id}/render`).json<ICreateWorkerResponse>());
-          setProgress('pending');
-          toast.success('Resume download started! Please wait...');
-        } catch (error) {
-          toast.error(<ErrorToast error={error} />);
-        }
-      }}
-    >
-      {progress === 'pending' ? <Spinner className="size-4" /> : <FileDown />}
-      Download
-    </Button>
   );
 }
 
@@ -722,76 +632,74 @@ export function ResumeForm({ type, data, id }: ResumeFormProps) {
   };
 
   return (
-    <div className="flex justify-center grow">
-      <FormProvider {...methods}>
-        <form
-          // eslint-disable-next-line @typescript-eslint/no-misused-promises
-          onSubmit={handleSubmit(onSubmit)}
-          className="flex flex-col gap-6 max-w-2xl grow px-6 lg:px-0"
-        >
-          <FieldGroup className="grid-cols-3 grid gap-4">
-            <Field>
-              <FieldLabel>Name</FieldLabel>
-              <Input {...methods.register('name')} placeholder="Enter resume name" />
-              <FieldError errors={[errors.name]} />
-            </Field>
-            <Field className="col-span-2">
-              <FieldLabel>Description</FieldLabel>
-              <Input {...methods.register('description')} placeholder="Enter resume description" />
-              <FieldError errors={[errors.description]} />
-            </Field>
-          </FieldGroup>
-          <Tabs className="gap-8 grow" defaultValue={TabKeys.PersonalInfo}>
-            <TabsList variant={'line'}>
-              {tabs.map(([tabKey, tabLabel]) => (
-                <TabsTrigger key={tabKey} value={tabKey}>
-                  {errors.json?.[tabKey] && <AlertCircle className="text-red-400" />}
-                  {tabLabel}
-                </TabsTrigger>
-              ))}
-            </TabsList>
-            <TabsContent value={TabKeys.PersonalInfo}>
-              <PersonalInfoTab />
-            </TabsContent>
-            <TabsContent value={TabKeys.Skills}>
-              <SkillsTab />
-            </TabsContent>
-            <TabsContent value={TabKeys.Experience}>
-              <ExperienceTab />
-            </TabsContent>
-            <TabsContent value={TabKeys.Education}>
-              <EducationTab />
-            </TabsContent>
-            <TabsContent value={TabKeys.Projects}>
-              <ProjectsTab />
-            </TabsContent>
-            <TabsContent value={TabKeys.Summary}>
-              <SummaryTab />
-            </TabsContent>
-          </Tabs>
-          <div className="flex justify-between self-end sticky bottom-0 bg-background py-4 shadow-lg shadow-black/10 w-full">
-            {
-              // TODO!: implement this feature
-            }
-            {type === 'new' && (
-              <Progress value={50} className="w-76 gap-2">
-                <ProgressLabel>Progress</ProgressLabel>
-                <ProgressValue />
-              </Progress>
-            )}
-            {type === 'edit' && <DownloadButton id={id} />}
-            <div className="flex gap-2 items-center">
-              {isSubmitting && <Spinner className="size-4" />}
-              <Button type="reset" onClick={() => reset()} variant="secondary">
-                Reset
-              </Button>
-              <Button type="submit" disabled={isSubmitting}>
-                {type === 'new' ? 'Save' : 'Update'}
-              </Button>
-            </div>
+    <FormProvider {...methods}>
+      <form
+        // eslint-disable-next-line @typescript-eslint/no-misused-promises
+        onSubmit={handleSubmit(onSubmit)}
+        className="flex flex-col gap-6 grow"
+      >
+        <FieldGroup className="grid-cols-3 grid gap-4">
+          <Field>
+            <FieldLabel required>Name</FieldLabel>
+            <Input {...methods.register('name')} placeholder="Enter resume name" />
+            <FieldError errors={[errors.name]} />
+          </Field>
+          <Field className="col-span-2">
+            <FieldLabel>Description</FieldLabel>
+            <Input {...methods.register('description')} placeholder="Enter resume description" />
+            <FieldError errors={[errors.description]} />
+          </Field>
+        </FieldGroup>
+        <Tabs className="gap-8 grow" defaultValue={TabKeys.PersonalInfo}>
+          <TabsList variant={'line'}>
+            {tabs.map(([tabKey, tabLabel]) => (
+              <TabsTrigger key={tabKey} value={tabKey}>
+                {errors.json?.[tabKey] && <AlertCircle className="text-red-400" />}
+                {tabLabel}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+          <TabsContent value={TabKeys.PersonalInfo}>
+            <PersonalInfoTab />
+          </TabsContent>
+          <TabsContent value={TabKeys.Skills}>
+            <SkillsTab />
+          </TabsContent>
+          <TabsContent value={TabKeys.Experience}>
+            <ExperienceTab />
+          </TabsContent>
+          <TabsContent value={TabKeys.Education}>
+            <EducationTab />
+          </TabsContent>
+          <TabsContent value={TabKeys.Projects}>
+            <ProjectsTab />
+          </TabsContent>
+          <TabsContent value={TabKeys.Summary}>
+            <SummaryTab />
+          </TabsContent>
+        </Tabs>
+        <div className="flex justify-between self-end sticky bottom-0 bg-background py-4 shadow-lg shadow-black/10 w-full">
+          {
+            // TODO!: implement this feature
+          }
+          {type === 'new' && (
+            <Progress value={50} className="w-76 gap-2">
+              <ProgressLabel>Progress</ProgressLabel>
+              <ProgressValue />
+            </Progress>
+          )}
+          {type === 'edit' && <div />}
+          <div className="flex gap-2 items-center">
+            {isSubmitting && <Spinner className="size-4" />}
+            <Button type="reset" onClick={() => reset()} variant="secondary">
+              Reset
+            </Button>
+            <Button type="submit" disabled={isSubmitting}>
+              {type === 'new' ? 'Save' : 'Update'}
+            </Button>
           </div>
-        </form>
-      </FormProvider>
-    </div>
+        </div>
+      </form>
+    </FormProvider>
   );
 }

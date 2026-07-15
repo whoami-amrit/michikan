@@ -20,7 +20,7 @@ import { api } from '@/lib/utils';
 
 import { JobForm } from './form';
 
-export function EditJobPage() {
+export function JobDetailPage() {
   const { id } = useParams<{ id: string }>();
   const {
     data: jobDetail,

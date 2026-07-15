@@ -1,5 +1,3 @@
-import { createHash } from 'node:crypto';
-
 import {
   ANALYSER_QUEUE_NAME,
   RENDER_PDF_JOB_NAME,
@@ -11,6 +9,7 @@ import { InjectQueue } from '@nestjs/bullmq';
 import { Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { Queue } from 'bullmq';
 import { Resume } from 'db';
+import hash from 'object-hash';
 import {
   ICreateRenderWorkerResponse,
   ICreateResumeDto,
@@ -55,11 +54,32 @@ export class ResumeService {
     return resume;
   }
 
-  update(resumeId: number, userId: number, updateResumeDto: IUpdateResumeDto): Promise<Resume> {
-    return this.prisma.resume.update({
+  async update(
+    resumeId: number,
+    userId: number,
+    updateResumeDto: IUpdateResumeDto,
+  ): Promise<Resume> {
+    const originalResume = await this.prisma.resume.findUnique({
+      where: { id: resumeId, userId },
+    });
+
+    if (!originalResume) {
+      throw new NotFoundException('Resume not found');
+    }
+
+    const updatedResume = await this.prisma.resume.update({
       where: { id: resumeId, userId },
       data: updateResumeDto,
     });
+
+    if (hash(originalResume.json) !== hash(updateResumeDto.json)) {
+      await this.analyserQueue.add(ANALYSER_QUEUE_NAME, {
+        type: RESUME_ANALYZER_JOB_NAME,
+        resumeId,
+      });
+    }
+
+    return updatedResume;
   }
 
   delete(resumeId: number, userId: number): Promise<Resume> {
@@ -111,7 +131,7 @@ export class ResumeService {
 
     const resumeRenderJob = await this.prisma.resumeRenderWorker.create({
       data: {
-        sourceHash: this.createHashOfResumeJson(resume),
+        sourceHash: hash(resume.json),
         resumeId,
         userId,
       },
@@ -127,17 +147,13 @@ export class ResumeService {
     };
   }
 
-  private createHashOfResumeJson(resume: Resume): string {
-    return createHash('sha256').update(JSON.stringify(resume.json)).digest('hex');
-  }
-
   private async checkPreviousSuccessRenderJob(resume: Resume, userId: number) {
     if (this.config.env === 'development') {
       this.logger.debug('Skipping check for previous successful render job in development mode');
       return null;
     }
 
-    const latestSourceHash = this.createHashOfResumeJson(resume);
+    const latestSourceHash = hash(resume.json);
 
     const previousJob = await this.prisma.resumeRenderWorker.findFirst({
       where: {

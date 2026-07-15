@@ -1,10 +1,6 @@
-import {
-  ANALYSER_QUEUE_NAME,
-  JOB_AT_A_GLANCE_JOB_NAME,
-  JOB_FIT_ANALYZER_JOB_NAME,
-} from '@common/constants';
+import { ANALYSER_QUEUE_NAME, JOB_AT_A_GLANCE_JOB_NAME } from '@common/constants';
 import { InjectQueue } from '@nestjs/bullmq';
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { Queue } from 'bullmq';
 import { Job, User } from 'db';
 import { ICreateJobDto, IUpdateJobDto } from 'shared';
@@ -14,8 +10,6 @@ import { IAnalyzerJobData } from './types';
 
 @Injectable()
 export class JobsService {
-  private readonly logger = new Logger(JobsService.name);
-
   constructor(
     private readonly prismaService: PrismaService,
     @InjectQueue(ANALYSER_QUEUE_NAME) private readonly analysisQueue: Queue<IAnalyzerJobData>,
@@ -31,24 +25,6 @@ export class JobsService {
         applyLink: body.applyLink,
         status: body.status,
         source: body.source,
-        ...(body.shouldAnalyzeOptions.should
-          ? {
-              jobFitAnalyses: {
-                create: {
-                  resume: {
-                    connect: {
-                      id: body.shouldAnalyzeOptions.resumeId!,
-                    },
-                  },
-                  user: {
-                    connect: {
-                      id: userId,
-                    },
-                  },
-                },
-              },
-            }
-          : {}),
         user: {
           connect: {
             id: userId,
@@ -64,16 +40,6 @@ export class JobsService {
         },
       },
     });
-
-    if (body.shouldAnalyzeOptions.should) {
-      this.logger.debug(`Job ${job.id} created with analysis, adding to queue`);
-
-      await this.analysisQueue.add(ANALYSER_QUEUE_NAME, {
-        type: JOB_FIT_ANALYZER_JOB_NAME,
-        analysisId: job.jobFitAnalyses[0].id,
-        isCreatedFromJob: true,
-      });
-    }
 
     await this.analysisQueue.add(ANALYSER_QUEUE_NAME, {
       type: JOB_AT_A_GLANCE_JOB_NAME,

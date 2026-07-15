@@ -20,11 +20,11 @@ import { UserContextProvider } from '@/lib/contexts/user/provider';
 import ReportPage from './analysis/detail.tsx';
 import AnalysisPage from './analysis/list.tsx';
 import { AuthFormPage, VerifyEmailPage } from './auth';
-import { EditJobPage } from './jobs/edit';
+import { JobDetailPage } from './jobs/detail';
 import JobsPage from './jobs/list';
 import { NewJobPage } from './jobs/new';
 import Layout from './layout';
-import { EditResumePage } from './resumes/edit';
+import { ResumeDetailPage } from './resumes/detail';
 import ResumesPage from './resumes/list';
 import { NewResumePage } from './resumes/new';
 
@@ -83,7 +83,7 @@ function App() {
                   <Route path="jobs">
                     <Route index element={<JobsPage />} />
                     <Route path="new" element={<NewJobPage />} />
-                    <Route path=":id" element={<EditJobPage />} />
+                    <Route path=":id" element={<JobDetailPage />} />
                   </Route>
                   <Route path="analysis">
                     <Route index element={<AnalysisPage />} />
@@ -92,7 +92,7 @@ function App() {
                   <Route path="resumes">
                     <Route index element={<ResumesPage />} />
                     <Route path="new" element={<NewResumePage />} />
-                    <Route path=":id" element={<EditResumePage />} />
+                    <Route path=":id" element={<ResumeDetailPage />} />
                   </Route>
                 </Route>
               </Routes>

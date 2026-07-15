@@ -1,10 +1,18 @@
-import { PlusIcon } from 'lucide-react';
+import { FilePlusCornerIcon, PlusIcon } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { IGetResumesResponse } from 'shared';
 import useSWR from 'swr';
 
 import AppHeader from '@/components/app-header';
 import { Button } from '@/components/ui/button';
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from '@/components/ui/empty';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   Table,
@@ -16,6 +24,15 @@ import {
 } from '@/components/ui/table';
 import { useBreadcrumbs } from '@/hooks/use-breadcrumbs';
 import { api } from '@/lib/utils';
+
+function NewResumeButton({ onClick }: { onClick: () => void }) {
+  return (
+    <Button onClick={onClick}>
+      <PlusIcon />
+      New Resume
+    </Button>
+  );
+}
 
 export default function ResumesPage() {
   const { data, isLoading } = useSWR(
@@ -34,24 +51,42 @@ export default function ResumesPage() {
     },
   ]);
 
+  const onNewResumeClick = () => {
+    void navigate('/resumes/new');
+  };
+
   return (
     <div className="flex flex-col items-center w-full">
       <AppHeader crumbs={crumbs} />
 
-      <main className="w-2xl flex flex-col gap-4">
-        <div className="flex">
-          <div className="grow" />
-          <Button
-            onClick={() => {
-              void navigate('/resumes/new');
-            }}
-          >
-            <PlusIcon />
-            New Resume
-          </Button>
-        </div>
+      <main className="w-2xl flex flex-col gap-4 grow">
+        {!isLoading && (data?.length ?? 0) > 0 && (
+          <div className="flex">
+            <div className="grow" />
+            <NewResumeButton onClick={onNewResumeClick} />
+          </div>
+        )}
 
-        {isLoading ? (
+        {!isLoading && data?.length === 0 && (
+          <Empty>
+            <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <FilePlusCornerIcon />
+              </EmptyMedia>
+              <EmptyTitle>No Resumes Yet</EmptyTitle>
+              <EmptyDescription>
+                You haven't created any resumes yet
+                <br />
+                Get started by creating your first resume
+              </EmptyDescription>
+            </EmptyHeader>
+            <EmptyContent>
+              <NewResumeButton onClick={onNewResumeClick} />
+            </EmptyContent>
+          </Empty>
+        )}
+
+        {isLoading && (
           <div className="flex w-full max-w-sm flex-col gap-2">
             {Array.from({ length: 5 }).map((_, index) => (
               <div className="flex gap-4" key={index}>
@@ -61,7 +96,9 @@ export default function ResumesPage() {
               </div>
             ))}
           </div>
-        ) : (
+        )}
+
+        {!isLoading && !!data?.length && (
           <Table>
             <TableHeader>
               <TableRow>

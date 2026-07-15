@@ -21,6 +21,10 @@ const formatDate = (date: string) => {
   return `${month} ${year}`;
 };
 
+const formatHighlights = (highlights: string) => {
+  return highlights.split('\n').filter((highlight) => !!highlight);
+};
+
 export const getResumeTex = (data: IResumeJson) => String.raw`
 \documentclass[11pt]{article}       % set main text size
 \usepackage[letterpaper,                % set paper size to letterpaper. change to a4paper for resumes outside of North America
@@ -78,7 +82,7 @@ ${
   data.skills?.length
     ? String.raw`
 \section*{Skills}
-${data.skills.map((skill) => String.raw`\textbf{${escapeLatex(skill.category)}:} ${skill.skills.map((skill) => escapeLatex(skill)).join(', ')} \\`).join('\n')}
+${data.skills.map((skill) => String.raw`\textbf{${escapeLatex(skill.category)}:} ${escapeLatex(skill.skills)} \\`).join('\n')}
 \vspace{-6.5pt}
 `
     : ''
@@ -96,7 +100,9 @@ ${data.experience
 \textbf{${escapeLatex(exp.title)},} {${escapeLatex(exp.company)}} ${exp.location ? `-- ${escapeLatex(exp.location)}` : ''} \hfill ${formatDate(exp.startDate)} -- ${exp.endDate ? formatDate(exp.endDate) : 'Present'} \\
 \vspace{-9pt}
 \begin{itemize}
-  ${exp.highlights.map((highlight) => String.raw`\item ${escapeLatex(highlight)}`).join('\n  ')}
+  ${formatHighlights(exp.highlights)
+    .map((highlight) => String.raw`\item ${escapeLatex(highlight)}`)
+    .join('\n  ')}
 \end{itemize}
 `,
   )
@@ -114,10 +120,12 @@ ${
 ${data.projects
   .map(
     (project) => String.raw`
-\textbf{${escapeLatex(project.title)}} ${project.url ? String.raw`\hfill \href{${project.url}}{${getPublicProfileUrlLabel(project.url)}}` : ''} \\
+\textbf{${escapeLatex(project.title)}} ${project.technologies ? String.raw`| ${project.technologies}` : ''} ${project.url ? String.raw`\hfill \href{${project.url}}{${getPublicProfileUrlLabel(project.url)}}` : ''} \\
 \vspace{-9pt}
 \begin{itemize}
-  ${project.highlights.map((highlight) => String.raw`\item ${escapeLatex(highlight)}`).join('\n  ')}
+  ${formatHighlights(project.highlights)
+    .map((highlight) => String.raw`\item ${escapeLatex(highlight)}`)
+    .join('\n  ')}
 \end{itemize}
 `,
   )
@@ -135,7 +143,8 @@ ${
 ${data.education
   .map(
     (edu) => String.raw`
-\textbf{${escapeLatex(edu.institution)}} -- ${escapeLatex(edu.degree)} in ${escapeLatex(edu.field)} \hfill ${formatDate(edu.graduationDate)} \\
+\textbf{${escapeLatex(edu.institution)}} \hfill ${formatDate(edu.graduationDate)} \\
+${escapeLatex(edu.degree)} in ${escapeLatex(edu.field)} \hfill ${escapeLatex(edu.specialRemark ?? '')}} \\
 `,
   )
   .join('\n')}

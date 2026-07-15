@@ -59,14 +59,10 @@ const SkillEntrySchema = z.object({
     .min(1, 'Category is required')
     .max(50, 'Category must be less than 50 characters'),
   skills: z
-    .array(
-      z
-        .string()
-        .trim()
-        .min(1, 'At least one skill is required')
-        .max(100, 'Skill must be less than 100 characters'),
-    )
-    .max(20, 'Maximum 20 skills per category'),
+    .string()
+    .trim()
+    .min(1, 'At least one skill is required')
+    .max(500, 'Must be less than 500 characters'),
 });
 
 const ExperienceEntrySchema = z
@@ -96,9 +92,9 @@ const ExperienceEntrySchema = z
     ),
     isCurrentRole: z.boolean().default(false),
     highlights: z
-      .array(z.string().trim().max(500, 'Highlight must be less than 500 characters'))
-      .min(1, 'At least one highlight is required')
-      .max(10, 'Maximum 10 highlights per experience'),
+      .string()
+      .min(1, "Highlights can't be empty")
+      .max(2000, 'Highlights must be less than 2000 characters'),
   })
   .superRefine((data, ctx) => {
     if (data.isCurrentRole && data.endDate) {
@@ -131,12 +127,14 @@ const ProjectEntrySchema = z.object({
       .optional(),
   ),
   highlights: z
-    .array(z.string().trim().max(500, 'Highlight must be less than 500 characters'))
-    .min(1, 'At least one highlight is required')
-    .max(10, 'Maximum 10 highlights per project'),
-  technologies: z
-    .array(z.string().trim().max(50, 'Technology name must be less than 50 characters'))
-    .max(15, 'Maximum 15 technologies per project'),
+    .string()
+    .min(1, "Highlights can't be empty")
+    .max(2000, 'Highlights must be less than 2000 characters'),
+  technologies: zodSafeString.pipe(
+    z
+      .string()
+      .max(50, 'Too long! Mention only the crucial technologies used to build this project'),
+  ),
 });
 
 const EducationEntrySchema = z.object({
@@ -155,7 +153,8 @@ const EducationEntrySchema = z.object({
     .string()
     .trim()
     .refine((date) => !isNaN(Date.parse(date)), 'Invalid graduation date'),
-  gpa: z.number().optional(),
+  // todo: this can also be accolade??
+  specialRemark: zodSafeString.pipe(z.string().max(100).optional()),
 });
 
 const ResumeJsonSchema = z.object({

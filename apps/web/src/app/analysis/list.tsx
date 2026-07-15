@@ -58,16 +58,18 @@ function ResumeSelectPopover() {
 
   return (
     <Popover>
-      <PopoverTrigger>
-        <Button className="max-w-60" ref={triggerRef} type="button" variant="ghost">
-          <FileTextIcon />
-          <span className="truncate">
-            {selectedResumeId
-              ? resumes?.find((resume) => resume.id === selectedResumeId)?.name
-              : 'Select Resume'}
-          </span>
-        </Button>
-      </PopoverTrigger>
+      <PopoverTrigger
+        render={
+          <Button className="max-w-60" ref={triggerRef} type="button" variant="ghost">
+            <FileTextIcon />
+            <span className="truncate">
+              {selectedResumeId
+                ? resumes?.find((resume) => resume.id === selectedResumeId)?.name
+                : 'Select Resume'}
+            </span>
+          </Button>
+        }
+      />
       <PopoverContent align="start" className="p-2 flex flex-col gap-2">
         <InputGroup>
           <InputGroupInput
@@ -135,13 +137,11 @@ export default function AnalysisPage() {
     getValues,
   } = methods;
 
-  console.log(errors);
-
   const navigate = useNavigate();
 
   const crumbs = useBreadcrumbs([
     {
-      label: 'Jobs',
+      label: 'Job Fit Analysis',
     },
   ]);
 
