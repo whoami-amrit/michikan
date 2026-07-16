@@ -1,15 +1,5 @@
 import z from 'zod';
 
-export const resourceNameSchema = z
-  .string()
-  .min(1, 'Resume name is required')
-  .max(50, 'Resume name must be less than 50 characters');
-
-export const resourceDescriptionSchema = z
-  .string()
-  .max(200, 'Description must be less than 200 characters')
-  .optional();
-
 export const zodSafeString = z.preprocess((value) => {
   if (typeof value === 'string' && value.trim() === '') {
     return undefined;
@@ -17,6 +7,15 @@ export const zodSafeString = z.preprocess((value) => {
 
   return value;
 }, z.string().trim().optional());
+
+export const resourceNameSchema = z
+  .string()
+  .min(1, 'Resume name is required')
+  .max(50, 'Resume name must be less than 50 characters');
+
+export const resourceDescriptionSchema = zodSafeString.pipe(
+  z.string().max(200, 'Description must be less than 200 characters').optional(),
+);
 
 export const nameSchema = z
   .string()

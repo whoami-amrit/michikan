@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Job, JobStatus, Resume } from 'db';
-import { FolderOpen, LoaderCircle, PlusIcon, SquareArrowOutUpRightIcon } from 'lucide-react';
+import { FolderOpen, LoaderCircle, PlusIcon } from 'lucide-react';
 import {
   Controller,
   FormProvider,
@@ -9,7 +9,7 @@ import {
   useFormContext,
   useWatch,
 } from 'react-hook-form';
-import { NavLink, useNavigate } from 'react-router';
+import { useNavigate } from 'react-router';
 import {
   CreateJobSchema,
   ICreateJobDto,
@@ -228,15 +228,13 @@ export function JobForm({ type, data, id }: JobFormProps) {
         >
           <FieldGroup className="grow">
             <FieldSet>
-              <FieldLegend>{type === 'new' ? 'Create Job' : 'Update Job'}</FieldLegend>
+              <FieldLegend>
+                {type === 'new' ? 'Your job search, finally organized.' : 'Update Job'}
+              </FieldLegend>
               <FieldDescription>
-                Save a job posting you are interest in by filling in the following. Otherwise you
-                could also checkout our{' '}
-                <NavLink to="/analysis">
-                  Analysis <SquareArrowOutUpRightIcon className="size-3 inline" />
-                </NavLink>{' '}
-                page where you can simply paste a job description and select a resume and our AI
-                expert will analyze it for you save the job for you.
+                Save every role in one place — company, source, status, all at a glance. Paste the
+                job description once, and we'll distill it into a clean summary automatically, so
+                you're never digging through walls of text to remember what a role was about.
               </FieldDescription>
               <FieldGroup>
                 <div className="grid-cols-2 grid gap-4">
@@ -246,13 +244,13 @@ export function JobForm({ type, data, id }: JobFormProps) {
                     <FieldError errors={[errors.role]} />
                   </Field>
                   <Field>
-                    <FieldLabel>Company</FieldLabel>
+                    <FieldLabel required>Company</FieldLabel>
                     <Input {...methods.register('company')} placeholder="Ex. Facebook" />
                     <FieldError errors={[errors.company]} />
                   </Field>
                 </div>
                 <Field>
-                  <FieldLabel>Job Description</FieldLabel>
+                  <FieldLabel required>Job Description</FieldLabel>
                   <Textarea
                     {...methods.register('jobDescription')}
                     placeholder="Ex. We are looking for a software engineer..."
@@ -262,7 +260,7 @@ export function JobForm({ type, data, id }: JobFormProps) {
                 </Field>
                 <div className="grid grid-cols-2 gap-4">
                   <Field>
-                    <FieldLabel>Status</FieldLabel>
+                    <FieldLabel required>Status</FieldLabel>
                     <Controller
                       name="status"
                       control={control}
@@ -292,7 +290,7 @@ export function JobForm({ type, data, id }: JobFormProps) {
                     <FieldError errors={[errors.status]} />
                   </Field>
                   <Field>
-                    <FieldLabel>Source</FieldLabel>
+                    <FieldLabel required>Source</FieldLabel>
                     <Input
                       {...methods.register('source')}
                       placeholder="Ex. Linkedin, Naukri, etc"
@@ -311,6 +309,15 @@ export function JobForm({ type, data, id }: JobFormProps) {
                     <FieldError errors={[errors.applyLink]} />
                   </Field>
                 </div>
+                <Field>
+                  <FieldLabel>Notes</FieldLabel>
+                  <FieldDescription>
+                    Jot down anything worth remembering — interview prep, contacts, follow-ups, or
+                    your own notes on the role.
+                  </FieldDescription>
+                  <Textarea className="min-h-36 max-h-92" {...methods.register('notes')} />
+                  <FieldError errors={[errors.notes]} />
+                </Field>
               </FieldGroup>
             </FieldSet>
           </FieldGroup>

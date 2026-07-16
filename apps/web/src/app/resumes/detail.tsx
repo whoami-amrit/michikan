@@ -1,14 +1,14 @@
 import { Resume } from 'db';
 import dompurify from 'dompurify';
-import { BrainCircuit, FileDown, PencilIcon } from 'lucide-react';
+import { BrainCircuit, FileDown, PencilIcon, SearchSlash } from 'lucide-react';
 import { marked } from 'marked';
 import { useState } from 'react';
-import { useLocation, useParams } from 'react-router';
+import { useNavigate, useParams } from 'react-router';
 import {
   ICreateRenderWorkerResponse,
+  ICreateResumeDto,
   ICreateWorkerResponse,
   IRenderStatusResponse,
-  IResumeJson,
 } from 'shared';
 import { toast } from 'sonner';
 import useSWR from 'swr';
@@ -16,6 +16,14 @@ import useSWR from 'swr';
 import AppHeader from '@/components/app-header';
 import { ErrorToast } from '@/components/error-toast';
 import { Button } from '@/components/ui/button';
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from '@/components/ui/empty';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Spinner } from '@/components/ui/spinner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -92,9 +100,13 @@ function DownloadButton({ id }: { id: string }) {
 export function ResumeDetailPage() {
   const { id } = useParams<{ id: string }>();
 
-  const { pathname } = useLocation();
+  const navigate = useNavigate();
 
-  const { data: detail, isLoading } = useSWR<Resume>(pathname, {
+  const {
+    data: detail,
+    isLoading,
+    error,
+  } = useSWR<Resume, undefined>(`/resumes/${id}`, {
     fetcher: () => api.get(`/resumes/${id}`).json<Resume>(),
   });
 
@@ -114,7 +126,24 @@ export function ResumeDetailPage() {
         <DownloadButton id={id!} />
       </AppHeader>
 
-      {isLoading || detail === undefined ? (
+      {error && (
+        <Empty>
+          <EmptyHeader>
+            <EmptyMedia variant="icon">
+              <SearchSlash />
+            </EmptyMedia>
+            <EmptyTitle>404 Not Found</EmptyTitle>
+            <EmptyDescription>No Resume found with the specified ID</EmptyDescription>
+          </EmptyHeader>
+          <EmptyContent>
+            <Button onClick={() => void navigate('/resumes')} variant="outline">
+              Go back
+            </Button>
+          </EmptyContent>
+        </Empty>
+      )}
+
+      {!error && isLoading && (
         <div className="flex flex-col gap-8 max-w-2xl grow w-full">
           <div className="flex flex-col gap-2 w-full">
             <Skeleton className="w-1/2 h-4" />
@@ -137,7 +166,9 @@ export function ResumeDetailPage() {
             <Skeleton className="w-full h-6" />
           </div>
         </div>
-      ) : (
+      )}
+
+      {!error && !isLoading && (
         <div className="flex flex-col grow max-w-2xl lg:px-0 px-6 w-full">
           <Tabs className="gap-8 grow">
             <TabsList>
@@ -152,19 +183,11 @@ export function ResumeDetailPage() {
               value="analysis"
               className="typeset typeset-doc"
               dangerouslySetInnerHTML={{
-                __html: dompurify.sanitize(marked(detail.analysisReport ?? '', { async: false })),
+                __html: dompurify.sanitize(marked(detail!.analysisReport ?? '', { async: false })),
               }}
             />
             <TabsContent value="edit" className="flex flex-col">
-              <ResumeForm
-                type="edit"
-                data={{
-                  json: detail.json as IResumeJson,
-                  name: detail.name,
-                  description: detail.description ?? undefined,
-                }}
-                id={id!}
-              />
+              <ResumeForm type="edit" data={detail as unknown as ICreateResumeDto} id={id!} />
             </TabsContent>
           </Tabs>
         </div>

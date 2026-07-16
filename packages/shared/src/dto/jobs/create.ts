@@ -1,7 +1,7 @@
 import { JobStatus } from 'db';
 import z from 'zod';
 
-import { applicationUrlSchema, companyNameSchema, jobTitleSchema } from './common';
+import { applicationUrlSchema, companyNameSchema, jobTitleSchema, notesSchema } from './common';
 
 const schema = z.object({
   jobDescription: z.string().nonempty('Job description must not be empty').max(10000),
@@ -11,6 +11,7 @@ const schema = z.object({
   status: z.enum(JobStatus),
   source: z.string(),
   submittedResumeId: z.number().nonnegative().optional(),
+  notes: notesSchema,
 });
 
 export type ICreateJobDto = z.infer<typeof schema>;
