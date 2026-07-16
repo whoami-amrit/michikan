@@ -1,6 +1,6 @@
 import { Resume } from 'db';
 import dompurify from 'dompurify';
-import { BrainCircuit, FileDown, PencilIcon, SearchSlash } from 'lucide-react';
+import { BotOff, BrainCircuit, FileDown, PencilIcon, RefreshCw, SearchSlash } from 'lucide-react';
 import { marked } from 'marked';
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
@@ -97,6 +97,41 @@ function DownloadButton({ id }: { id: string }) {
   );
 }
 
+function SummarySection({ resume }: { resume?: Resume }) {
+  if (!resume || resume.analysisReportGenerateStatus === 'GENERATING') {
+    return <Spinner />;
+  }
+
+  if (resume.analysisReportGenerateStatus === 'FAILED') {
+    return (
+      <Empty>
+        <EmptyHeader>
+          <EmptyMedia variant="icon">
+            <BotOff />
+          </EmptyMedia>
+          <EmptyTitle>Summary generation failed</EmptyTitle>
+          <EmptyDescription>Cat spilled coffee on our AI :/ Please try again</EmptyDescription>
+        </EmptyHeader>
+        <EmptyContent>
+          <Button variant="outline">
+            <RefreshCw />
+            Retry
+          </Button>
+        </EmptyContent>
+      </Empty>
+    );
+  }
+
+  return (
+    <article
+      className="typeset typeset-doc pb-8"
+      dangerouslySetInnerHTML={{
+        __html: dompurify.sanitize(marked(resume.analysisReport!, { async: false })),
+      }}
+    />
+  );
+}
+
 export function ResumeDetailPage() {
   const { id } = useParams<{ id: string }>();
 
@@ -179,13 +214,9 @@ export function ResumeDetailPage() {
                 <PencilIcon /> Edit
               </TabsTrigger>
             </TabsList>
-            <TabsContent
-              value="analysis"
-              className="typeset typeset-doc"
-              dangerouslySetInnerHTML={{
-                __html: dompurify.sanitize(marked(detail!.analysisReport ?? '', { async: false })),
-              }}
-            />
+            <TabsContent value="analysis" className="typeset typeset-doc pb-8">
+              <SummarySection resume={detail} />
+            </TabsContent>
             <TabsContent value="edit" className="flex flex-col">
               <ResumeForm type="edit" data={detail as unknown as ICreateResumeDto} id={id!} />
             </TabsContent>

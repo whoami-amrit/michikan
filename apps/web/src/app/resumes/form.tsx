@@ -178,8 +178,8 @@ function SkillsTab() {
             </Field>
           </FieldGroup>
         )}
-        {fields.map((field, index) => (
-          <FieldGroup key={field.category} className="flex-row gap-4">
+        {fields.map((_, index) => (
+          <FieldGroup key={index} className="flex-row gap-4">
             <Field className="w-50 shrink-0">
               <Input
                 {...register(`json.skills.${index}.category`)}
@@ -312,8 +312,8 @@ function ExperienceTab() {
             Add Experience
           </Button>
         </div>
-        {fields.map((field, index) => (
-          <Card key={field.title}>
+        {fields.map((_, index) => (
+          <Card key={index}>
             <CardHeader>
               <CardTitle>
                 <Field className="w-64">
@@ -454,8 +454,8 @@ function EducationTab() {
             Add Qualification
           </Button>
         </div>
-        {fields.map((field, index) => (
-          <Card key={field.degree}>
+        {fields.map((_, index) => (
+          <Card key={index}>
             <CardHeader>
               <CardTitle>
                 <Field className="w-44">
@@ -584,8 +584,8 @@ function ProjectsTab() {
             Add Project
           </Button>
         </div>
-        {fields.map((field, index) => (
-          <Card key={field.title}>
+        {fields.map((_, index) => (
+          <Card key={index}>
             <CardHeader>
               <CardTitle>
                 <Field className="w-64">
@@ -731,7 +731,11 @@ export function ResumeForm({ type, data, id }: ResumeFormProps) {
         <FieldGroup className="grid-cols-3 grid gap-4">
           <Field>
             <FieldLabel required>Name</FieldLabel>
-            <Input {...methods.register('name')} placeholder="Enter resume name" />
+            <Input
+              disabled={type === 'edit'}
+              {...methods.register('name')}
+              placeholder="Enter resume name"
+            />
             <FieldError errors={[errors.name]} />
           </Field>
           <Field className="col-span-2">
@@ -768,7 +772,7 @@ export function ResumeForm({ type, data, id }: ResumeFormProps) {
             <SummaryTab />
           </TabsContent>
         </Tabs>
-        <div className="flex justify-between self-end sticky bottom-0 bg-background py-4 shadow-lg shadow-black/10 w-full">
+        <div className="flex justify-between self-end sticky bottom-0 py-4 z-10 w-full after:content-[''] after:w-[calc(100%+24px)] after:bg-background after:absolute after:-left-3 after:h-full after:top-0 after:z-[-1]">
           {
             // TODO!: implement this feature
           }
@@ -781,9 +785,11 @@ export function ResumeForm({ type, data, id }: ResumeFormProps) {
           {type === 'edit' && <div />}
           <div className="flex gap-2 items-center">
             {isSubmitting && <Spinner className="size-4" />}
-            <Button type="reset" onClick={() => reset()} variant="secondary">
-              Reset
-            </Button>
+            {type === 'new' && (
+              <Button type="reset" onClick={() => reset()} variant="secondary">
+                Reset
+              </Button>
+            )}
             <Button type="submit" disabled={isSubmitting}>
               {type === 'new' ? 'Save' : 'Update'}
             </Button>

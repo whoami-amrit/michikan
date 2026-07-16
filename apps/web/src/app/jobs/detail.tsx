@@ -51,7 +51,7 @@ function SummarySection({ job }: { job: Job | undefined }) {
 
   return (
     <article
-      className="typeset typeset-doc"
+      className="typeset typeset-doc pb-8"
       dangerouslySetInnerHTML={{
         __html: dompurify.sanitize(marked(job.atAGlance!, { async: false })),
       }}
@@ -79,7 +79,7 @@ export function JobDetailPage() {
   ]);
 
   return (
-    <div className="flex flex-col w-full">
+    <div className="flex flex-col w-full items-center">
       <AppHeader crumbs={crumbs} />
 
       {error && (

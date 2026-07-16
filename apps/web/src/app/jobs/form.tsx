@@ -183,6 +183,8 @@ export function JobForm({ type, data, id }: JobFormProps) {
             role: '',
             status: JobStatus.NOT_APPLIED,
             submittedResumeId: undefined,
+            notes: '',
+            source: '',
           }
         : data,
     mode: 'onBlur',
@@ -228,30 +230,42 @@ export function JobForm({ type, data, id }: JobFormProps) {
         >
           <FieldGroup className="grow">
             <FieldSet>
-              <FieldLegend>
-                {type === 'new' ? 'Your job search, finally organized.' : 'Update Job'}
-              </FieldLegend>
-              <FieldDescription>
-                Save every role in one place — company, source, status, all at a glance. Paste the
-                job description once, and we'll distill it into a clean summary automatically, so
-                you're never digging through walls of text to remember what a role was about.
-              </FieldDescription>
+              {type === 'new' && (
+                <>
+                  <FieldLegend>'Your job search, finally organized'</FieldLegend>
+                  <FieldDescription>
+                    Save every role in one place — company, source, status, all at a glance. Paste
+                    the job description once, and we'll distill it into a clean summary
+                    automatically, so you're never digging through walls of text to remember what a
+                    role was about.
+                  </FieldDescription>
+                </>
+              )}
               <FieldGroup>
                 <div className="grid-cols-2 grid gap-4">
                   <Field>
                     <FieldLabel required>Role</FieldLabel>
-                    <Input {...methods.register('role')} placeholder="Ex. Software Engineer" />
+                    <Input
+                      disabled={type === 'edit'}
+                      {...methods.register('role')}
+                      placeholder="Ex. Software Engineer"
+                    />
                     <FieldError errors={[errors.role]} />
                   </Field>
                   <Field>
                     <FieldLabel required>Company</FieldLabel>
-                    <Input {...methods.register('company')} placeholder="Ex. Facebook" />
+                    <Input
+                      disabled={type === 'edit'}
+                      {...methods.register('company')}
+                      placeholder="Ex. Facebook"
+                    />
                     <FieldError errors={[errors.company]} />
                   </Field>
                 </div>
                 <Field>
                   <FieldLabel required>Job Description</FieldLabel>
                   <Textarea
+                    disabled={type === 'edit'}
                     {...methods.register('jobDescription')}
                     placeholder="Ex. We are looking for a software engineer..."
                     className="min-h-36 max-h-64"
@@ -292,6 +306,7 @@ export function JobForm({ type, data, id }: JobFormProps) {
                   <Field>
                     <FieldLabel required>Source</FieldLabel>
                     <Input
+                      disabled={type === 'edit'}
                       {...methods.register('source')}
                       placeholder="Ex. Linkedin, Naukri, etc"
                     />
@@ -325,12 +340,14 @@ export function JobForm({ type, data, id }: JobFormProps) {
           {
             // todo: implement shadow for scrollable thing
           }
-          <div className="flex justify-end self-end sticky bottom-0 bg-background py-4 shadow-lg shadow-black/10 w-full">
+          <div className="flex justify-end self-end sticky bottom-0 py-4 z-10 w-full after:content-[''] after:w-[calc(100%+24px)] after:bg-background after:absolute after:-left-3 after:h-full after:top-0 after:z-[-1]">
             <div className="flex gap-2 items-center">
               {isSubmitting && <LoaderCircle className="size-4 animate-spin" />}
-              <Button type="reset" onClick={() => reset()} variant="secondary">
-                Reset
-              </Button>
+              {type === 'new' && (
+                <Button type="reset" onClick={() => reset()} variant="secondary">
+                  Reset
+                </Button>
+              )}
               <Button type="submit" disabled={isSubmitting}>
                 {type === 'new' ? 'Save' : 'Update'}
               </Button>

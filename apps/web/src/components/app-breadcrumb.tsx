@@ -27,7 +27,7 @@ const BreadcrumbItemContent = ({ crumb, isLast }: { crumb: ICrumb; isLast: boole
 
 export const AppBreadcrumb = ({ crumbs }: { crumbs: ICrumb[] }) => {
   return (
-    <Breadcrumb>
+    <Breadcrumb className="flex items-center h-8">
       <BreadcrumbList>
         {crumbs.map((crumb, index) => (
           <Fragment key={index}>
