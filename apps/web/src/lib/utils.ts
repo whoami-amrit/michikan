@@ -49,3 +49,21 @@ export const api = ky.create({
     statusCodes: [HttpStatus.UNAUTHORIZED],
   },
 });
+
+export const convertNullsToUndefined = (object: unknown) => {
+  if (object === null) {
+    return undefined;
+  }
+
+  if (typeof object !== 'object') {
+    return object;
+  }
+
+  const copy: Record<string, unknown> = {};
+
+  Object.keys(object).forEach((key) => {
+    copy[key] = convertNullsToUndefined((object as Record<string, unknown>)[key]);
+  });
+
+  return copy;
+};

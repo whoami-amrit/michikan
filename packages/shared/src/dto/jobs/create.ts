@@ -10,7 +10,7 @@ const schema = z.object({
   applyLink: applicationUrlSchema,
   status: z.enum(JobStatus),
   source: z.string(),
-  submittedResumeId: z.number().nonnegative().optional(),
+  submittedResumeId: z.number().nonnegative().nullable().optional(),
   notes: notesSchema,
 });
 

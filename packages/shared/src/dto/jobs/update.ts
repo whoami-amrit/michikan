@@ -8,7 +8,7 @@ const schema = z.object({
   status: zodSafeString.pipe(z.enum(JobStatus).optional()),
   notes: notesSchema,
   applyLink: applicationUrlSchema,
-  submittedResumeId: z.number().nonnegative().optional(),
+  submittedResumeId: z.number().nonnegative().nullable().optional(),
 });
 
 export type IUpdateJobDto = z.infer<typeof schema>;

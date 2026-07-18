@@ -1,6 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Job, JobStatus, Resume } from 'db';
 import { FolderOpen, LoaderCircle, PlusIcon } from 'lucide-react';
+import { useState } from 'react';
 import {
   Controller,
   FormProvider,
@@ -59,7 +60,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { api } from '@/lib/utils';
+import { api, convertNullsToUndefined } from '@/lib/utils';
 
 type JobFormProps =
   | {
@@ -85,32 +86,48 @@ const jobStatusOptions: { value: JobStatus; label: string }[] = [
 
 type UnpackArray<T> = T extends readonly (infer U)[] ? U : never;
 
+interface ResumeOptionType {
+  id: Resume['id'];
+  name: string;
+}
+
 function ResumesCombobox({
   onChange,
   value,
 }: {
-  onChange: (value: number | undefined) => void;
+  onChange: (value: number | null | undefined) => void;
   value: number | undefined;
 }) {
   const navigate = useNavigate();
-  const { data: resumeOptions, isLoading } = useSWR<
-    { id: Resume['id']; name: string }[],
-    undefined
-  >('/resumes', {
+
+  const [selectedOption, setSelectedOption] = useState<ResumeOptionType | null>(null);
+
+  const { data: resumeOptions, isLoading } = useSWR<ResumeOptionType[], undefined>('/resumes', {
     fetcher: async () => {
       const resumes = await api.get('/resumes').json<IGetResumesResponse[]>();
-      return resumes.map((resume) => ({ id: resume.id, name: resume.name }));
+      const options: ResumeOptionType[] = resumes.map((resume) => ({
+        id: resume.id,
+        name: resume.name,
+      }));
+      if (value) {
+        setSelectedOption(options.find((option) => option.id === value) ?? null);
+      }
+      return options;
     },
   });
 
   return (
-    <Combobox
+    <Combobox<ResumeOptionType>
       disabled={isLoading}
-      onValueChange={(value) => onChange(value ? Number(value) : undefined)}
-      value={value ? String(value) : undefined}
+      onValueChange={(value, { reason }) => {
+        onChange(reason === 'clear-press' ? null : value?.id);
+        setSelectedOption(value);
+      }}
+      value={selectedOption}
       items={resumeOptions ?? []}
+      itemToStringLabel={(item) => item.name}
     >
-      <ComboboxInput className="w-full" placeholder="Select a resume for analysis">
+      <ComboboxInput className="w-full" placeholder="Select a resume for analysis" showClear>
         <InputGroupAddon>
           {isLoading && <LoaderCircle className="size-3 animate-spin" />}
         </InputGroupAddon>
@@ -139,7 +156,7 @@ function ResumesCombobox({
         </ComboboxEmpty>
         <ComboboxList>
           {(resume: UnpackArray<typeof resumeOptions>) => (
-            <ComboboxItem key={resume.id} value={resume.id.toString()}>
+            <ComboboxItem key={resume.id} value={resume}>
               {resume.name}
             </ComboboxItem>
           )}
@@ -151,10 +168,9 @@ function ResumesCombobox({
 
 function SubmittedResumeField() {
   const {
-    control,
     formState: { errors },
   } = useFormContext<ICreateJobDto>();
-  const status = useWatch<ICreateJobDto>({ control, name: 'status' });
+  const status = useWatch<ICreateJobDto>({ name: 'status' });
 
   return (
     status !== JobStatus.NOT_APPLIED && (
@@ -162,7 +178,6 @@ function SubmittedResumeField() {
         <FieldLabel>Submitted Resume</FieldLabel>
         <Controller
           name="submittedResumeId"
-          control={control}
           render={({ field }) => <ResumesCombobox {...field} />}
         />
         <FieldError errors={[errors.submittedResumeId]} />
@@ -186,13 +201,12 @@ export function JobForm({ type, data, id }: JobFormProps) {
             notes: '',
             source: '',
           }
-        : data,
+        : convertNullsToUndefined(data),
     mode: 'onBlur',
     resolver: zodResolver(CreateJobSchema),
   });
   const {
     handleSubmit,
-    control,
     reset,
     formState: { errors, isSubmitting },
   } = methods;
@@ -232,12 +246,11 @@ export function JobForm({ type, data, id }: JobFormProps) {
             <FieldSet>
               {type === 'new' && (
                 <>
-                  <FieldLegend>'Your job search, finally organized'</FieldLegend>
+                  <FieldLegend>Your job search, finally organized</FieldLegend>
                   <FieldDescription>
                     Save every role in one place — company, source, status, all at a glance. Paste
                     the job description once, and we'll distill it into a clean summary
-                    automatically, so you're never digging through walls of text to remember what a
-                    role was about.
+                    automatically.
                   </FieldDescription>
                 </>
               )}
@@ -246,8 +259,7 @@ export function JobForm({ type, data, id }: JobFormProps) {
                   <Field>
                     <FieldLabel required>Role</FieldLabel>
                     <Input
-                      disabled={type === 'edit'}
-                      {...methods.register('role')}
+                      {...methods.register('role', { disabled: type === 'edit' })}
                       placeholder="Ex. Software Engineer"
                     />
                     <FieldError errors={[errors.role]} />
@@ -255,8 +267,7 @@ export function JobForm({ type, data, id }: JobFormProps) {
                   <Field>
                     <FieldLabel required>Company</FieldLabel>
                     <Input
-                      disabled={type === 'edit'}
-                      {...methods.register('company')}
+                      {...methods.register('company', { disabled: type === 'edit' })}
                       placeholder="Ex. Facebook"
                     />
                     <FieldError errors={[errors.company]} />
@@ -265,8 +276,7 @@ export function JobForm({ type, data, id }: JobFormProps) {
                 <Field>
                   <FieldLabel required>Job Description</FieldLabel>
                   <Textarea
-                    disabled={type === 'edit'}
-                    {...methods.register('jobDescription')}
+                    {...methods.register('jobDescription', { disabled: type === 'edit' })}
                     placeholder="Ex. We are looking for a software engineer..."
                     className="min-h-36 max-h-64"
                   />
@@ -277,7 +287,6 @@ export function JobForm({ type, data, id }: JobFormProps) {
                     <FieldLabel required>Status</FieldLabel>
                     <Controller
                       name="status"
-                      control={control}
                       render={({ field }) => (
                         <Select
                           {...field}
@@ -306,8 +315,7 @@ export function JobForm({ type, data, id }: JobFormProps) {
                   <Field>
                     <FieldLabel required>Source</FieldLabel>
                     <Input
-                      disabled={type === 'edit'}
-                      {...methods.register('source')}
+                      {...methods.register('source', { disabled: type === 'edit' })}
                       placeholder="Ex. Linkedin, Naukri, etc"
                     />
                     <FieldError errors={[errors.source]} />

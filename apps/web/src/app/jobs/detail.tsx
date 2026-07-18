@@ -73,7 +73,7 @@ export function JobDetailPage() {
       label: 'Jobs',
     },
     {
-      label: jobDetail ? `${jobDetail.role} -- ${jobDetail.company}` : 'Detail',
+      label: jobDetail ? `${jobDetail.role} - ${jobDetail.company}` : 'Detail',
       isLoading,
     },
   ]);

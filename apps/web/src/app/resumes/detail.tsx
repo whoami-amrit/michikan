@@ -1,15 +1,10 @@
-import { Resume } from 'db';
+import { Resume, WorkerStatus } from 'db';
 import dompurify from 'dompurify';
 import { BotOff, BrainCircuit, FileDown, PencilIcon, RefreshCw, SearchSlash } from 'lucide-react';
 import { marked } from 'marked';
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
-import {
-  ICreateRenderWorkerResponse,
-  ICreateResumeDto,
-  ICreateWorkerResponse,
-  IRenderStatusResponse,
-} from 'shared';
+import { ICreateRenderWorkerResponse, ICreateResumeDto, IRenderStatusResponse } from 'shared';
 import { toast } from 'sonner';
 import useSWR from 'swr';
 
@@ -42,11 +37,10 @@ const download = (url: string) => {
 
 function DownloadButton({ id }: { id: string }) {
   const [workerInfo, setWorkerInfo] = useState<ICreateRenderWorkerResponse>();
-  const [progress, setProgress] = useState<'pending' | 'completed' | 'failed'>();
 
   useSWR(`/resumes/worker/${id}`, {
     refreshInterval: 500,
-    isOnline: () => progress === 'pending',
+    isOnline: () => workerInfo?.status === WorkerStatus.IN_PROGRESS,
     fetcher: async () => {
       if (!workerInfo) {
         return;
@@ -61,9 +55,10 @@ function DownloadButton({ id }: { id: string }) {
         .get(`/resumes/worker/${workerInfo.workerId}`)
         .json<IRenderStatusResponse>();
 
+      setWorkerInfo({ ...workerInfo, status: response.status, downloadUrl: response.downloadUrl });
+
       if (response.status === 'FAILED') {
         toast.error(<ErrorToast />);
-        setProgress('failed');
         return;
       }
 
@@ -73,7 +68,6 @@ function DownloadButton({ id }: { id: string }) {
 
       toast.success('Resume ready for download');
       download(response.downloadUrl!);
-      setProgress('completed');
     },
   });
 
@@ -83,15 +77,24 @@ function DownloadButton({ id }: { id: string }) {
       // eslint-disable-next-line @typescript-eslint/no-misused-promises
       onClick={async () => {
         try {
-          setWorkerInfo(await api.post(`/resumes/${id}/render`).json<ICreateWorkerResponse>());
-          setProgress('pending');
-          toast.success('Resume download started! Please wait...');
+          const info = await api.post(`/resumes/${id}/render`).json<ICreateRenderWorkerResponse>();
+          setWorkerInfo(info);
+          if (info.status === WorkerStatus.COMPLETED) {
+            toast.success('Resume ready for download');
+            download(info.downloadUrl!);
+            return;
+          }
+          toast.success('Resume download started. Please wait...');
         } catch (error) {
           toast.error(<ErrorToast error={error} />);
         }
       }}
     >
-      {progress === 'pending' ? <Spinner className="size-4" /> : <FileDown />}
+      {workerInfo?.status === WorkerStatus.IN_PROGRESS ? (
+        <Spinner className="size-4" />
+      ) : (
+        <FileDown />
+      )}
       Download
     </Button>
   );

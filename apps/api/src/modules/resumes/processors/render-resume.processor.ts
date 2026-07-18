@@ -120,7 +120,10 @@ export class RenderResumeProcessor extends WorkerHost {
   private async uploadPdfAndGetStorageKey(workerId: number, pdfFilePath: string): Promise<string> {
     const fileBuffer = await fs.open(pdfFilePath);
     const readStream = fileBuffer.createReadStream();
-    const s3Key = `${workerId}:resume.pdf`;
+    const date = new Date();
+    // note: I don't expect to get more than 1000 requests per second
+    // therefore (% 1000); very little chances of collision
+    const s3Key = `resume-${date.getMonth()}_${date.getDate()}_${date.getFullYear()}-${date.getHours()}-${date.getMinutes()}-${date.getSeconds()}-${workerId % 1000}.pdf`;
 
     await this.s3Service.uploadFile(s3Key, readStream);
 

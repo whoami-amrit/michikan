@@ -32,7 +32,7 @@ import { Progress, ProgressLabel, ProgressValue } from '@/components/ui/progress
 import { Spinner } from '@/components/ui/spinner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
-import { api } from '@/lib/utils';
+import { api, convertNullsToUndefined } from '@/lib/utils';
 
 type ResumeFormProps =
   | {
@@ -688,7 +688,7 @@ export function ResumeForm({ type, data, id }: ResumeFormProps) {
               summary: '',
             },
           }
-        : data,
+        : convertNullsToUndefined(data),
     mode: 'onBlur',
     resolver: zodResolver(CreateResumeSchema),
   });

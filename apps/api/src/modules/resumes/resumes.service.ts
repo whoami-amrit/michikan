@@ -119,6 +119,10 @@ export class ResumeService {
     const previousSuccessJob = await this.checkPreviousSuccessRenderJob(resume, userId);
 
     if (previousSuccessJob) {
+      this.logger.debug(
+        `Found a previous success download! Re-serving this render: ${resumeId} of ${userId}`,
+      );
+
       return {
         workerId: previousSuccessJob.id,
         status: previousSuccessJob.status,

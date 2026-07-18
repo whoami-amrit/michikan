@@ -144,7 +144,7 @@ ${data.education
   .map(
     (edu) => String.raw`
 \textbf{${escapeLatex(edu.institution)}} \hfill ${formatDate(edu.graduationDate)} \\
-${escapeLatex(edu.degree)} in ${escapeLatex(edu.field)} \hfill ${escapeLatex(edu.specialRemark ?? '')}} \\
+${escapeLatex(edu.degree)} in ${escapeLatex(edu.field)} \hfill ${escapeLatex(edu.specialRemark ?? '')} \\
 `,
   )
   .join('\n')}

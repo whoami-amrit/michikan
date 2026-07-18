@@ -2,7 +2,7 @@ import { ANALYSER_QUEUE_NAME, JOB_AT_A_GLANCE_JOB_NAME } from '@common/constants
 import { InjectQueue } from '@nestjs/bullmq';
 import { Injectable } from '@nestjs/common';
 import { Queue } from 'bullmq';
-import { Job, User } from 'db';
+import { Job, JobStatus, User } from 'db';
 import { ICreateJobDto, IUpdateJobDto } from 'shared';
 
 import { PrismaService } from '../../infra/database/prisma.service';
@@ -56,6 +56,10 @@ export class JobsService {
   }
 
   async update(jobId: number, userId: User['id'], body: IUpdateJobDto): Promise<void> {
+    if (body.status === JobStatus.NOT_APPLIED) {
+      body.submittedResumeId = null;
+    }
+
     await this.prismaService.job.update({
       where: { id: jobId, userId },
       data: body,
