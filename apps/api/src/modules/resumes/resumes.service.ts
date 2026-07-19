@@ -73,10 +73,23 @@ export class ResumeService {
     });
 
     if (hash(originalResume.json) !== hash(updateResumeDto.json)) {
-      await this.analyserQueue.add(ANALYSER_QUEUE_NAME, {
-        type: RESUME_ANALYZER_JOB_NAME,
-        resumeId,
-      });
+      await this.analyserQueue.add(
+        ANALYSER_QUEUE_NAME,
+        {
+          type: RESUME_ANALYZER_JOB_NAME,
+          resumeId,
+        },
+        {
+          deduplication: {
+            id: String(resumeId),
+            ttl: 5000,
+            extend: true,
+            replace: true,
+          },
+          delay: 5000,
+          removeOnComplete: true,
+        },
+      );
     }
 
     return updatedResume;

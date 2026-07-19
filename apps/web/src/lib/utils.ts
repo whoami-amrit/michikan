@@ -50,13 +50,17 @@ export const api = ky.create({
   },
 });
 
-export const convertNullsToUndefined = (object: unknown) => {
+export const convertNullsToUndefined = (object: unknown): unknown => {
   if (object === null) {
     return undefined;
   }
 
-  if (typeof object !== 'object') {
+  if (typeof object !== 'object' || Array.isArray(object)) {
     return object;
+  }
+
+  if (Array.isArray(object)) {
+    return object.map(convertNullsToUndefined);
   }
 
   const copy: Record<string, unknown> = {};

@@ -144,6 +144,7 @@ export function ResumeDetailPage() {
     data: detail,
     isLoading,
     error,
+    mutate,
   } = useSWR<Resume, undefined>(`/resumes/${id}`, {
     fetcher: () => api.get(`/resumes/${id}`).json<Resume>(),
   });
@@ -221,7 +222,14 @@ export function ResumeDetailPage() {
               <SummarySection resume={detail} />
             </TabsContent>
             <TabsContent value="edit" className="flex flex-col">
-              <ResumeForm type="edit" data={detail as unknown as ICreateResumeDto} id={id!} />
+              <ResumeForm
+                type="edit"
+                data={detail as unknown as ICreateResumeDto}
+                id={id!}
+                mutate={() => {
+                  void mutate();
+                }}
+              />
             </TabsContent>
           </Tabs>
         </div>

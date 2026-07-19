@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Job, JobStatus, Resume } from 'db';
 import { FolderOpen, LoaderCircle, PlusIcon } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Controller,
   FormProvider,
@@ -65,13 +65,15 @@ import { api, convertNullsToUndefined } from '@/lib/utils';
 type JobFormProps =
   | {
       type: 'edit';
-      data?: IUpdateJobDto;
-      id?: Job['id'];
+      data: IUpdateJobDto;
+      id: Job['id'];
+      mutate: () => void;
     }
   | {
       type: 'new';
       id?: never;
       data?: never;
+      mutate?: never;
     };
 
 const jobStatusOptions: { value: JobStatus; label: string }[] = [
@@ -186,22 +188,38 @@ function SubmittedResumeField() {
   );
 }
 
-export function JobForm({ type, data, id }: JobFormProps) {
+const LOCAL_STORAGE_KEY = 'new-job-form';
+
+const getDefaultNewFormValues = (): ICreateJobDtoInput => {
+  const unsavedFormState = localStorage.getItem(LOCAL_STORAGE_KEY);
+
+  try {
+    return JSON.parse(unsavedFormState!) as ICreateJobDtoInput;
+  } catch (error) {
+    if (unsavedFormState) {
+      console.log(error);
+    }
+
+    return {
+      applyLink: '',
+      company: '',
+      jobDescription: '',
+      role: '',
+      status: JobStatus.NOT_APPLIED,
+      submittedResumeId: undefined,
+      notes: '',
+      source: '',
+    };
+  }
+};
+
+export function JobForm({ type, data, id, mutate }: JobFormProps) {
   const navigate = useNavigate();
   const methods = useForm<ICreateJobDtoInput, unknown, ICreateJobDto>({
     defaultValues:
       type === 'new'
-        ? {
-            applyLink: '',
-            company: '',
-            jobDescription: '',
-            role: '',
-            status: JobStatus.NOT_APPLIED,
-            submittedResumeId: undefined,
-            notes: '',
-            source: '',
-          }
-        : convertNullsToUndefined(data),
+        ? getDefaultNewFormValues()
+        : (convertNullsToUndefined(data) as ICreateJobDtoInput),
     mode: 'onBlur',
     resolver: zodResolver(CreateJobSchema),
   });
@@ -209,7 +227,27 @@ export function JobForm({ type, data, id }: JobFormProps) {
     handleSubmit,
     reset,
     formState: { errors, isSubmitting },
+    subscribe,
   } = methods;
+
+  useEffect(() => {
+    if (type === 'edit') {
+      return;
+    }
+
+    const callback = subscribe({
+      formState: {
+        values: true,
+      },
+      callback: ({ values }) => {
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(values));
+      },
+    });
+
+    return () => {
+      callback();
+    };
+  }, [subscribe, type]);
 
   const onSubmit: SubmitHandler<ICreateJobDto> = async (formData, event) => {
     event?.preventDefault();
@@ -229,6 +267,8 @@ export function JobForm({ type, data, id }: JobFormProps) {
       await api.patch(`/jobs/${id}`, {
         json: formData,
       });
+
+      mutate();
     } catch (error) {
       toast.error(<ErrorToast error={error} />);
     }
@@ -352,7 +392,14 @@ export function JobForm({ type, data, id }: JobFormProps) {
             <div className="flex gap-2 items-center">
               {isSubmitting && <LoaderCircle className="size-4 animate-spin" />}
               {type === 'new' && (
-                <Button type="reset" onClick={() => reset()} variant="secondary">
+                <Button
+                  type="reset"
+                  onClick={() => {
+                    reset();
+                    localStorage.removeItem(LOCAL_STORAGE_KEY);
+                  }}
+                  variant="secondary"
+                >
                   Reset
                 </Button>
               )}

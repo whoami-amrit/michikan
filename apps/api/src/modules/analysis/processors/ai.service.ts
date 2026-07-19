@@ -14,9 +14,12 @@ export class AiService {
   }
 
   async execute(prompt: string) {
+    this.logger.debug(prompt);
+
     const response = await this.aiService.interactions.create({
       model: 'gemini-2.5-flash-lite',
       input: prompt,
+      store: false,
       generation_config: {
         temperature: 0.2,
         max_output_tokens: 2000,

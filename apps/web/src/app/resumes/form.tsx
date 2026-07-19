@@ -1,6 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Resume } from 'db';
 import { AlertCircle, PlusIcon, XIcon } from 'lucide-react';
+import { useEffect } from 'react';
 import {
   Controller,
   FormProvider,
@@ -39,11 +40,13 @@ type ResumeFormProps =
       type: 'edit';
       id: string;
       data: ICreateResumeDto;
+      mutate: () => void;
     }
   | {
       type: 'new';
       id?: never;
       data?: never;
+      mutate?: never;
     };
 
 const useFormContext = () => useRHFFormContext<ICreateResumeDtoInput, unknown, ICreateResumeDto>();
@@ -666,29 +669,46 @@ function SummaryTab() {
   );
 }
 
-export function ResumeForm({ type, data, id }: ResumeFormProps) {
+const LOCAL_STORAGE_KEY = 'new-resume-form';
+
+const getDefaultNewFormValues = (): ICreateResumeDtoInput => {
+  const unsavedFormState = localStorage.getItem(LOCAL_STORAGE_KEY);
+
+  try {
+    return JSON.parse(unsavedFormState!) as ICreateResumeDtoInput;
+  } catch (error) {
+    if (unsavedFormState) {
+      console.log(error);
+    }
+
+    return {
+      name: '',
+      description: '',
+      json: {
+        personalInfo: {
+          name: '',
+          email: '',
+          github: '',
+          phone: '',
+          portfolio: '',
+        },
+        skills: [],
+        experience: [],
+        projects: [],
+        education: [],
+        summary: '',
+      },
+    };
+  }
+};
+
+export function ResumeForm({ type, data, id, mutate }: ResumeFormProps) {
   const navigate = useNavigate();
   const methods = useForm<ICreateResumeDtoInput, unknown, ICreateResumeDto>({
     defaultValues:
       type === 'new'
-        ? {
-            name: '',
-            description: '',
-            json: {
-              personalInfo: {
-                name: '',
-                email: '',
-                github: '',
-                phone: '',
-              },
-              skills: [],
-              experience: [],
-              projects: [],
-              education: [],
-              summary: '',
-            },
-          }
-        : convertNullsToUndefined(data),
+        ? getDefaultNewFormValues()
+        : (convertNullsToUndefined(data) as ICreateResumeDtoInput),
     mode: 'onBlur',
     resolver: zodResolver(CreateResumeSchema),
   });
@@ -696,7 +716,27 @@ export function ResumeForm({ type, data, id }: ResumeFormProps) {
     handleSubmit,
     reset,
     formState: { errors, isSubmitting },
+    subscribe,
   } = methods;
+
+  useEffect(() => {
+    if (type === 'edit') {
+      return;
+    }
+
+    const callback = subscribe({
+      formState: {
+        values: true,
+      },
+      callback: ({ values }) => {
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(values));
+      },
+    });
+
+    return () => {
+      callback();
+    };
+  }, [subscribe, type]);
 
   const onSubmit: SubmitHandler<ICreateResumeDto> = async (formData, event) => {
     event?.preventDefault();
@@ -716,6 +756,8 @@ export function ResumeForm({ type, data, id }: ResumeFormProps) {
       await api.patch(`/resumes/${id}`, {
         json: formData,
       });
+
+      mutate();
     } catch (error) {
       toast.error(<ErrorToast error={error} />);
     }
@@ -786,7 +828,14 @@ export function ResumeForm({ type, data, id }: ResumeFormProps) {
           <div className="flex gap-2 items-center">
             {isSubmitting && <Spinner className="size-4" />}
             {type === 'new' && (
-              <Button type="reset" onClick={() => reset()} variant="secondary">
+              <Button
+                type="reset"
+                onClick={() => {
+                  reset();
+                  localStorage.removeItem(LOCAL_STORAGE_KEY);
+                }}
+                variant="secondary"
+              >
                 Reset
               </Button>
             )}

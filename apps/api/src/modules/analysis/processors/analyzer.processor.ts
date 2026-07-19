@@ -62,9 +62,17 @@ export class AnalyzerService extends WorkerHost {
       throw new UnrecoverableError(errorString);
     }
 
-    const prompt = getJobAtAGlancePrompt(job.jobDescription);
-
     try {
+      await this.prismaService.job.update({
+        where: { id: jobId },
+        data: {
+          atAGlanceGenerateStatus: ReportGenerationStatus.GENERATING,
+          atAGlance: null,
+        },
+      });
+
+      const prompt = getJobAtAGlancePrompt(job.jobDescription);
+
       const response = await this.aiService.execute(prompt);
 
       await this.prismaService.job.update({
@@ -102,9 +110,17 @@ export class AnalyzerService extends WorkerHost {
       throw new UnrecoverableError(errorString);
     }
 
-    const prompt = getResumeAnalysisPrompt(JSON.stringify(resume, null, 2));
-
     try {
+      await this.prismaService.resume.update({
+        where: { id: resumeId },
+        data: {
+          analysisReportGenerateStatus: ReportGenerationStatus.GENERATING,
+          analysisReport: null,
+        },
+      });
+
+      const prompt = getResumeAnalysisPrompt(JSON.stringify(resume.json, null, 2));
+
       const response = await this.aiService.execute(prompt);
 
       await this.prismaService.resume.update({

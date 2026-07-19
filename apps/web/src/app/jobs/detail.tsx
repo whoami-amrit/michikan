@@ -65,6 +65,7 @@ export function JobDetailPage() {
     data: jobDetail,
     isLoading,
     error,
+    mutate,
   } = useSWR<Job, undefined>(`/jobs/${id}`, () => api.get(`/jobs/${id}`).json<Job>());
   const navigate = useNavigate();
 
@@ -141,7 +142,14 @@ export function JobDetailPage() {
               <SummarySection job={jobDetail} />
             </TabsContent>
             <TabsContent value="edit" className="flex flex-col">
-              <JobForm type="edit" data={jobDetail as IUpdateJobDto} id={Number(id)} />
+              <JobForm
+                type="edit"
+                data={jobDetail as IUpdateJobDto}
+                id={Number(id)}
+                mutate={() => {
+                  void mutate();
+                }}
+              />
             </TabsContent>
           </Tabs>
         </div>
