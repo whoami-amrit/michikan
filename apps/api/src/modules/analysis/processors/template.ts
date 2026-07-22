@@ -76,7 +76,7 @@ For each entry:
   - **Starts with a strong past-tense action verb.** Good: analyzed, architected, automated, built, created, decreased, designed, developed, implemented, improved, optimized, reduced, refactored. Weak: aided, assisted, collaborated, helped, participated, used, utilized. Overused: spearheaded, orchestrated, pioneered, leveraged, enhanced.
   - **Follows STAR/XYZ/CAR shape** — check whether the bullet shows what was done, how (tools/method), and the quantified result. Flag bullets that only describe a duty with no outcome.
   - **Has a quantified result** (%, time, scale, cost, users, latency). If missing, ask me for the number rather than inventing one.
-  - **Length proxy**: since the schema allows up to 500 characters, don't rely on that cap — flag anything over roughly **130-150 characters** as likely running past a clean 1-2 line bullet, and anything over ~220 characters as almost certainly cramming multiple ideas together.
+  - **Length proxy**: since the schema allows up to 500 characters, don't rely on that cap — flag anything over roughly **200 characters** as likely running past a clean 1-2 line bullet, and anything over ~220 characters as almost certainly cramming multiple ideas together.
   - No personal pronouns (I, we, my, our), no trailing periods, no apostrophes/ampersands/slashes.
   - Reads as an accomplishment, not a restated job duty.
 - Order check: within each entry, are \`highlights\` ordered most-impressive-first? Flag if a strong quantified bullet is buried after weaker ones.

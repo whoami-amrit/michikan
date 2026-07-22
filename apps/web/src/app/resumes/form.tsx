@@ -366,7 +366,7 @@ function ExperienceTab() {
                 <Field className="col-span-2">
                   <FieldLabel required>Highlights</FieldLabel>
                   <Textarea
-                    className="max-h-44"
+                    className="max-h-80"
                     {...register(`json.experience.${index}.highlights`)}
                   />
                   <FieldDescription>

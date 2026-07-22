@@ -22,7 +22,7 @@ export class AiService {
       store: false,
       generation_config: {
         temperature: 0.2,
-        max_output_tokens: 2000,
+        max_output_tokens: 4000,
       },
     });
 
