@@ -29,6 +29,8 @@ services:
       context: .
       dockerfile: Dockerfile
       target: web
+    environment:
+      NODE_ENV: production
     env_file:
       - .env.prod
     ports:
@@ -42,6 +44,8 @@ services:
       context: .
       dockerfile: Dockerfile
       target: api
+    environment:
+      NODE_ENV: production
     env_file:
       - .env.prod
     ports:
@@ -54,6 +58,8 @@ services:
       context: .
       dockerfile: Dockerfile
       target: workers
+    environment:
+      NODE_ENV: production
     env_file:
       - .env.prod
     restart: always

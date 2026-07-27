@@ -19,7 +19,7 @@ import { getResumeTex } from './template';
 @Processor(RENDER_QUEUE_NAME)
 export class RenderResumeProcessor extends WorkerHost {
   private readonly logger = new Logger(RenderResumeProcessor.name);
-  private readonly renderOutputPath = process.env.RENDER_OUTPUT_PATH ?? '/tmp/michikan-renders';
+  private readonly renderOutputPath;
   private readonly TEX_FILE_NAME = 'resume.tex';
   private readonly PDF_FILE_NAME = 'resume.pdf';
 
@@ -29,6 +29,8 @@ export class RenderResumeProcessor extends WorkerHost {
     @Inject(appConfig.KEY) private readonly config: IAppConfig,
   ) {
     super();
+
+    this.renderOutputPath = this.config.renderOutputPath;
 
     try {
       mkdirSync(this.renderOutputPath, { recursive: true });

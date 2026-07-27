@@ -15,7 +15,7 @@ export interface IAppConfig extends z.infer<typeof schema> {}
 export default registerAs('app', () => {
   return schema.parse({
     jwtSecret: process.env.JWT_SECRET,
-    renderOutputPath: process.env.RENDER_OUTPUT_PATH,
+    renderOutputPath: process.env.RENDER_OUTPUT_PATH ?? '/tmp/michikan-renders',
     // note: this indicates the minimum log level to log
     // e.g. if set to 'info', 'debug' and 'trace' logs will be ignored
     logLevel: process.env.LOG_LEVEL,
