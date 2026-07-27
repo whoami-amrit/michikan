@@ -1,6 +1,6 @@
 services:
   db:
-    image: dhi.io/postgres:18
+    image: postgres:18.4
     container_name: michi_db
     restart: always
     environment:
@@ -22,7 +22,7 @@ services:
       - valkey_data:/var/lib/valkey/data
 
   web:
-    image: michi-web:latest
+    image: elessar1802/personal:web
     container_name: michi_web
     restart: always
     build:
@@ -37,7 +37,7 @@ services:
       - '3000:8000'
 
   api:
-    image: michi-api:latest
+    image: elessar1802/personal:api
     container_name: michi_api
     restart: always
     build:
@@ -52,7 +52,7 @@ services:
       - '5252:5252'
 
   workers:
-    image: michi-workers:latest
+    image: elessar1802/personal:workers
     container_name: michi_workers
     build:
       context: .

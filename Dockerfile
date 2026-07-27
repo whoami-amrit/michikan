@@ -1,20 +1,28 @@
-FROM node:24-slim AS base
+# ==========================================
+# 1. Base Build Environment
+# ==========================================
+FROM node:24-slim AS base-node
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME/bin:$PATH"
 RUN corepack enable
 
-FROM base AS build
-COPY . /usr/src/app
+FROM base-node AS build
 WORKDIR /usr/src/app
 ENV CI=true
+COPY pnpm-lock.yaml package.json pnpm-workspace.yaml ./
+COPY apps/web/package.json ./apps/web/
+COPY apps/api/package.json ./apps/api/
+COPY . .
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 RUN pnpm build 
 RUN pnpm deploy --filter=web --prod /prod/web
 RUN pnpm deploy --filter=api --prod /prod/api
 
-FROM base AS web
-RUN apt-get update && apt-get install -y nginx
-COPY --from=build /prod/web /var/www/web
+# ==========================================
+# 2. Web / Frontend Target
+# ==========================================
+FROM nginx:alpine AS web
+COPY --from=build /prod/web/dist /var/www/web/dist
 WORKDIR /etc/nginx/conf.d
 RUN cat << 'EOF' > michi-web.conf
 server {
@@ -23,7 +31,6 @@ server {
     index index.html;
 
     location / {
-        # This line is critical for SPAs
         try_files $uri $uri/ /index.html;
     }
 
@@ -32,27 +39,41 @@ server {
         proxy_set_header Host http://api:5252;
     }
 
-    # Optional: Cache static assets heavily
     location /assets/ {
         expires 1y;
         add_header Cache-Control "public, no-transform";
     }
 }
 EOF
-EXPOSE 80
+EXPOSE 8000
 CMD ["nginx", "-g", "daemon off;"]
 
-FROM base AS api
-COPY --from=build /prod/api /prod/api
+# ==========================================
+# 3. API Target
+# ==========================================
+FROM node:24-slim AS api
 WORKDIR /prod/api
+COPY --from=build /prod/api/dist/api /prod/api
 EXPOSE 5143
-CMD [ "node", "dist/api/main.js" ]
+CMD [ "node", "main.js" ]
 
-FROM base AS workers
-COPY --from=build /prod/api /prod/workers
+# ==========================================
+# 4. Workers Target
+# ==========================================
+FROM node:24-slim AS workers
 WORKDIR /prod/workers
-RUN apt-get update && apt-get install -y perl xz-utils wget
+COPY --from=build /prod/api/dist/worker /prod/workers
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    perl \
+    xz-utils \
+    wget \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
 RUN wget -qO- "https://tinytex.yihui.org/install-bin-unix.sh" | sh
 ENV PATH="/root/bin:$PATH"
+
 RUN tlmgr install relsize carlisle fontaxes enumitem titlesec xcharter xstring
-CMD [ "node", "dist/worker/worker.main.js" ]
+
+CMD [ "node", "worker.main.js" ]
