@@ -21,6 +21,31 @@ services:
     volumes:
       - valkey_data:/var/lib/valkey/data
 
+  web:
+    image: michi-web:latest
+    container_name: michi_web
+    restart: always
+    env_file:
+      - .env.prod
+    ports:
+      - '3000:8000'
+
+  api:
+    image: michi-api:latest
+    container_name: michi_api
+    restart: always
+    env_file:
+      - .env.prod
+    ports:
+      - '5252:5252'
+
+  workers:
+    image: michi-workers:latest
+    container_name: michi_workers
+    env_file:
+      - .env.prod
+    restart: always
+
 volumes:
   postgres_data:
   valkey_data:

@@ -36,7 +36,7 @@ export function LoginForm() {
       // and redirect to /login; so we should use ky directly here otherwise it
       // will cause a page reload
       await ky.post(`${API_PREFIX}/auth/login`, { json: data });
-      await navigate('/analysis');
+      await navigate('/resumes');
     } catch (error) {
       toast.error(<ErrorToast error={error} />);
     }

@@ -1,0 +1,25 @@
+.git
+.gitignore
+
+node_modules/
+vendor/
+.venv/
+env/
+
+# Exclude build outputs and caches
+dist/
+build/
+*.pyc
+.cache/
+
+# Exclude local environment secrets and configuration
+.env
+.env.local
+*.pem
+id_rsa
+
+# Exclude system files and IDE configurations
+.DS_Store
+.idea/
+.vscode/
+npm-debug.log*

@@ -68,7 +68,7 @@ export function SignupForm() {
   const onSubmit: SubmitHandler<ISignupDto> = async (data) => {
     try {
       await ky.post(`${API_PREFIX}/auth/signup`, { json: data });
-      await navigate('/analysis');
+      await navigate('/resumes');
     } catch (error) {
       toast.error(<ErrorToast error={error} />);
     }

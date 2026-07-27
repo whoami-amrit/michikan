@@ -13,3 +13,4 @@ allowBuilds:
 ignoredBuiltDependencies:
   - sharp
   - unrs-resolver
+forceLegacyDeploy: true
