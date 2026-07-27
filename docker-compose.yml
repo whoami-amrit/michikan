@@ -25,6 +25,10 @@ services:
     image: michi-web:latest
     container_name: michi_web
     restart: always
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: web
     env_file:
       - .env.prod
     ports:
@@ -34,6 +38,10 @@ services:
     image: michi-api:latest
     container_name: michi_api
     restart: always
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: api
     env_file:
       - .env.prod
     ports:
@@ -42,6 +50,10 @@ services:
   workers:
     image: michi-workers:latest
     container_name: michi_workers
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: workers
     env_file:
       - .env.prod
     restart: always

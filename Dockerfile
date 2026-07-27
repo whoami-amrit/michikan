@@ -52,5 +52,8 @@ CMD [ "node", "dist/api/main.js" ]
 FROM base AS workers
 COPY --from=build /prod/api /prod/workers
 WORKDIR /prod/workers
+RUN apt-get update && apt-get install -y perl xz-utils && wget -qO- "https://tinytex.yihui.org/install-bin-unix.sh" | sh && chmod +x $HOME/bin/*
+ENV PATH="/root/bin:$PATH"
+RUN tlmgr install relsize carlisle fontaxes enumitem titlesec xcharter xstring
 ENV NODE_ENV="production"
 CMD [ "node", "dist/api/worker.main.js" ]
