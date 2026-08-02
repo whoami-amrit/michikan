@@ -39,6 +39,7 @@ right=0.5in]{geometry}              % specify right page margin
 \usepackage{enumitem}               % enable lists for bullet points: itemize and \item
 \usepackage[hidelinks]{hyperref}    % format hyperlinks
 \usepackage{titlesec}               % enable section title customization
+\usepackage{xcolor}                 % enable color alpha change
 \raggedright                        % disable text justification
 \pagestyle{empty}                   % disable page numbering
 
@@ -144,10 +145,10 @@ ${data.education
   .map(
     (edu) => String.raw`
 \textbf{${escapeLatex(edu.institution)}} \hfill ${formatDate(edu.graduationDate)} \\
-${escapeLatex(edu.degree)} in ${escapeLatex(edu.field)} \hfill ${escapeLatex(edu.specialRemark ?? '')} \\
+${escapeLatex(edu.degree)} in ${escapeLatex(edu.field)} \hfill \textcolor{.!50}{${escapeLatex(edu.specialRemark ?? '')}} \\
 `,
   )
-  .join('\n')}
+  .join('\n\\vspace{4pt}\n')}
 \vspace{-9pt}
 `
     : ''

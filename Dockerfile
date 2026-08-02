@@ -9,11 +9,9 @@ RUN corepack enable
 FROM base-node AS build
 WORKDIR /usr/src/app
 ENV CI=true
-COPY pnpm-lock.yaml package.json pnpm-workspace.yaml ./
-COPY apps/web/package.json ./apps/web/
-COPY apps/api/package.json ./apps/api/
+COPY pnpm-lock.yaml package.json .
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile --prefer-offline --ignore-scripts
 COPY . .
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 RUN pnpm build 
 RUN pnpm deploy --filter=web --prod /prod/web
 RUN pnpm deploy --filter=api --prod /prod/api

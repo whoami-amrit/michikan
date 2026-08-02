@@ -116,7 +116,7 @@ export default function ResumesPage() {
                   key={resume.id}
                 >
                   <TableCell>{resume.name}</TableCell>
-                  <TableCell>{resume.jobs.length}</TableCell>
+                  <TableCell>{!!resume.jobs.length ? resume.jobs.length : '-'}</TableCell>
                   <TableCell>{new Date(resume.updatedAt).toLocaleDateString()}</TableCell>
                 </TableRow>
               ))}

@@ -25,6 +25,15 @@ export class JobsService {
         applyLink: body.applyLink,
         status: body.status,
         source: body.source,
+        ...(body.submittedResumeId
+          ? {
+              submittedResume: {
+                connect: {
+                  id: body.submittedResumeId,
+                },
+              },
+            }
+          : {}),
         user: {
           connect: {
             id: userId,
