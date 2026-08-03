@@ -1,0 +1,61 @@
+---
+import { getCollection } from "astro:content";
+
+import Navbar from "@/components/site/navbar.astro";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import Layout from "@/layouts/Layout.astro";
+
+const posts = (await getCollection("blog", ({ data }) => !data.draft)).sort(
+  (a, b) => b.data.date.getTime() - a.data.date.getTime(),
+);
+---
+
+<Layout
+  title="Michikan Blog — Job search playbooks"
+  description="Markdown-first writing on resumes, job-fit analysis, and application tracking."
+>
+  <Navbar />
+  <main class="mx-auto w-full max-w-5xl px-6 py-14">
+    <header class="mb-10 space-y-3">
+      <p class="text-sm text-primary">Blog</p>
+      <h1 class="font-heading text-4xl font-semibold tracking-tight">Job search notes that stay practical</h1>
+      <p class="max-w-3xl text-muted-foreground">
+        A markdown-first publishing workflow inspired by Hugo, powered by Astro content collections.
+      </p>
+    </header>
+
+    <section class="grid gap-5 md:grid-cols-2">
+      {
+        posts.map((post) => (
+          <Card>
+            <CardHeader>
+              <div class="mb-2 flex flex-wrap gap-2">
+                {(post.data.tags ?? []).slice(0, 3).map((tag) => (
+                  <Badge variant="secondary">{tag}</Badge>
+                ))}
+              </div>
+              <CardTitle>{post.data.title}</CardTitle>
+              <CardDescription>{post.data.description}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p class="text-xs text-muted-foreground">
+                {post.data.date.toLocaleDateString("en-US", {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                })}
+              </p>
+            </CardContent>
+            <CardFooter>
+              <a href={`/blog/${post.id}/`}>
+                <Button size="sm">Read article</Button>
+              </a>
+            </CardFooter>
+          </Card>
+        ))
+      }
+    </section>
+  </main>
+</Layout>

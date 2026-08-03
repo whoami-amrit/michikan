@@ -1,8 +1,111 @@
 ---
-import Layout from "../layouts/Layout.astro";
+import { getCollection } from "astro:content";
+import FeatureSection from "@/components/site/feature-section.astro";
+import Navbar from "@/components/site/navbar.astro";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import Layout from "../layouts/Layout.astro";
+
+const latestPosts = (await getCollection("blog", ({ data }) => !data.draft))
+  .sort((a, b) => b.data.date.getTime() - a.data.date.getTime())
+  .slice(0, 3);
 ---
 
-<Layout>
-  <Button>Hello</Button>
+<Layout
+  title="Michikan — Build, tailor, and track your job search"
+  description="Build ATS-proof resumes, analyze job fit quickly, and track every application in one clean workflow."
+>
+  <Navbar />
+  <main>
+    <section id="hero" class="mx-auto flex min-h-[70vh] w-full max-w-6xl flex-col items-start justify-center gap-8 px-6 py-16">
+      <div class="space-y-4">
+        <p class="text-sm font-medium text-primary">All-in-one job search workflow</p>
+        <h1 class="font-heading text-4xl leading-tight font-semibold tracking-tight md:text-6xl">
+          Build, tailor, and track your job search—all in one place.
+        </h1>
+        <p class="max-w-3xl text-lg text-muted-foreground">
+          Stop juggling spreadsheets and resume hacks. Build ATS-proof resumes using
+          battle-tested templates, analyze job fit instantly, and track every application end-to-end.
+        </p>
+      </div>
+      <div class="flex flex-wrap gap-3">
+        <a href="#features"><Button>Explore features</Button></a>
+        <a href="/blog">
+          <Button variant="outline">Read the blog</Button>
+        </a>
+      </div>
+    </section>
+
+    <Separator className="mx-auto max-w-6xl" />
+
+    <FeatureSection
+      id="features"
+      label="Resume Builder"
+      title="The precision of LaTeX. Zero syntax required."
+      description="You don’t need to fight Overleaf compile errors or raw .tex files. Fill a guided form, and the renderer compiles a clean ATS-parseable PDF every time."
+      bullets={[
+        "Standardized layout aligned with industry-tested resume structure.",
+        "Consistent spacing and formatting without broken margins or overflow.",
+        "ATS-friendly text layer for reliable parsing by hiring platforms.",
+      ]}
+    />
+
+    <FeatureSection
+      id="analysis"
+      reverse={true}
+      label="Job Fit Analysis"
+      title="Know exactly how to tailor before you apply."
+      description="Paste a job description and instantly get missing keywords, skill gaps, and focused tailoring suggestions."
+      bullets={[
+        "Spot coverage gaps before you hit apply.",
+        "Prioritize role-specific keywords based on context.",
+        "Turn role requirements into practical resume edits.",
+      ]}
+    />
+
+    <FeatureSection
+      id="tracking"
+      label="Application Tracking"
+      title="Ditch messy spreadsheets and stay on top of your pipeline."
+      description="Track each role from saved to final outcome with notes and next actions in one clean view."
+      bullets={[
+        "Keep each opportunity and status visible at a glance.",
+        "Capture interview notes and reminders where they belong.",
+        "Maintain momentum with a single source of truth.",
+      ]}
+    />
+
+    <section class="mx-auto w-full max-w-6xl px-6 py-16">
+      <div class="mb-6 flex items-end justify-between gap-4">
+        <div>
+          <h2 class="font-heading text-2xl font-semibold tracking-tight md:text-3xl">From the blog</h2>
+          <p class="text-muted-foreground">Practical notes on resumes, tailoring, and pipeline management.</p>
+        </div>
+        <a href="/blog"><Button variant="ghost" size="sm">View all posts</Button></a>
+      </div>
+      <div class="grid gap-4 md:grid-cols-3">
+        {
+          latestPosts.map((post) => (
+            <Card size="sm">
+              <CardHeader>
+                <CardTitle>{post.data.title}</CardTitle>
+                <CardDescription>{post.data.description}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p class="text-xs text-muted-foreground">
+                  {post.data.date.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}
+                </p>
+              </CardContent>
+              <CardFooter>
+                <a href={`/blog/${post.id}/`}>
+                  <Button size="sm" variant="secondary">Read post</Button>
+                </a>
+              </CardFooter>
+            </Card>
+          ))
+        }
+      </div>
+    </section>
+  </main>
 </Layout>

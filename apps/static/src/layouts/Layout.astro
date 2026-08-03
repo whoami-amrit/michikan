@@ -1,5 +1,15 @@
 ---
-import '../styles/global.css'
+import "../styles/global.css";
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const {
+  title = "Michikan — Build resumes, analyze fit, and track applications",
+  description = "Build ATS-friendly resumes, analyze job fit instantly, and track your job search in one focused workflow.",
+} = Astro.props;
 ---
 
 <!doctype html>
@@ -9,7 +19,8 @@ import '../styles/global.css'
 		<meta name="viewport" content="width=device-width" />
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<meta name="generator" content={Astro.generator} />
-		<title>Michikan</title>
+		<title>{title}</title>
+		<meta name="description" content={description} />
 	</head>
 	<body class="dark">
 		<slot />

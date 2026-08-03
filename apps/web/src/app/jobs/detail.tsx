@@ -51,7 +51,7 @@ function SummarySection({ job }: { job: Job | undefined }) {
 
   return (
     <article
-      className="typeset typeset-doc pb-8"
+      className="typeset pb-8"
       dangerouslySetInnerHTML={{
         __html: dompurify.sanitize(marked(job.atAGlance!, { async: false })),
       }}

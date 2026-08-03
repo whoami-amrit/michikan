@@ -145,7 +145,7 @@ function SummarySection({ resume }: { resume?: Resume }) {
 
   return (
     <article
-      className="typeset typeset-doc pb-8"
+      className="typeset pb-8"
       dangerouslySetInnerHTML={{
         __html: dompurify.sanitize(marked(resume.analysisReport!, { async: false })),
       }}
@@ -236,7 +236,7 @@ export function ResumeDetailPage() {
                 <PencilIcon /> Edit
               </TabsTrigger>
             </TabsList>
-            <TabsContent value="analysis" className="typeset typeset-doc pb-8">
+            <TabsContent value="analysis" className="typeset pb-8">
               <SummarySection resume={detail} />
             </TabsContent>
             <TabsContent value="edit" className="flex flex-col">
