@@ -1,7 +1,6 @@
 import { CircleAlert, RotateCwIcon } from 'lucide-react';
 import { ErrorBoundary, getErrorMessage } from 'react-error-boundary';
 import { BrowserRouter, Route, Routes } from 'react-router';
-import { Toaster } from 'sonner';
 import { useSWRConfig } from 'swr';
 
 import { Button } from '@/components/ui/button';
@@ -13,6 +12,7 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from '@/components/ui/empty';
+import { Toaster } from '@/components/ui/toast';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { MainContextProvider } from '@/lib/contexts/main/provider';
 import { UserContextProvider } from '@/lib/contexts/user/provider';

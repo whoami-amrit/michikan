@@ -4,14 +4,12 @@ import { LoaderCircleIcon } from 'lucide-react';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import { NavLink, useNavigate } from 'react-router';
 import { ILoginDto, LoginSchema } from 'shared';
-import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
-import { API_PREFIX } from '@/lib/utils';
-
-import { ErrorToast } from './error-toast';
+import { toast } from '@/components/ui/toast';
+import { API_PREFIX, getErrorToastContent } from '@/lib/utils';
 
 export function LoginForm() {
   const navigate = useNavigate();
@@ -38,7 +36,10 @@ export function LoginForm() {
       await ky.post(`${API_PREFIX}/auth/login`, { json: data });
       await navigate('/resumes');
     } catch (error) {
-      toast.error(<ErrorToast error={error} />);
+      toast.add({
+        type: 'error',
+        ...getErrorToastContent(error),
+      });
     }
   };
 

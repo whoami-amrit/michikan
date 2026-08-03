@@ -12,9 +12,7 @@ import {
 } from 'react-hook-form';
 import { useNavigate } from 'react-router';
 import { CreateResumeSchema, ICreateResumeDto, ICreateResumeDtoInput, IResumeJson } from 'shared';
-import { toast } from 'sonner';
 
-import { ErrorToast } from '@/components/error-toast';
 import { Button } from '@/components/ui/button';
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DatePickerSimple } from '@/components/ui/date-picker';
@@ -33,7 +31,8 @@ import { Progress, ProgressLabel, ProgressValue } from '@/components/ui/progress
 import { Spinner } from '@/components/ui/spinner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
-import { api, convertNullsToUndefined } from '@/lib/utils';
+import { toast } from '@/components/ui/toast';
+import { api, convertNullsToUndefined, getErrorToastContent } from '@/lib/utils';
 
 type ResumeFormProps =
   | {
@@ -759,7 +758,10 @@ export function ResumeForm({ type, data, id, mutate }: ResumeFormProps) {
 
       mutate();
     } catch (error) {
-      toast.error(<ErrorToast error={error} />);
+      toast.add({
+        type: 'error',
+        ...getErrorToastContent(error),
+      });
     }
   };
 

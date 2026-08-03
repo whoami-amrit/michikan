@@ -10,11 +10,9 @@ import {
   ICreateAnalysisDtoInput,
   IGetResumesResponse,
 } from 'shared';
-import { toast } from 'sonner';
 import useSWR from 'swr';
 
 import AppHeader from '@/components/app-header';
-import { ErrorToast } from '@/components/error-toast';
 import { Button } from '@/components/ui/button';
 import { FieldError } from '@/components/ui/field';
 import {
@@ -27,8 +25,9 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
+import { toast } from '@/components/ui/toast';
 import { useBreadcrumbs } from '@/hooks/use-breadcrumbs';
-import { api } from '@/lib/utils';
+import { api, getErrorToastContent } from '@/lib/utils';
 
 function ResumeSelectPopover() {
   const { field } = useController<ICreateAnalysisDto>({
@@ -151,7 +150,10 @@ export default function AnalysisPage() {
       void navigate(`/analysis/${id}`);
     } catch (error) {
       console.error('Error creating analysis:', error);
-      toast.error(<ErrorToast error={error} />);
+      toast.add({
+        type: 'error',
+        ...getErrorToastContent(error),
+      });
     }
   };
 

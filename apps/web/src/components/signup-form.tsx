@@ -4,14 +4,12 @@ import { LoaderCircleIcon } from 'lucide-react';
 import { FieldErrors, FormProvider, SubmitHandler, useForm, useFormContext } from 'react-hook-form';
 import { NavLink, useNavigate } from 'react-router';
 import { ISignupDto, SignupSchema } from 'shared';
-import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
-import { API_PREFIX } from '@/lib/utils';
-
-import { ErrorToast } from './error-toast';
+import { toast } from '@/components/ui/toast';
+import { API_PREFIX, getErrorToastContent } from '@/lib/utils';
 
 function PersonalInfo({ errors }: { errors: FieldErrors<ISignupDto> }) {
   const { register } = useFormContext<ISignupDto>();
@@ -70,7 +68,10 @@ export function SignupForm() {
       await ky.post(`${API_PREFIX}/auth/signup`, { json: data });
       await navigate('/resumes');
     } catch (error) {
-      toast.error(<ErrorToast error={error} />);
+      toast.add({
+        type: 'error',
+        ...getErrorToastContent(error),
+      });
     }
   };
 

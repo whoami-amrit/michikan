@@ -18,10 +18,8 @@ import {
   IGetResumesResponse,
   IUpdateJobDto,
 } from 'shared';
-import { toast } from 'sonner';
 import useSWR from 'swr';
 
-import { ErrorToast } from '@/components/error-toast';
 import { Button } from '@/components/ui/button';
 import {
   Combobox,
@@ -60,7 +58,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { api, convertNullsToUndefined } from '@/lib/utils';
+import { toast } from '@/components/ui/toast';
+import { api, convertNullsToUndefined, getErrorToastContent } from '@/lib/utils';
 
 type JobFormProps =
   | {
@@ -270,7 +269,10 @@ export function JobForm({ type, data, id, mutate }: JobFormProps) {
 
       mutate();
     } catch (error) {
-      toast.error(<ErrorToast error={error} />);
+      toast.add({
+        type: 'error',
+        ...getErrorToastContent(error),
+      });
     }
   };
 

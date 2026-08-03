@@ -1,14 +1,13 @@
 import { useEffect } from 'react';
 import { useSearchParams } from 'react-router';
-import { toast } from 'sonner';
 import useSWRMutation from 'swr/mutation';
 
 import authBg from '@/assets/auth-bg.webp';
 import MichikanIcon from '@/assets/michikan-icon.svg?react';
-import { ErrorToast } from '@/components/error-toast';
 import { LoginForm } from '@/components/login-form';
 import { SignupForm } from '@/components/signup-form';
-import { api } from '@/lib/utils';
+import { toast } from '@/components/ui/toast';
+import { api, getErrorToastContent } from '@/lib/utils';
 
 // todo: we can have a center spaced layout with redirecting to dashboard in 5 seconds
 // todo: a beautiful bouquet for successful verification or something
@@ -28,7 +27,10 @@ export const VerifyEmailPage = () => {
     trigger()
       .then(() => api.get('/auth/refresh'))
       .catch((err: unknown) => {
-        toast.error(<ErrorToast error={err} />);
+        toast.add({
+          type: 'error',
+          ...getErrorToastContent(err),
+        });
       });
   }, [trigger]);
 

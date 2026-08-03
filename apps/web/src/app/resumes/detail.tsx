@@ -5,11 +5,9 @@ import { marked } from 'marked';
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { ICreateRenderWorkerResponse, ICreateResumeDto, IRenderStatusResponse } from 'shared';
-import { toast } from 'sonner';
 import useSWR from 'swr';
 
 import AppHeader from '@/components/app-header';
-import { ErrorToast } from '@/components/error-toast';
 import { Button } from '@/components/ui/button';
 import {
   Empty,
@@ -22,8 +20,9 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import { Spinner } from '@/components/ui/spinner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { toast } from '@/components/ui/toast';
 import { useBreadcrumbs } from '@/hooks/use-breadcrumbs';
-import { api } from '@/lib/utils';
+import { api, getErrorToastContent } from '@/lib/utils';
 
 import { ResumeForm } from './form';
 
@@ -58,7 +57,11 @@ function DownloadButton({ id }: { id: string }) {
       setWorkerInfo({ ...workerInfo, status: response.status, downloadUrl: response.downloadUrl });
 
       if (response.status === 'FAILED') {
-        toast.error(<ErrorToast />);
+        toast.add({
+          type: 'error',
+          title: 'Download failed',
+          description: 'Resume rendering did not complete. Please try again.',
+        });
         return;
       }
 
@@ -66,7 +69,11 @@ function DownloadButton({ id }: { id: string }) {
         return;
       }
 
-      toast.success('Resume ready for download');
+      toast.add({
+        type: 'success',
+        title: 'Resume ready',
+        description: 'Your PDF is ready and downloading now.',
+      });
       download(response.downloadUrl!);
     },
   });
@@ -80,13 +87,24 @@ function DownloadButton({ id }: { id: string }) {
           const info = await api.post(`/resumes/${id}/render`).json<ICreateRenderWorkerResponse>();
           setWorkerInfo(info);
           if (info.status === WorkerStatus.COMPLETED) {
-            toast.success('Resume ready for download');
+            toast.add({
+              type: 'success',
+              title: 'Resume ready',
+              description: 'Your PDF is ready and downloading now.',
+            });
             download(info.downloadUrl!);
             return;
           }
-          toast.success('Resume download started. Please wait...');
+          toast.add({
+            type: 'loading',
+            title: 'Preparing download',
+            description: 'We are rendering your resume. Download will start automatically.',
+          });
         } catch (error) {
-          toast.error(<ErrorToast error={error} />);
+          toast.add({
+            type: 'error',
+            ...getErrorToastContent(error),
+          });
         }
       }}
     >

@@ -1,7 +1,9 @@
 import { type ClassValue, clsx } from 'clsx';
 import ky, { isHTTPError } from 'ky';
-import { toast } from 'sonner';
+import type { IProblemDetails } from 'shared';
 import { twMerge } from 'tailwind-merge';
+
+import { toast } from '@/components/ui/toast';
 
 import { HttpStatus } from './constants';
 
@@ -10,6 +12,30 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export const API_PREFIX = '/api/v1';
+
+export const getErrorToastContent = (
+  error: unknown,
+): {
+  title: string;
+  description: string;
+} => {
+  if (!isHTTPError(error)) {
+    return {
+      title: 'Something went wrong',
+      description: 'Please try again.',
+    };
+  }
+
+  const problem = error.data as IProblemDetails | undefined;
+
+  const title = problem?.title ?? 'Request failed';
+
+  const description = Array.isArray(problem?.detail)
+    ? problem.detail.filter(Boolean).join('. ')
+    : (problem?.detail ?? error.response.statusText) || 'Please try again.';
+
+  return { title, description };
+};
 
 export const api = ky.create({
   prefix: API_PREFIX,
@@ -37,7 +63,11 @@ export const api = ky.create({
         }
 
         if (response.status === HttpStatus.FORBIDDEN) {
-          toast.warning('You need to verify your email to access this resource');
+          toast.add({
+            type: 'warning',
+            title: 'Verify your email to continue',
+            description: 'Some features stay locked until your email is verified.',
+          });
         }
 
         return response;
