@@ -19,7 +19,7 @@
     font-family: var(--typeset-font-body);
     font-size: calc(var(--typeset-size) * 1.125);
     line-height: var(--typeset-leading);
-    color: var(--color-foreground, currentColor);
+    color: color-mix(in oklab, var(--foreground) 80%, transparent);
     overflow-wrap: break-word;
     margin-trim: block-start;
 
@@ -54,7 +54,7 @@
 
     /* Headings. */
     &:where(h1, h2, h3, h4, h5, h6) {
-      color: var(--color-foreground, currentColor);
+      color: var(--foreground, currentColor);
       font-family: var(--typeset-font-heading);
       font-weight: 600;
       margin-block-end: 0;
@@ -130,6 +130,7 @@
     /* Inline semantics. */
     &:where(strong, b) {
       font-weight: 600;
+      color: var(--primary-foreground);
     }
     &:where(:is(h1, h2, h3, h4) :is(strong, b)) {
       font-weight: 600;

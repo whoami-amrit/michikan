@@ -4,7 +4,14 @@ import { getCollection } from "astro:content";
 import Navbar from "@/components/site/navbar.astro";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import Layout from "@/layouts/Layout.astro";
 
 const posts = (await getCollection("blog", ({ data }) => !data.draft)).sort(
@@ -17,12 +24,15 @@ const posts = (await getCollection("blog", ({ data }) => !data.draft)).sort(
   description="Markdown-first writing on resumes, job-fit analysis, and application tracking."
 >
   <Navbar />
-  <main class="mx-auto w-full max-w-5xl px-6 py-14">
+  <main class="mx-auto grow w-full max-w-5xl px-6 py-14">
     <header class="mb-10 space-y-3">
       <p class="text-sm text-primary">Blog</p>
-      <h1 class="font-heading text-4xl font-semibold tracking-tight">Job search notes that stay practical</h1>
+      <h1 class="font-heading text-4xl font-semibold tracking-tight">
+        Job search notes that stay practical
+      </h1>
       <p class="max-w-3xl text-muted-foreground">
-        A markdown-first publishing workflow inspired by Hugo, powered by Astro content collections.
+        A markdown-first publishing workflow inspired by Hugo, powered by Astro
+        content collections.
       </p>
     </header>
 

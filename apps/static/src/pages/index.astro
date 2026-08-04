@@ -3,9 +3,19 @@ import { getCollection } from "astro:content";
 import FeatureSection from "@/components/site/feature-section.astro";
 import Navbar from "@/components/site/navbar.astro";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import Layout from "../layouts/Layout.astro";
+import ResumeDemo from "@/assets/resume-demo.png";
+import TrackerDemo from "@/assets/tracker-demo.png";
+import AnalyserDemo from "@/assets/analyser-demo.png";
 
 const latestPosts = (await getCollection("blog", ({ data }) => !data.draft))
   .sort((a, b) => b.data.date.getTime() - a.data.date.getTime())
@@ -18,15 +28,23 @@ const latestPosts = (await getCollection("blog", ({ data }) => !data.draft))
 >
   <Navbar />
   <main>
-    <section id="hero" class="mx-auto flex min-h-[70vh] w-full max-w-6xl flex-col items-start justify-center gap-8 px-6 py-16">
+    <section
+      id="hero"
+      class="mx-auto flex grow min-h-[70vh] w-full max-w-6xl flex-col items-start justify-center gap-8 px-6 py-16"
+    >
       <div class="space-y-4">
-        <p class="text-sm font-medium text-primary">All-in-one job search workflow</p>
-        <h1 class="font-heading text-4xl leading-tight font-semibold tracking-tight md:text-6xl">
+        <p class="text-sm font-medium text-primary">
+          All-in-one job search workflow
+        </p>
+        <h1
+          class="font-heading text-4xl leading-tight font-semibold tracking-tight md:text-6xl"
+        >
           Build, tailor, and track your job search—all in one place.
         </h1>
         <p class="max-w-3xl text-lg text-muted-foreground">
-          Stop juggling spreadsheets and resume hacks. Build ATS-proof resumes using
-          battle-tested templates, analyze job fit instantly, and track every application end-to-end.
+          Stop juggling spreadsheets and resume hacks. Build ATS-proof resumes
+          using battle-tested templates, analyze job fit instantly, and track
+          every application end-to-end.
         </p>
       </div>
       <div class="flex flex-wrap gap-3">
@@ -49,6 +67,8 @@ const latestPosts = (await getCollection("blog", ({ data }) => !data.draft))
         "Consistent spacing and formatting without broken margins or overflow.",
         "ATS-friendly text layer for reliable parsing by hiring platforms.",
       ]}
+      imageSrc={ResumeDemo}
+      imageAlt="A showcase of the resume builder feature"
     />
 
     <FeatureSection
@@ -62,6 +82,8 @@ const latestPosts = (await getCollection("blog", ({ data }) => !data.draft))
         "Prioritize role-specific keywords based on context.",
         "Turn role requirements into practical resume edits.",
       ]}
+      imageSrc={AnalyserDemo}
+      imageAlt="A showcase of the job fit analyser feature"
     />
 
     <FeatureSection
@@ -74,15 +96,25 @@ const latestPosts = (await getCollection("blog", ({ data }) => !data.draft))
         "Capture interview notes and reminders where they belong.",
         "Maintain momentum with a single source of truth.",
       ]}
+      imageSrc={TrackerDemo}
+      imageAlt="A showcase of the job application tracker feature"
     />
 
     <section class="mx-auto w-full max-w-6xl px-6 py-16">
       <div class="mb-6 flex items-end justify-between gap-4">
         <div>
-          <h2 class="font-heading text-2xl font-semibold tracking-tight md:text-3xl">From the blog</h2>
-          <p class="text-muted-foreground">Practical notes on resumes, tailoring, and pipeline management.</p>
+          <h2
+            class="font-heading text-2xl font-semibold tracking-tight md:text-3xl"
+          >
+            From the blog
+          </h2>
+          <p class="text-muted-foreground">
+            Practical notes on resumes, tailoring, and pipeline management.
+          </p>
         </div>
-        <a href="/blog"><Button variant="ghost" size="sm">View all posts</Button></a>
+        <a href="/blog"
+          ><Button variant="ghost" size="sm">View all posts</Button></a
+        >
       </div>
       <div class="grid gap-4 md:grid-cols-3">
         {
@@ -94,12 +126,18 @@ const latestPosts = (await getCollection("blog", ({ data }) => !data.draft))
               </CardHeader>
               <CardContent>
                 <p class="text-xs text-muted-foreground">
-                  {post.data.date.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}
+                  {post.data.date.toLocaleDateString("en-US", {
+                    year: "numeric",
+                    month: "short",
+                    day: "numeric",
+                  })}
                 </p>
               </CardContent>
               <CardFooter>
                 <a href={`/blog/${post.id}/`}>
-                  <Button size="sm" variant="secondary">Read post</Button>
+                  <Button size="sm" variant="secondary">
+                    Read post
+                  </Button>
                 </a>
               </CardFooter>
             </Card>

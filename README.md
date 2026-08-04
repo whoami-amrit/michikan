@@ -17,9 +17,9 @@ If you've searched for a job as a software engineer recently, you've probably li
 
 It works, technically. It also falls apart the moment you're not at your laptop, and it leaves your application history living nowhere. Michikan exists to close that loop:
 
-- **Resumes are structured data, not documents.** Store resume content as JSON. Rendering to PDF is just substituting that JSON into a LaTeX template — so an LLM can propose edits to *data* instead of rewriting a wall of text and hoping the formatting survives.
+- **Resumes are structured data, not documents.** Store resume content as JSON. Rendering to PDF is just substituting that JSON into a LaTeX template — so an LLM can propose edits to _data_ instead of rewriting a wall of text and hoping the formatting survives.
 - **Your resume goes wherever you go.** Edit content and download a clean, ATS-friendly PDF from your phone. No LaTeX editor required outside the browser.
-- **Analysis and action live in the same place.** The AI analyzer doesn't just talk *at* you — its suggestions map directly onto your resume's JSON fields, so acting on feedback doesn't mean losing the formatting guarantees LaTeX gives you.
+- **Analysis and action live in the same place.** The AI analyzer doesn't just talk _at_ you — its suggestions map directly onto your resume's JSON fields, so acting on feedback doesn't mean losing the formatting guarantees LaTeX gives you.
 - **Tracking is a side effect, not a chore.** Applying through Michikan (downloading a tailored resume for a job) creates the tracking entry automatically, instead of asking you to remember to log it separately.
 
 Michikan is intentionally opinionated: resume structure and content guidance follow the [r/EngineeringResumes wiki](https://www.reddit.com/r/EngineeringResumes/wiki/), and templates are single-column, ATS-friendly LaTeX — the format most consistently recommended for technical roles.
@@ -29,26 +29,29 @@ Michikan is intentionally opinionated: resume structure and content guidance fol
 ## Features
 
 ### 1. ATS-friendly resume builder
+
 A guided UI for building resume content, backed by the r/EngineeringResumes wiki's guidance at each field (what makes a strong bullet, how to quantify impact, what to avoid). Content is stored as structured JSON and rendered into the community-recommended single-column LaTeX template. Maintain multiple resumes, edit from any device, and export polished PDFs on demand.
 
 ### 2. Job tracker
+
 Save job postings and track them through your application pipeline — from saved, to applied, to interviewing, to offer/rejected. Built to stay out of your way: entries are created automatically as you apply through Michikan, so tracking doesn't require a separate habit.
 
 ### 3. Job fit analyzer
+
 Paste a one-off job description, or point to a saved job, and validate it against one of your saved resumes. Analysis is grounded in r/EngineeringResumes guidelines and powered by Gemini behind the scenes — surfacing concrete, actionable gaps (missing keywords, weak or unquantified bullets, formatting concerns) mapped to specific resume fields, rather than generic advice you have to translate yourself.
 
 ---
 
 ## Tech stack
 
-| Layer | Technology |
-|---|---|
-| Frontend | React, Vite, TypeScript, Tailwind CSS, shadcn/ui |
-| Backend | NestJS, TypeScript |
-| Database | PostgreSQL via Prisma ORM |
-| Background jobs | BullMQ (Valkey) |
-| Validation | Zod |
-| AI | Gemini API |
+| Layer            | Technology                                        |
+| ---------------- | ------------------------------------------------- |
+| Frontend         | React, Vite, TypeScript, Tailwind CSS, shadcn/ui  |
+| Backend          | NestJS, TypeScript                                |
+| Database         | PostgreSQL via Prisma ORM                         |
+| Background jobs  | BullMQ (Valkey)                                   |
+| Validation       | Zod                                               |
+| AI               | Gemini API                                        |
 | Resume rendering | LaTeX (r/EngineeringResumes-recommended template) |
 
 ---
@@ -163,7 +166,7 @@ michikan/
 └── README.md
 ```
 
-*(Adjust to match your actual repo layout — this reflects a typical monorepo split; update if you're not using one.)*
+_(Adjust to match your actual repo layout — this reflects a typical monorepo split; update if you're not using one.)_
 
 ---
 
