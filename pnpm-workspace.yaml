@@ -10,6 +10,7 @@ allowBuilds:
   prisma: true
   protobufjs: false
   unrs-resolver: false
+  workerd: false
 ignoredBuiltDependencies:
   - sharp
   - unrs-resolver

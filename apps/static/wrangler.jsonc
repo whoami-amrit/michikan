@@ -1,0 +1,7 @@
+{
+  "name": "static",
+  "compatibility_date": "2026-07-03", // Update to the day you deploy
+  "assets": {
+    "directory": "./dist"
+  }
+}
