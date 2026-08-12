@@ -130,7 +130,7 @@
     /* Inline semantics. */
     &:where(strong, b) {
       font-weight: 600;
-      color: var(--primary-foreground);
+      color: var(--foreground);
     }
     &:where(:is(h1, h2, h3, h4) :is(strong, b)) {
       font-weight: 600;

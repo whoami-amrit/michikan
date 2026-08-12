@@ -35,8 +35,8 @@ import { Sun, Moon, SunMoon } from "lucide-react";
       <Button
         id="theme-switcher"
         variant={"ghost"}
-        size={"icon"}
-        className="hidden flex items-center justify-center"
+        size={"icon-lg"}
+        className="invisible"
       >
         <SunMoon data-value="system" />
         <Moon data-value="dark" />
@@ -47,7 +47,7 @@ import { Sun, Moon, SunMoon } from "lucide-react";
         referrerpolicy="no-referrer"
         href="https://github.com/whoami-amrit/michikan"
       >
-        <Button variant={"outline"} className="flex gap-2">
+        <Button variant={"outline"} className="flex gap-2" size="lg">
           <svg
             class="size-4 fill-foreground"
             role="img"
@@ -65,7 +65,7 @@ import { Sun, Moon, SunMoon } from "lucide-react";
         referrerpolicy="no-referrer"
         href="https://app.michikan.dev/signup"
       >
-        <Button>Get Started</Button>
+        <Button size="lg">Get Started</Button>
       </a>
     </div>
   </nav>
@@ -82,7 +82,7 @@ import { Sun, Moon, SunMoon } from "lucide-react";
   const button = document.getElementById("theme-switcher")!;
   let selectedIndex = themes.findIndex((item) => item === theme);
 
-  const getTheme = (localTheme) => {
+  const getTheme = (localTheme: string) => {
     if (localTheme === "system") {
       return window.matchMedia("(prefers-color-scheme: dark)").matches
         ? "dark"
@@ -106,7 +106,7 @@ import { Sun, Moon, SunMoon } from "lucide-react";
   };
 
   updateButtonState();
-  button.classList.remove("hidden");
+  button.classList.remove("invisible");
 
   button.addEventListener("click", () => {
     selectedIndex = (selectedIndex + 1) % 3;

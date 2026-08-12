@@ -1,6 +1,6 @@
 ---
 title: "I Was Unemployed for 3 Months, So I Built the Job Search Tool I Actually Needed"
-description: "Built after 3 months of job searching: an app that turns your LaTeX resume into editable JSON, adds AI-powered analysis, and tracks every application in one place."
+description: "Built after months of job hunting: an app that turns your LaTeX resume into editable JSON, adds AI-powered analysis, and tracks every application in one place."
 date: 2026-07-25
 tags:
   [
@@ -15,52 +15,57 @@ tags:
 cover: "../../assets/resume-demo.png"
 ---
 
-Three months ago, my job search looked like this: open a posting, copy the description, paste it into an AI chat, ask it to compare the role against my resume, switch tabs to Overleaf, manually rewrite a bullet or two, compile, download, apply, close the tab, and try not to think about it again.
+As a full-stack software engineer with a degree in Computer Science, I found myself on the job search trail for the past two months. Like most devs in the modern market, I built a system to stay competitive. My daily stack was a mix of ChatGPT, Overleaf, Google Drive, and a massive tracking spreadsheet.
 
-Repeat. Forty, fifty, sixty times.
+It worked, but it was tedious, manual, and frankly, soul-crushing.
 
-It worked, technically. It also left me exhausted, scattered across a dozen browser tabs, and quietly convinced that the process itself was part of why nothing was landing. If you've done a real job search in the last year, you already know this loop. You've probably built your own version of it. And you've probably felt the same low hum of despair that comes from doing a lot of _activity_ without a lot of _progress_.
+Every single application felt like an exercise in friction: copying job descriptions across multiple tabs, wrestling with LaTeX syntax on Overleaf just to tweak a few bullet points, hunting down PDF versions on Google Drive, and logging rows in a spreadsheet. I realized my job search wasn't hindered by my technical skills—it was being slowed down by a broken workflow.
 
-So I stopped patching the workflow and looked at what was actually broken.
+So I decided to optimize it. I built **[Michikan](https://www.michikan.dev/)** to iron out the friction and give full-stack job seekers the streamlined, single-dashboard experience we actually need.
 
-## The Problem Wasn't the Advice. It Was the Plumbing.
+---
 
-The advice I was following was good. The r/EngineeringResumes wiki is one of the best free resources out there, and the LaTeX template it recommends produces a clean, single-column, genuinely ATS-friendly resume. That part wasn't the issue.
+## The Friction Points That Led to Michikan
 
-The issue was everything _around_ it:
+### 1. Overleaf is Great for Papers, Terrible for Quick Resume Edits
 
-**Updating the resume was harder than it should have been.** LaTeX gives you a beautiful, consistent PDF — but every tweak meant opening Overleaf, finding the right line in a wall of markup, editing carefully so I didn't break the formatting, and recompiling. For a two-minute edit, that's a lot of friction.
+LaTeX gives you pixel-perfect control, but making quick edits on mobile or on the fly is nearly impossible. Storing compiled PDFs on Google Drive or local folders leaves you with fragmented files (`Resume_v2_Final_Final.pdf`). There was no single source of truth for every iteration of my resume, nor was there a mobile-friendly way to adjust a bullet point when an opportunity popped up while away from a desktop.
 
-**My resume lived on one laptop.** Half my applications happen on my phone — scrolling LinkedIn on the couch, replying to a recruiter between errands. But there's no reasonable way to edit LaTeX on a phone. So "quick apply" became "apply once I'm back at my laptop," which in job searching often means "apply after the moment has passed."
+### 2. LLMs Are Great at Text, Bad at Rendering
 
-**The AI analysis and the resume update were two disconnected steps.** I had a solid prompt template for comparing a job description against my resume. But the AI could only _tell_ me what to change — it couldn't hand me back a finished, correctly formatted PDF. So I was the manual bridge between "here's what to fix" and "here's the fixed document," every single time, for every single application.
+When you want to tailor a resume for a specific role using AI, pasting LaTeX code into an LLM often breaks formatting or produces messy code blocks.
 
-**Tracking fell apart because it wasn't part of the flow.** I tried a spreadsheet. It worked for exactly nine days. Anything that requires a separate habit, outside the thing you're already doing, quietly dies. Not from laziness — from friction.
+LLMs were designed to handle structured text and semantics—not layout compilation.
 
-None of these problems were dramatic on their own. Together, over sixty-plus applications, they added up to a process that was slow, inconsistent, and quietly demoralizing.
+Michikan solves this by **decoupling resume data from formatting**. Your resume content lives as a clean, structured JSON schema based on opinionated `r/EngineeringResumes` guidelines. When an LLM tailors your experience for a job description, it works purely with structured text. Michikan then seamlessly compiles that data into an ATS-friendly, LaTeX-backed render behind the scenes.
 
-## What I Actually Needed
+### 3. Tool Fatigue: Too Many Tabs for 1 Application
 
-Somewhere around month two, I realized I didn't need more job search advice. I needed the four disconnected steps — resume editing, AI analysis, exporting, and tracking — to live in one place and talk to each other.
+Job hunting shouldn't require juggling four or five different tools:
 
-That's the app I've spent the last two months building.
+- **Tab 1:** Job Board
+- **Tab 2:** Application Tracker (Spreadsheet / Notion)
+- **Tab 3:** AI Chat (Job Fit Analysis)
+- **Tab 4:** Overleaf / Resume Builder
+- **Tab 5:** Google Drive / Local Storage
 
-## How It Works
+Michikan brings this entire workflow under **one roof**:
 
-**Resumes as structured data, not just documents.** Instead of storing my resume as a LaTeX file, I store the content as JSON. When I need a PDF, that content gets mapped straight into the same r/EngineeringResumes-recommended LaTeX template — so I still get the polished, ATS-friendly, single-column output that format is known for. I just never have to hand-edit LaTeX markup again.
+1. **Job Application Tracker:** Keep tabs on every role you've applied to in one place.
+2. **Job Fit Analysis:** Real-time gap analysis and feedback against job descriptions based on proven resume guidelines.
+3. **Structured Resume Builder:** AI-assisted tailoring with zero formatting headaches.
 
-**AI that edits the actual content, not just a suggestion.** Because the resume is structured data instead of typeset markup, an AI can directly edit the _content_ — rewrite a bullet, retarget a summary line for a specific posting — without ever touching or breaking the formatting. The gap between "here's my feedback" and "here's your updated resume" disappears.
+---
 
-**One place for the whole loop.** Paste a job description, get AI analysis against your current resume, apply the suggested edits, and download a clean PDF — all in the same app, in the same session.
+## Opinionated by Design, Open Source by Choice
 
-**Your resume, everywhere.** Because everything lives in the cloud, I can open the app on my phone, tweak a line, and download a print-ready PDF in under a minute. Applying to a job the moment I see it — on a train, on a couch, wherever — stopped requiring a laptop.
+Michikan is deliberately opinionated. It doesn't give you 50 flashy, multi-column graphic design templates that fail ATS parsers. Instead, it enforces what actually works in technical recruiting: clean, single-column layout, standard typography, and bulleted accomplishment metrics.
 
-**Tracking that doesn't need a separate habit.** Every application funnels into a tracker that's just... there, as part of applying, not a chore I have to remember to do afterward. I can filter by status, company, or role and actually see patterns instead of guessing.
+And because your resume data is personal, **Michikan is completely open-source**.
 
-## Built for a Specific Kind of Job Seeker
+If you prefer full control over your privacy, you can inspect the code, hack on features, or spin up your own offline local instance.
 
-I want to be upfront about something: this app has a strong opinion. It's built around the single-column, LaTeX-based resume format the r/EngineeringResumes community advocates for — because that format has a real, evidence-backed reputation for being ATS-friendly and easy for recruiters to scan. If that's not your resume philosophy, this probably isn't your tool. But if you've ever used that template, or you've bookmarked that wiki, or you're an engineer applying to roles where a clean, no-nonsense resume format matters — this was built for exactly that.
+- **Try the app:** [michikan.dev](https://www.michikan.dev/)
+- **Explore / Host the code:** Open source on [GitHub](https://github.com/whoami-amrit/michikan)
 
-## Where This Goes From Here
-
-This started as a personal fix for my own three-month stretch of unemployment. It's still early, and I'm still the primary user testing it against my own applications. But if any part of this — the LaTeX-without-the-LaTeX-editing, the AI that edits your actual resume instead of just critiquing it, the tracking that doesn't require a new habit — sounds like a problem you've been quietly living with too, I'd love for you to try it.
+Whether you want to streamline your own job search or contribute to making resume management less painful for everyone, give it a try—and I'd love to hear your feedback!

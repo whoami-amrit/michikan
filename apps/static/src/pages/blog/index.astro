@@ -60,7 +60,7 @@ const posts = (await getCollection("blog", ({ data }) => !data.draft)).sort(
             </CardContent>
             <CardFooter>
               <a href={`/blog/${post.id}/`}>
-                <Button size="sm">Read article</Button>
+                <Button>Read article</Button>
               </a>
             </CardFooter>
           </Card>

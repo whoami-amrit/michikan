@@ -48,9 +48,9 @@ const latestPosts = (await getCollection("blog", ({ data }) => !data.draft))
         </p>
       </div>
       <div class="flex flex-wrap gap-3">
-        <a href="#features"><Button>Explore features</Button></a>
+        <a href="#features"><Button size="lg">Explore features</Button></a>
         <a href="/blog">
-          <Button variant="outline">Read the blog</Button>
+          <Button variant="outline" size="lg">Read the blog</Button>
         </a>
       </div>
     </section>
@@ -135,7 +135,7 @@ const latestPosts = (await getCollection("blog", ({ data }) => !data.draft))
               </CardContent>
               <CardFooter>
                 <a href={`/blog/${post.id}/`}>
-                  <Button size="sm" variant="secondary">
+                  <Button variant="secondary">
                     Read post
                   </Button>
                 </a>
