@@ -1,6 +1,17 @@
 import { AllowUnverified } from '@common/decorators/allow-unverified.decorator';
 import { Public } from '@common/decorators/public.decorator';
-import { Body, Controller, Get, HttpCode, HttpStatus, Post, Query, Req, Res } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Post,
+  Query,
+  Req,
+  Res,
+} from '@nestjs/common';
 import type { Request, Response } from 'express';
 import { createZodDto } from 'nestjs-zod';
 import { IUserResponse, LoginSchema, SignupSchema } from 'shared';
@@ -55,5 +66,11 @@ export class AuthController {
   @HttpCode(HttpStatus.NO_CONTENT)
   async verifyEmail(@Query('token') verificationToken: string, @Req() req: Request) {
     await this.authService.verifyEmail(verificationToken, req);
+  }
+
+  @Delete('logout')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  logout(@Res({ passthrough: true }) res: Response) {
+    return this.authService.logout(res);
   }
 }

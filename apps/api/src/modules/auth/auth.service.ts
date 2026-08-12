@@ -121,6 +121,10 @@ export class AuthService {
     );
   }
 
+  logout(res: Response) {
+    this.setAuthCookies(res, '', '');
+  }
+
   async refresh(req: Request, res: Response): Promise<void> {
     const refreshToken = req.cookies[REFRESH_TOKEN_COOKIE_NAME] as string;
     if (!refreshToken) {

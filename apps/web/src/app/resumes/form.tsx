@@ -27,7 +27,6 @@ import {
   FieldSet,
 } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
-import { Progress, ProgressLabel, ProgressValue } from '@/components/ui/progress';
 import { Spinner } from '@/components/ui/spinner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
@@ -77,7 +76,7 @@ function PersonalInfoTab() {
   return (
     <FieldGroup>
       <FieldSet>
-        <FieldGroup className="grid-cols-2 grid gap-4">
+        <FieldGroup className="sm:grid-cols-2 grid gap-4">
           <Field>
             <FieldLabel required>Name</FieldLabel>
             <Input
@@ -172,7 +171,7 @@ function SkillsTab() {
         </div>
         {!!fields.length && (
           <FieldGroup className="flex-row gap-4">
-            <Field className="w-50 shrink-0">
+            <Field className="w-30 sm:w-50 shrink-0">
               <FieldLabel required>Category</FieldLabel>
             </Field>
             <Field className="grow">
@@ -182,7 +181,7 @@ function SkillsTab() {
         )}
         {fields.map((_, index) => (
           <FieldGroup key={index} className="flex-row gap-4">
-            <Field className="w-50 shrink-0">
+            <Field className="w-30 sm:w-50 shrink-0">
               <Input
                 {...register(`json.skills.${index}.category`)}
                 placeholder="Ex. Frontend"
@@ -342,7 +341,7 @@ function ExperienceTab() {
             </CardHeader>
             <CardContent>
               <FieldGroup>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid sm:grid-cols-2 gap-4">
                   <Field>
                     <FieldLabel required>Job Title</FieldLabel>
                     <Input
@@ -492,7 +491,7 @@ function EducationTab() {
             </CardHeader>
             <CardContent>
               <FieldGroup>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid sm:grid-cols-2 gap-4">
                   <Field>
                     <FieldLabel required>Degree</FieldLabel>
                     <Input
@@ -607,8 +606,8 @@ function ProjectsTab() {
               </CardAction>
             </CardHeader>
             <CardContent>
-              <FieldGroup className="grid grid-cols-2">
-                <Field className="col-span-2">
+              <FieldGroup className="grid sm:grid-cols-2 gap-4">
+                <Field className="sm:col-span-2">
                   <FieldLabel required>Highlights</FieldLabel>
                   <Textarea
                     className="max-h-44"
@@ -621,7 +620,10 @@ function ProjectsTab() {
                 </Field>
                 <Field>
                   <FieldLabel>Technologies</FieldLabel>
-                  <Input {...register(`json.projects.${index}.technologies`)} />
+                  <Input
+                    {...register(`json.projects.${index}.technologies`)}
+                    placeholder="Next.js, NestJS, Prisma"
+                  />
                 </Field>
                 <Field>
                   <FieldLabel>URL</FieldLabel>
@@ -770,9 +772,9 @@ export function ResumeForm({ type, data, id, mutate }: ResumeFormProps) {
       <form
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
         onSubmit={handleSubmit(onSubmit)}
-        className="flex flex-col gap-6 grow"
+        className="flex flex-col gap-6 grow overflow-hidden"
       >
-        <FieldGroup className="grid-cols-3 grid gap-4">
+        <FieldGroup className="sm:grid-cols-3 grid gap-4">
           <Field>
             <FieldLabel required>Name</FieldLabel>
             <Input
@@ -782,21 +784,23 @@ export function ResumeForm({ type, data, id, mutate }: ResumeFormProps) {
             />
             <FieldError errors={[errors.name]} />
           </Field>
-          <Field className="col-span-2">
+          <Field className="sm:col-span-2">
             <FieldLabel>Description</FieldLabel>
             <Input {...methods.register('description')} placeholder="Enter resume description" />
             <FieldError errors={[errors.description]} />
           </Field>
         </FieldGroup>
         <Tabs className="gap-8 grow" defaultValue={TabKeys.PersonalInfo}>
-          <TabsList variant={'line'}>
-            {tabs.map(([tabKey, tabLabel]) => (
-              <TabsTrigger key={tabKey} value={tabKey}>
-                {errors.json?.[tabKey] && <AlertCircle className="text-red-400" />}
-                {tabLabel}
-              </TabsTrigger>
-            ))}
-          </TabsList>
+          <div className="overflow-auto w-full">
+            <TabsList variant={'line'}>
+              {tabs.map(([tabKey, tabLabel]) => (
+                <TabsTrigger key={tabKey} value={tabKey}>
+                  {errors.json?.[tabKey] && <AlertCircle className="text-red-400" />}
+                  {tabLabel}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </div>
           <TabsContent value={TabKeys.PersonalInfo}>
             <PersonalInfoTab />
           </TabsContent>
@@ -817,16 +821,7 @@ export function ResumeForm({ type, data, id, mutate }: ResumeFormProps) {
           </TabsContent>
         </Tabs>
         <div className="flex justify-between self-end sticky bottom-0 py-4 z-10 w-full after:content-[''] after:w-[calc(100%+24px)] after:bg-background after:absolute after:-left-3 after:h-full after:top-0 after:z-[-1]">
-          {
-            // TODO!: implement this feature
-          }
-          {type === 'new' && (
-            <Progress value={50} className="w-76 gap-2">
-              <ProgressLabel>Progress</ProgressLabel>
-              <ProgressValue />
-            </Progress>
-          )}
-          {type === 'edit' && <div />}
+          <div />
           <div className="flex gap-2 items-center">
             {isSubmitting && <Spinner className="size-4" />}
             {type === 'new' && (

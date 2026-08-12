@@ -4,6 +4,7 @@ import {
   SearchIcon,
   SidebarCloseIcon,
   SidebarOpenIcon,
+  XIcon,
 } from 'lucide-react';
 import * as React from 'react';
 
@@ -20,6 +21,8 @@ import {
   SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { useSidebar } from '@/lib/contexts/sidebar/hook';
+
+import { Button } from './ui/button';
 
 const data = {
   navMain: [
@@ -41,22 +44,40 @@ const data = {
   ],
 };
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const { open, toggleSidebar } = useSidebar();
+  const { open, toggleSidebar, isMobile } = useSidebar();
 
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem className="pt-3">
-            <SidebarMenuButton onClick={toggleSidebar}>
-              {open && (
-                <div className="flex flex-1 text-left shrink-0 items-center gap-2">
+            {isMobile ? (
+              <div className="flex justify-between gap-6">
+                <div className="flex grow text-left shrink-0 items-center gap-2">
                   <MichikanIcon className="size-6" />
                   <span className="font-sm font-bold font-heading">Michikan</span>
                 </div>
-              )}
-              {open ? <SidebarCloseIcon /> : <SidebarOpenIcon />}
-            </SidebarMenuButton>
+
+                <Button
+                  variant="ghost-destructive"
+                  size="icon-sm"
+                  onClick={toggleSidebar}
+                  className="shrink"
+                >
+                  <XIcon />
+                </Button>
+              </div>
+            ) : (
+              <SidebarMenuButton onClick={toggleSidebar}>
+                {open && (
+                  <div className="flex flex-1 text-left shrink-0 items-center gap-2">
+                    <MichikanIcon className="size-6" />
+                    <span className="font-sm font-bold font-heading">Michikan</span>
+                  </div>
+                )}
+                {open ? <SidebarCloseIcon /> : <SidebarOpenIcon />}
+              </SidebarMenuButton>
+            )}
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>

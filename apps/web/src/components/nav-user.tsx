@@ -1,26 +1,21 @@
-import {
-  BadgeCheckIcon,
-  BellIcon,
-  ChevronsUpDownIcon,
-  LogOutIcon,
-  SparklesIcon,
-} from 'lucide-react';
+import { ChevronsUpDownIcon, LogOutIcon } from 'lucide-react';
+import { useNavigate } from 'react-router';
 
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuGroup,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { useSidebar } from '@/lib/contexts/sidebar/hook';
 import { useUserContext } from '@/lib/contexts/user/hook';
+import { api } from '@/lib/utils';
 
 export function NavUser() {
   const { isMobile } = useSidebar();
+  const navigate = useNavigate();
   const user = useUserContext();
 
   if (user === null) {
@@ -49,25 +44,16 @@ export function NavUser() {
             align="end"
             sideOffset={4}
           >
-            <DropdownMenuGroup>
-              <DropdownMenuItem>
-                <SparklesIcon />
-                Upgrade to Pro
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
-            <DropdownMenuSeparator />
-            <DropdownMenuGroup>
-              <DropdownMenuItem>
-                <BadgeCheckIcon />
-                Account
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <BellIcon />
-                Notifications
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => {
+                api
+                  .delete('auth/logout')
+                  .then(() => {
+                    void navigate('/login');
+                  })
+                  .catch((err) => console.log(err));
+              }}
+            >
               <LogOutIcon />
               Log out
             </DropdownMenuItem>

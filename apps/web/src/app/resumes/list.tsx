@@ -59,7 +59,7 @@ export default function ResumesPage() {
     <div className="flex flex-col items-center w-full">
       <AppHeader crumbs={crumbs} />
 
-      <main className="w-2xl flex flex-col gap-4 grow">
+      <main className="flex w-full px-6 lg:px-0 flex-col gap-4 grow">
         {!isLoading && (data?.length ?? 0) > 0 && (
           <div className="flex">
             <div className="grow" />
@@ -87,7 +87,7 @@ export default function ResumesPage() {
         )}
 
         {isLoading && (
-          <div className="flex w-full max-w-sm flex-col gap-2">
+          <div className="flex max-w-sm flex-col gap-2">
             {Array.from({ length: 5 }).map((_, index) => (
               <div className="flex gap-4" key={index}>
                 <Skeleton className="h-4 flex-1" />
@@ -110,12 +110,15 @@ export default function ResumesPage() {
             <TableBody>
               {data?.map((resume) => (
                 <TableRow
+                  className="hover:cursor-pointer"
                   onClick={() => {
                     void navigate(`/resumes/${resume.id}`);
                   }}
                   key={resume.id}
                 >
-                  <TableCell>{resume.name}</TableCell>
+                  <TableCell className="max-w-50 text-ellipsis overflow-hidden">
+                    {resume.name}
+                  </TableCell>
                   <TableCell>{!!resume.jobs.length ? resume.jobs.length : '-'}</TableCell>
                   <TableCell>{new Date(resume.updatedAt).toLocaleDateString()}</TableCell>
                 </TableRow>

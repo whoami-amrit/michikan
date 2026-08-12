@@ -17,7 +17,7 @@ export function NewResumePage() {
     <div className="flex flex-col w-full items-center">
       <AppHeader crumbs={crumbs} />
 
-      <div className="flex flex-col gap-8 grow max-w-2xl w-full">
+      <div className="flex flex-col gap-8 grow max-w-2xl w-full px-6 lg:px-0">
         <ResumeForm type="new" />
       </div>
     </div>

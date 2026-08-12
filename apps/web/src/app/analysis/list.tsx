@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { JobFitAnalysis } from 'db';
-import { CheckIcon, FileTextIcon, SearchIcon, SendIcon } from 'lucide-react';
+import { CheckIcon, ConstructionIcon, FileTextIcon, SearchIcon, SendIcon } from 'lucide-react';
 import { MouseEvent, useRef, useState } from 'react';
 import { FormProvider, SubmitHandler, useController, useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router';
@@ -14,6 +14,13 @@ import useSWR from 'swr';
 
 import AppHeader from '@/components/app-header';
 import { Button } from '@/components/ui/button';
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from '@/components/ui/empty';
 import { FieldError } from '@/components/ui/field';
 import {
   InputGroup,
@@ -156,6 +163,22 @@ export default function AnalysisPage() {
       });
     }
   };
+
+  if (process.env.DISABLE_ANALYSIS === 'true') {
+    return (
+      <Empty>
+        <EmptyHeader>
+          <EmptyMedia variant="icon">
+            <ConstructionIcon />
+          </EmptyMedia>
+          <EmptyTitle className="text-foreground">Under Construction</EmptyTitle>
+          <EmptyDescription>
+            Good things take time! We are putting the final touches on this feature.
+          </EmptyDescription>
+        </EmptyHeader>
+      </Empty>
+    );
+  }
 
   return (
     <div className="flex flex-col items-center w-full relative">
