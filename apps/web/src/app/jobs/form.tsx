@@ -79,7 +79,6 @@ const jobStatusOptions: { value: JobStatus; label: string }[] = [
   { value: JobStatus.NOT_APPLIED, label: 'Not Applied' },
   { value: JobStatus.APPLIED, label: 'Applied' },
   { value: JobStatus.SHORTLISTED, label: 'Shortlisted' },
-  { value: JobStatus.NOT_SHORTLISTED, label: 'Not Shortlisted' },
   { value: JobStatus.INTERVIEW_ONGOING, label: 'Interview Ongoing' },
   { value: JobStatus.ACCEPTED, label: 'Offer Received' },
   { value: JobStatus.REJECTED, label: 'Rejected' },

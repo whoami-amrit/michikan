@@ -164,7 +164,7 @@ export default function AnalysisPage() {
     }
   };
 
-  if (process.env.DISABLE_ANALYSIS === 'true') {
+  if (import.meta.env.VITE_DISABLE_ANALYSIS) {
     return (
       <Empty>
         <EmptyHeader>

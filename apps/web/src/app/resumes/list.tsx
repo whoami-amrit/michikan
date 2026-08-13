@@ -22,6 +22,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useBreadcrumbs } from '@/hooks/use-breadcrumbs';
 import { api } from '@/lib/utils';
 
@@ -59,73 +60,86 @@ export default function ResumesPage() {
     <div className="flex flex-col items-center w-full">
       <AppHeader crumbs={crumbs} />
 
-      <main className="flex w-full px-6 lg:px-0 flex-col gap-4 grow">
-        {!isLoading && (data?.length ?? 0) > 0 && (
-          <div className="flex">
-            <div className="grow" />
-            <NewResumeButton onClick={onNewResumeClick} />
-          </div>
-        )}
-
-        {!isLoading && data?.length === 0 && (
-          <Empty>
-            <EmptyHeader>
-              <EmptyMedia variant="icon">
-                <FilePlusCornerIcon />
-              </EmptyMedia>
-              <EmptyTitle>No Resumes Yet</EmptyTitle>
-              <EmptyDescription>
-                You haven't created any resumes yet
-                <br />
-                Get started by creating your first resume
-              </EmptyDescription>
-            </EmptyHeader>
-            <EmptyContent>
+      <main className="flex w-full px-6 lg:px-0 flex-col grow items-center">
+        <div className="flex max-w-xl w-full flex-col gap-4">
+          {!isLoading && (data?.length ?? 0) > 0 && (
+            <div className="flex">
+              <div className="grow" />
               <NewResumeButton onClick={onNewResumeClick} />
-            </EmptyContent>
-          </Empty>
-        )}
+            </div>
+          )}
 
-        {isLoading && (
-          <div className="flex max-w-sm flex-col gap-2">
-            {Array.from({ length: 5 }).map((_, index) => (
-              <div className="flex gap-4" key={index}>
-                <Skeleton className="h-4 flex-1" />
-                <Skeleton className="h-4 w-24" />
-                <Skeleton className="h-4 w-20" />
-              </div>
-            ))}
-          </div>
-        )}
+          {!isLoading && data?.length === 0 && (
+            <Empty>
+              <EmptyHeader>
+                <EmptyMedia variant="icon">
+                  <FilePlusCornerIcon />
+                </EmptyMedia>
+                <EmptyTitle>No Resumes Yet</EmptyTitle>
+                <EmptyDescription>
+                  You haven't created any resumes yet
+                  <br />
+                  Get started by creating your first resume
+                </EmptyDescription>
+              </EmptyHeader>
+              <EmptyContent>
+                <NewResumeButton onClick={onNewResumeClick} />
+              </EmptyContent>
+            </Empty>
+          )}
 
-        {!isLoading && !!data?.length && (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Jobs</TableHead>
-                <TableHead>Last Updated</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {data?.map((resume) => (
-                <TableRow
-                  className="hover:cursor-pointer"
-                  onClick={() => {
-                    void navigate(`/resumes/${resume.id}`);
-                  }}
-                  key={resume.id}
-                >
-                  <TableCell className="max-w-50 text-ellipsis overflow-hidden">
-                    {resume.name}
-                  </TableCell>
-                  <TableCell>{!!resume.jobs.length ? resume.jobs.length : '-'}</TableCell>
-                  <TableCell>{new Date(resume.updatedAt).toLocaleDateString()}</TableCell>
-                </TableRow>
+          {isLoading && (
+            <div className="flex max-w-sm flex-col gap-2">
+              {Array.from({ length: 5 }).map((_, index) => (
+                <div className="flex gap-4" key={index}>
+                  <Skeleton className="h-4 flex-1" />
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-4 w-20" />
+                </div>
               ))}
-            </TableBody>
-          </Table>
-        )}
+            </div>
+          )}
+
+          {!isLoading && !!data?.length && (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="grow">Name</TableHead>
+                  <TableHead className="text-right w-15">
+                    <Tooltip>
+                      <TooltipTrigger>Jobs</TooltipTrigger>
+                      <TooltipContent>
+                        Number of job applications where this resume has been submitted
+                      </TooltipContent>
+                    </Tooltip>
+                  </TableHead>
+                  <TableHead className="text-right w-30">Last Updated</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {data?.map((resume) => (
+                  <TableRow
+                    className="hover:cursor-pointer"
+                    onClick={() => {
+                      void navigate(`/resumes/${resume.id}`);
+                    }}
+                    key={resume.id}
+                  >
+                    <TableCell className="max-w-50 text-ellipsis overflow-hidden">
+                      {resume.name}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {!!resume.jobs.length ? resume.jobs.length : '-'}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {new Date(resume.updatedAt).toLocaleDateString()}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </div>
       </main>
     </div>
   );

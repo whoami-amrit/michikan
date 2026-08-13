@@ -4,11 +4,11 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "dotenv-run -- vite",
     "build": "tsc -b && vite build",
     "check:types": "tsc -b --noEmit",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "dotenv-run -- vite preview"
   },
   "dependencies": {
     "@base-ui/react": "^1.5.0",
