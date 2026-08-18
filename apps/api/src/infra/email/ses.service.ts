@@ -11,7 +11,7 @@ export class SesService {
     private readonly config: ConfigType<typeof awsConfig>,
   ) {}
 
-  async sendVerificationLink(to: string, link: string) {
+  async sendVerificationOtp(to: string, otp: number) {
     const command = new SendEmailCommand({
       Destination: {
         ToAddresses: [to],
@@ -19,7 +19,7 @@ export class SesService {
       Message: {
         Body: {
           Text: {
-            Data: `Please click the following link to verify your email address: ${link}`,
+            Data: `Please enter the following otp to verify your email address: ${otp}`,
           },
         },
         Subject: {

@@ -1,8 +1,18 @@
 import appConfig from '@config/app.config';
-import { Inject, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import {
+  HttpException,
+  HttpStatus,
+  Inject,
+  Injectable,
+  Logger,
+  NotFoundException,
+  UnauthorizedException,
+  UnprocessableEntityException,
+} from '@nestjs/common';
 import type { ConfigType } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import bcrypt from 'bcrypt';
+import crypto from 'crypto';
 import type { Session, User } from 'db';
 import { Provider } from 'db';
 import type { Request, Response } from 'express';
@@ -14,11 +24,13 @@ import { SesService } from '../../infra/email/ses.service';
 import {
   ACCESS_TOKEN_COOKIE_NAME,
   BCRYPT_SALT_ROUNDS,
+  OTP_LOCKOUT_WINDOW_MS,
+  OTP_MAX_ATTEMPTS,
+  OTP_VALIDITY_MS,
   REFRESH_TOKEN_COOKIE_NAME,
   TOKEN_VALIDITY_MAP,
-  VERIFY_EMAIL_PATH,
 } from './constants';
-import { IJwtEmailVerifyPayload, IJwtRefreshPayload, JwtTokenType } from './types';
+import { IJwtRefreshPayload, JwtTokenType } from './types';
 
 @Injectable()
 export class AuthService {
@@ -52,13 +64,7 @@ export class AuthService {
       },
     });
 
-    const verificationToken = await this.getSignedToken<IJwtEmailVerifyPayload>('email-verify', {
-      sub: user.id,
-      email: user.email,
-    });
-    const verificationLink = `https://${this.config.hostname}/${VERIFY_EMAIL_PATH}?token=${verificationToken}`;
-    this.logger.debug(`Generated email verification link for user ${user.id}: ${verificationLink}`);
-    await this.SesService.sendVerificationLink(user.email, verificationLink);
+    await this.sendOtp(user.id);
 
     await this.getTokensAndUpsertSession(
       user.id,
@@ -72,21 +78,114 @@ export class AuthService {
     return user;
   }
 
-  async verifyEmail(verificationToken: string, req: Request): Promise<void> {
-    const tokenPayload = await this.verifyToken<IJwtEmailVerifyPayload>(verificationToken, req);
+  async sendOtp(userId: User['id']): Promise<void> {
+    const otp = crypto.randomInt(100000, 1000000);
 
-    await this.prisma.account.update({
+    this.logger.debug(`Generated otp ${otp}`);
+
+    const user = await this.prisma.user.findUnique({
       where: {
-        provider_providerId: {
+        id: userId,
+      },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const otpHash = this.hashOtp(otp);
+    const expiresAt = new Date(Date.now() + OTP_VALIDITY_MS);
+
+    await this.prisma.verifyOtp.upsert({
+      where: {
+        userId,
+      },
+      update: {
+        otpHash,
+        expiresAt,
+      },
+      create: {
+        otpHash,
+        expiresAt,
+        userId,
+      },
+    });
+
+    await this.SesService.sendVerificationOtp(user.email, otp);
+  }
+
+  async resendOtp(userId: User['id']): Promise<void> {
+    await this.registerOtpAttempt(userId);
+    await this.sendOtp(userId);
+  }
+
+  async verifyOtp(userId: User['id'], otp: number, req: Request, res: Response): Promise<void> {
+    const record = await this.registerOtpAttempt(userId);
+
+    const otpHash = this.hashOtp(otp);
+    if (record.otpHash !== otpHash || record.expiresAt.getTime() < Date.now()) {
+      throw new UnprocessableEntityException('Invalid otp received!');
+    }
+
+    const account = await this.prisma.account.update({
+      where: {
+        provider_userId: {
           provider: Provider.LOCAL,
-          providerId: tokenPayload.email,
+          userId,
         },
-        userId: tokenPayload.sub,
       },
       data: {
         emailVerified: new Date(),
       },
     });
+
+    await this.getTokensAndUpsertSession(
+      account.userId,
+      crypto.randomUUID(),
+      !!account.emailVerified,
+      account.provider,
+      req,
+      res,
+    );
+
+    await this.prisma.verifyOtp.delete({ where: { userId } });
+  }
+
+  /**
+   * Shared abuse guard for both verify-otp and resend-otp: caps combined
+   * attempts at OTP_MAX_ATTEMPTS within a rolling OTP_LOCKOUT_WINDOW_MS
+   * window, so resending can't be used to reset a verify lockout.
+   */
+  private async registerOtpAttempt(userId: User['id']) {
+    const record = await this.prisma.verifyOtp.findUnique({ where: { userId } });
+
+    if (!record) {
+      throw new NotFoundException('No verification in progress for this user');
+    }
+
+    const now = Date.now();
+    const windowActive =
+      record.firstAttemptAt !== null &&
+      now - record.firstAttemptAt.getTime() < OTP_LOCKOUT_WINDOW_MS;
+
+    if (windowActive && record.attempts >= OTP_MAX_ATTEMPTS) {
+      throw new HttpException(
+        'Too many otp attempts, try again later',
+        HttpStatus.TOO_MANY_REQUESTS,
+      );
+    }
+
+    return this.prisma.verifyOtp.update({
+      where: { userId },
+      data: {
+        attempts: windowActive ? record.attempts + 1 : 1,
+        firstAttemptAt: windowActive ? record.firstAttemptAt : new Date(now),
+      },
+    });
+  }
+
+  private hashOtp(otp: number): string {
+    return crypto.createHash('sha256').update(String(otp)).digest('hex');
   }
 
   async login(loginDto: ILoginDto, req: Request, res: Response): Promise<void> {

@@ -30,6 +30,12 @@ export const UserContextProvider = ({ children }: { children: React.ReactNode })
     return <Navigate to="/login" replace />;
   }
 
+  console.log(user);
+
+  if (user && !user.verified) {
+    return <Navigate to="/verify-email" replace />;
+  }
+
   if (error) {
     console.error(error);
     throw error;

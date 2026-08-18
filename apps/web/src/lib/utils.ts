@@ -3,8 +3,6 @@ import ky, { isHTTPError } from 'ky';
 import type { IProblemDetails } from 'shared';
 import { twMerge } from 'tailwind-merge';
 
-import { toast } from '@/components/ui/toast';
-
 import { HttpStatus } from './constants';
 
 export function cn(...inputs: ClassValue[]) {
@@ -46,7 +44,7 @@ export const api = ky.create({
           try {
             await ky.get(`${API_PREFIX}/auth/refresh`);
 
-            return response;
+            return ky.retry();
           } catch (refreshError) {
             if (!isHTTPError(refreshError)) {
               throw refreshError;
@@ -62,21 +60,9 @@ export const api = ky.create({
           }
         }
 
-        if (response.status === HttpStatus.FORBIDDEN) {
-          toast.add({
-            type: 'warning',
-            title: 'Verify your email to continue',
-            description: 'Some features stay locked until your email is verified.',
-          });
-        }
-
         return response;
       },
     ],
-  },
-  retry: {
-    limit: 1, // Limit retries to 1 to avoid infinite loops
-    statusCodes: [HttpStatus.UNAUTHORIZED],
   },
 });
 

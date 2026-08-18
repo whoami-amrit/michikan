@@ -19,8 +19,8 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from '@/components/ui/sidebar';
-import { useSidebar } from '@/lib/contexts/sidebar/hook';
 
 import { Button } from './ui/button';
 
@@ -50,7 +50,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
         <SidebarMenu>
-          <SidebarMenuItem className="pt-3">
+          <SidebarMenuItem className={`pt-3 ${isMobile ? 'pl-2 pt-4' : ''}`}>
             {isMobile ? (
               <div className="flex justify-between gap-6">
                 <div className="flex grow text-left shrink-0 items-center gap-2">
@@ -58,12 +58,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   <span className="font-sm font-bold font-heading">Michikan</span>
                 </div>
 
-                <Button
-                  variant="ghost-destructive"
-                  size="icon-sm"
-                  onClick={toggleSidebar}
-                  className="shrink"
-                >
+                <Button variant="ghost" size="icon-sm" onClick={toggleSidebar} className="shrink">
                   <XIcon />
                 </Button>
               </div>

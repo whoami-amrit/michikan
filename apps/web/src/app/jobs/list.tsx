@@ -57,7 +57,7 @@ export default function JobsPage() {
       <AppHeader crumbs={crumbs} />
 
       <main className="flex w-full px-6 lg:px-0 flex-col grow items-center">
-        <div className="flex max-w-xl w-full flex-col gap-4 overflow-hidden">
+        <div className="flex max-w-xl w-full flex-col gap-4 grow">
           {!!data?.length && (
             <div className="flex">
               <div className="grow" />

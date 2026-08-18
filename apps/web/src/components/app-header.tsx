@@ -1,11 +1,11 @@
 import { SidebarOpenIcon } from 'lucide-react';
 import { PropsWithChildren } from 'react';
 
-import { useSidebar } from '@/lib/contexts/sidebar/hook';
 import { ICrumb } from '@/lib/types';
 
 import { AppBreadcrumb } from './app-breadcrumb';
 import { Button } from './ui/button';
+import { useSidebar } from './ui/sidebar';
 
 export default function AppHeader({ crumbs, children }: PropsWithChildren<{ crumbs: ICrumb[] }>) {
   const { toggleSidebar } = useSidebar();

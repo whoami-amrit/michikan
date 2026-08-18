@@ -61,7 +61,7 @@ export default function ResumesPage() {
       <AppHeader crumbs={crumbs} />
 
       <main className="flex w-full px-6 lg:px-0 flex-col grow items-center">
-        <div className="flex max-w-xl w-full flex-col gap-4">
+        <div className="flex max-w-xl w-full flex-col gap-4 grow">
           {!isLoading && (data?.length ?? 0) > 0 && (
             <div className="flex">
               <div className="grow" />

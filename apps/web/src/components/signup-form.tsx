@@ -18,7 +18,7 @@ function PersonalInfo({ errors }: { errors: FieldErrors<ISignupDto> }) {
     <FieldGroup>
       <Field>
         <FieldLabel htmlFor="name">Full Name</FieldLabel>
-        <Input {...register('userInfo.name')} placeholder="John Doe" className="bg-background" />
+        <Input {...register('userInfo.name')} placeholder="John Doe" />
         <FieldError errors={[errors.userInfo?.name]} />
       </Field>
       <Field>
@@ -38,7 +38,7 @@ function PersonalInfo({ errors }: { errors: FieldErrors<ISignupDto> }) {
       </Field>
       <Field>
         <FieldLabel htmlFor="password">Password</FieldLabel>
-        <Input {...register('password')} type="password" className="bg-background" />
+        <Input {...register('password')} type="password" />
         {errors.password ? (
           <FieldError errors={[errors.password]} />
         ) : (

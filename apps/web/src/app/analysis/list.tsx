@@ -164,77 +164,77 @@ export default function AnalysisPage() {
     }
   };
 
-  if (import.meta.env.VITE_DISABLE_ANALYSIS) {
-    return (
-      <Empty>
-        <EmptyHeader>
-          <EmptyMedia variant="icon">
-            <ConstructionIcon />
-          </EmptyMedia>
-          <EmptyTitle className="text-foreground">Under Construction</EmptyTitle>
-          <EmptyDescription>
-            Good things take time! We are putting the final touches on this feature.
-          </EmptyDescription>
-        </EmptyHeader>
-      </Empty>
-    );
-  }
-
   return (
     <div className="flex flex-col items-center w-full relative">
       <AppHeader crumbs={crumbs} />
 
-      <main className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 max-w-2xl w-full flex flex-col gap-5 grow">
-        <FormProvider {...methods}>
-          <form
-            // eslint-disable-next-line @typescript-eslint/no-misused-promises
-            onSubmit={handleSubmit(onSubmit)}
-          >
-            <InputGroup>
-              <InputGroupTextarea
-                id="analysis-textarea"
-                placeholder="Enter job description"
-                className="max-h-60"
-                {...register('jobDescription')}
-              />
-              <InputGroupAddon align="block-end">
-                <ResumeSelectPopover />
-                <InputGroupButton type="submit" className="ml-auto" variant="default" size="sm">
-                  Analyze <SendIcon />
-                </InputGroupButton>
-              </InputGroupAddon>
-              {errors?.jobDescription && (
-                <InputGroupAddon align="block-start">
-                  <FieldError errors={[errors.jobDescription]} />
+      {import.meta.env.VITE_DISABLE_ANALYSIS ? (
+        <div className="grow flex justify-center items-center">
+          <Empty>
+            <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <ConstructionIcon />
+              </EmptyMedia>
+              <EmptyTitle className="text-foreground">Under Construction</EmptyTitle>
+              <EmptyDescription>
+                Good things take time! We are putting the final touches on this feature.
+              </EmptyDescription>
+            </EmptyHeader>
+          </Empty>
+        </div>
+      ) : (
+        <main className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 max-w-2xl w-full flex flex-col gap-5 grow">
+          <FormProvider {...methods}>
+            <form
+              // eslint-disable-next-line @typescript-eslint/no-misused-promises
+              onSubmit={handleSubmit(onSubmit)}
+            >
+              <InputGroup>
+                <InputGroupTextarea
+                  id="analysis-textarea"
+                  placeholder="Enter job description"
+                  className="max-h-60"
+                  {...register('jobDescription')}
+                />
+                <InputGroupAddon align="block-end">
+                  <ResumeSelectPopover />
+                  <InputGroupButton type="submit" className="ml-auto" variant="default" size="sm">
+                    Analyze <SendIcon />
+                  </InputGroupButton>
                 </InputGroupAddon>
-              )}
-            </InputGroup>
-          </form>
-        </FormProvider>
-        {isLoading && (
-          <div className="flex w-full max-w-sm flex-col gap-4">
-            <Skeleton className="h-5" />
-            <Skeleton className="h-5" />
-            <Skeleton className="h-5" />
-          </div>
-        )}
-        {!isLoading && !!data?.length && !getValues().jobDescription && (
-          <Table>
-            <TableBody>
-              {data?.map((analysis) => (
-                <TableRow
-                  onClick={() => {
-                    void navigate(`/analysis/${analysis.id}`);
-                  }}
-                  key={analysis.id}
-                >
-                  <TableCell>{analysis.title}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        )}
-      </main>
+                {errors?.jobDescription && (
+                  <InputGroupAddon align="block-start">
+                    <FieldError errors={[errors.jobDescription]} />
+                  </InputGroupAddon>
+                )}
+              </InputGroup>
+            </form>
+          </FormProvider>
+          {isLoading && (
+            <div className="flex w-full max-w-sm flex-col gap-4">
+              <Skeleton className="h-5" />
+              <Skeleton className="h-5" />
+              <Skeleton className="h-5" />
+            </div>
+          )}
+          {!isLoading && !!data?.length && !getValues().jobDescription && (
+            <Table>
+              <TableBody>
+                {data?.map((analysis) => (
+                  <TableRow
+                    onClick={() => {
+                      void navigate(`/analysis/${analysis.id}`);
+                    }}
+                    key={analysis.id}
+                  >
+                    <TableCell>{analysis.title}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </main>
+      )}
     </div>
   );
 }

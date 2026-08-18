@@ -25,9 +25,6 @@ if ! command -v tlmgr >/dev/null 2>&1; then
   echo "Installing TinyTeX..."
   wget -qO- "https://tinytex.yihui.org/install-bin-unix.sh" | sh
   export PATH="$HOME/.TinyTeX/bin/$(uname -m)-linux:$PATH"
-fi
-
-if command -v tlmgr >/dev/null 2>&1; then
   tlmgr install relsize carlisle fontaxes enumitem titlesec xcharter xstring
 fi
 
@@ -53,7 +50,7 @@ pnpm run build
 sudo mkdir -p /var/log/michikan
 sudo chown -R "$USER:$USER" /var/log/michikan
 
-#### START WORKER
+#### CREATE SYSTEMD SERVICES
 cat << 'EOF' | sudo tee /etc/systemd/system/michikan-api.service > /dev/null
 [Unit]
 Description=Michikan API Service

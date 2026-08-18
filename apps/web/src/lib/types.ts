@@ -1,5 +1,5 @@
 export interface IMainState {
-  theme: 'light' | 'dark' | 'system';
+  theme: 'light' | 'dark';
 }
 
 export interface IMainContext {

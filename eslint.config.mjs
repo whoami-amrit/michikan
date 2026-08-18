@@ -74,6 +74,7 @@ export default defineConfig([
   // `extends` inside a config object scopes the entire array to `files`
   {
     files: ['apps/web/**/*.{js,jsx,ts,tsx}'],
+    ignores: ['apps/web/src/components/ui/**/*.{ts,tsx}', 'apps/web/src/hooks/use-mobile.ts'],
     extends: [reactHooks.configs.flat.recommended, reactRefresh.configs.vite],
     languageOptions: {
       globals: globals.browser,

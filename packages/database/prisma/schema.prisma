@@ -74,18 +74,32 @@ model Resume {
 // NOTE: for 1 - 1 relationship simply add @unique to the foreign key field
 
 model User {
-  id                Int      @id @default(autoincrement())
-  email             String   @unique
-  name              String
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  resumes  Resume[] // 1 to n relationship with Resume
-  accounts Account[] // 1 to 1 relationship with Account
-  sessions Session[] // 1 to n relationship with Session
+  resumes             Resume[] // 1 to n relationship with Resume
+  accounts            Account[] // 1 to 1 relationship with Account
+  sessions            Session[] // 1 to n relationship with Session
   resumeRenderWorkers ResumeRenderWorker[]
   jobs                Job[]
-  jobFitAnalyses JobFitAnalysis[]
+  jobFitAnalyses      JobFitAnalysis[]
+
+  verifyOtps VerifyOtp?
+}
+
+model VerifyOtp {
+  otpHash String
+  user    User   @relation(fields: [userId], references: [id])
+  userId  Int    @id
+
+  expiresAt      DateTime
+  attempts       Int       @default(0)
+  firstAttemptAt DateTime?
+
+  createdAt DateTime @default(now())
 }
 
 model Account {

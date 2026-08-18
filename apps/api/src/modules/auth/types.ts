@@ -3,9 +3,4 @@ export interface IJwtRefreshPayload {
   sid: string;
 }
 
-export interface IJwtEmailVerifyPayload {
-  sub: number;
-  email: string;
-}
-
-export type JwtTokenType = 'access' | 'refresh' | 'email-verify';
+export type JwtTokenType = 'access' | 'refresh';

@@ -79,21 +79,12 @@ function PersonalInfoTab() {
         <FieldGroup className="sm:grid-cols-2 grid gap-4">
           <Field>
             <FieldLabel required>Name</FieldLabel>
-            <Input
-              {...register('json.personalInfo.name')}
-              type="text"
-              placeholder="John Doe"
-              className="bg-background"
-            />
+            <Input {...register('json.personalInfo.name')} type="text" placeholder="John Doe" />
             <FieldError errors={[errors.json?.personalInfo?.name]} />
           </Field>
           <Field>
             <FieldLabel required>Email</FieldLabel>
-            <Input
-              {...register('json.personalInfo.email')}
-              placeholder="hello@world.me"
-              className="bg-background"
-            />
+            <Input {...register('json.personalInfo.email')} placeholder="hello@world.me" />
             <FieldError errors={[errors.json?.personalInfo?.email]} />
           </Field>
           <Field>
@@ -101,17 +92,12 @@ function PersonalInfoTab() {
             <Input
               {...register('json.personalInfo.github')}
               placeholder="https://github.com/username"
-              className="bg-background"
             />
             <FieldError errors={[errors.json?.personalInfo?.github]} />
           </Field>
           <Field>
             <FieldLabel>Phone</FieldLabel>
-            <Input
-              {...register('json.personalInfo.phone')}
-              placeholder="123-456-7890"
-              className="bg-background"
-            />
+            <Input {...register('json.personalInfo.phone')} placeholder="123-456-7890" />
             <FieldError errors={[errors.json?.personalInfo?.phone]} />
           </Field>
         </FieldGroup>
@@ -134,7 +120,6 @@ function PersonalInfoTab() {
           <Input
             {...register('json.personalInfo.portfolio')}
             placeholder="https://your-portfolio.com"
-            className="bg-background"
           />
           <FieldError errors={[errors.json?.personalInfo?.portfolio]} />
         </Field>
@@ -182,11 +167,7 @@ function SkillsTab() {
         {fields.map((_, index) => (
           <FieldGroup key={index} className="flex-row gap-4">
             <Field className="w-30 sm:w-50 shrink-0">
-              <Input
-                {...register(`json.skills.${index}.category`)}
-                placeholder="Ex. Frontend"
-                className="bg-background"
-              />
+              <Input {...register(`json.skills.${index}.category`)} placeholder="Ex. Frontend" />
               <FieldError errors={[errors.json?.skills?.[index]?.category]} />
             </Field>
             <Field className="grow">
@@ -322,7 +303,6 @@ function ExperienceTab() {
                   <Input
                     {...register(`json.experience.${index}.company`)}
                     placeholder="Ex. Google"
-                    className="bg-background"
                     tabIndex={0}
                   />
                   <FieldError errors={[errors.json?.experience?.[index]?.company]} />
@@ -347,7 +327,6 @@ function ExperienceTab() {
                     <Input
                       {...register(`json.experience.${index}.title`)}
                       placeholder="Ex. Software Engineer"
-                      className="bg-background"
                     />
                     <FieldError errors={[errors.json?.experience?.[index]?.title]} />
                   </Field>
@@ -356,7 +335,6 @@ function ExperienceTab() {
                     <Input
                       {...register(`json.experience.${index}.location`)}
                       placeholder="Ex. San Francisco, CA"
-                      className="bg-background"
                     />
                     <FieldError errors={[errors.json?.experience?.[index]?.location]} />
                   </Field>
@@ -497,7 +475,6 @@ function EducationTab() {
                     <Input
                       {...register(`json.education.${index}.degree`)}
                       placeholder="Ex. Bachelor of Science"
-                      className="bg-background"
                       tabIndex={0}
                     />
                     <FieldError errors={[errors.json?.education?.[index]?.degree]} />
@@ -507,7 +484,6 @@ function EducationTab() {
                     <Input
                       {...register(`json.education.${index}.field`)}
                       placeholder="Ex. Computer Science"
-                      className="bg-background"
                     />
                     <FieldError errors={[errors.json?.education?.[index]?.field]} />
                   </Field>
@@ -518,7 +494,6 @@ function EducationTab() {
                     <Input
                       {...register(`json.education.${index}.institution`)}
                       placeholder="Ex. Stanford University"
-                      className="bg-background"
                     />
                     <FieldError errors={[errors.json?.education?.[index]?.institution]} />
                   </Field>
@@ -527,7 +502,6 @@ function EducationTab() {
                     <Input
                       {...register(`json.education.${index}.specialRemark`)}
                       placeholder="3.75/4 or 9/10"
-                      className="bg-background"
                     />
                     <FieldDescription>
                       Mention only if 3.75/4+ or 9/10+; drop it once you have real full-time
@@ -594,7 +568,6 @@ function ProjectsTab() {
                   <Input
                     {...register(`json.projects.${index}.title`)}
                     placeholder="Ex. Software Engineer"
-                    className="bg-background"
                   />
                   <FieldError errors={[errors.json?.projects?.[index]?.title]} />
                 </Field>
@@ -630,7 +603,6 @@ function ProjectsTab() {
                   <Input
                     {...register(`json.projects.${index}.url`)}
                     placeholder="Ex. https://github.com/user/project"
-                    className="bg-background"
                   />
                   <FieldError errors={[errors.json?.projects?.[index]?.url]} />
                 </Field>
@@ -772,7 +744,7 @@ export function ResumeForm({ type, data, id, mutate }: ResumeFormProps) {
       <form
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
         onSubmit={handleSubmit(onSubmit)}
-        className="flex flex-col gap-6 grow overflow-hidden"
+        className="flex flex-col gap-6 grow"
       >
         <FieldGroup className="sm:grid-cols-3 grid gap-4">
           <Field>
@@ -820,7 +792,7 @@ export function ResumeForm({ type, data, id, mutate }: ResumeFormProps) {
             <SummaryTab />
           </TabsContent>
         </Tabs>
-        <div className="flex justify-between self-end sticky bottom-0 py-4 z-10 w-full after:content-[''] after:w-[calc(100%+24px)] after:bg-background after:absolute after:-left-3 after:h-full after:top-0 after:z-[-1]">
+        <div className="flex justify-between self-end sticky border boder-t-border bottom-0 py-4 z-10 w-full after:content-[''] after:w-[calc(100%+24px)] after:bg-background after:absolute after:-left-3 after:h-full after:top-0 after:z-[-1]">
           <div />
           <div className="flex gap-2 items-center">
             {isSubmitting && <Spinner className="size-4" />}

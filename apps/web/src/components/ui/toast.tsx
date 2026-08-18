@@ -1,4 +1,3 @@
-/* eslint-disable react-refresh/only-export-components */
 import { Toast as ToastPrimitive } from '@base-ui/react/toast';
 import {
   CircleCheckIcon,
@@ -14,8 +13,6 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 const toast = ToastPrimitive.createToastManager();
-type ToastItem = ReturnType<typeof ToastPrimitive.useToastManager>['toasts'][number];
-type ToastType = ToastItem['type'];
 
 function ToastProvider({ ...props }: ToastPrimitive.Provider.Props) {
   return <ToastPrimitive.Provider {...props} />;
@@ -50,8 +47,8 @@ function Toast({ className, ...props }: ToastPrimitive.Root.Props) {
         'data-expanded:h-(--toast-height) data-expanded:[transform:translateX(var(--toast-swipe-movement-x))_translateY(var(--offset-y))]',
         'data-limited:opacity-0 data-starting-style:[transform:translateY(150%)]',
         '[&[data-ending-style]:not([data-limited]):not([data-swipe-direction])]:[transform:translateY(150%)]',
-        'data-ending-style:data-[swipe-direction=down]:transform-[translateY(calc(var(--toast-swipe-movement-y)+150%))]',
-        'data-ending-style:data-[swipe-direction=left]:transform-[translateX(calc(var(--toast-swipe-movement-x)-150%))_translateY(var(--offset-y))]',
+        'data-ending-style:data-[swipe-direction=down]:[transform:translateY(calc(var(--toast-swipe-movement-y)+150%))]',
+        'data-ending-style:data-[swipe-direction=left]:[transform:translateX(calc(var(--toast-swipe-movement-x)-150%))_translateY(var(--offset-y))]',
         'data-ending-style:data-[swipe-direction=right]:[transform:translateX(calc(var(--toast-swipe-movement-x)+150%))_translateY(var(--offset-y))]',
         'data-ending-style:data-[swipe-direction=up]:[transform:translateY(calc(var(--toast-swipe-movement-y)-150%))]',
         'data-expanded:data-ending-style:data-[swipe-direction=down]:[transform:translateY(calc(var(--toast-swipe-movement-y)+150%))]',
@@ -135,7 +132,7 @@ function ToastClose({
   );
 }
 
-function ToastIcon({ type }: { type: ToastType }) {
+function ToastIcon({ type }: { type: string | undefined }) {
   let icon: React.ReactNode = null;
 
   if (type === 'success') {

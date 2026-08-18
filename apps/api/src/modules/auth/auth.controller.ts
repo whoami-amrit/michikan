@@ -1,5 +1,7 @@
 import { AllowUnverified } from '@common/decorators/allow-unverified.decorator';
+import { CurrentUser } from '@common/decorators/current-user.decorator';
 import { Public } from '@common/decorators/public.decorator';
+import { type IJwtAccessPayload } from '@common/types/jwt-payload.interface';
 import {
   Body,
   Controller,
@@ -8,26 +10,25 @@ import {
   HttpCode,
   HttpStatus,
   Post,
-  Query,
   Req,
   Res,
 } from '@nestjs/common';
 import type { Request, Response } from 'express';
 import { createZodDto } from 'nestjs-zod';
-import { IUserResponse, LoginSchema, SignupSchema } from 'shared';
+import { IUserResponse, LoginSchema, SignupSchema, VerificationOtpSchema } from 'shared';
 
 import { AuthService } from './auth.service';
-import { VERIFY_EMAIL_PATH } from './constants';
 
 class LoginDto extends createZodDto(LoginSchema) {}
 class SignupDto extends createZodDto(SignupSchema) {}
+class VerificationOtpDto extends createZodDto(VerificationOtpSchema) {}
 
-@Public()
 @AllowUnverified()
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  @Public()
   @Post('signup')
   @HttpCode(HttpStatus.CREATED)
   async signup(
@@ -45,6 +46,7 @@ export class AuthController {
     };
   }
 
+  @Public()
   @Post('login')
   @HttpCode(HttpStatus.NO_CONTENT)
   login(
@@ -56,16 +58,28 @@ export class AuthController {
     return this.authService.login(loginDto, req, res);
   }
 
+  @Public()
   @Get('refresh')
   @HttpCode(HttpStatus.NO_CONTENT)
   refresh(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
     return this.authService.refresh(req, res);
   }
 
-  @Post(VERIFY_EMAIL_PATH)
+  @Post('resend-otp')
   @HttpCode(HttpStatus.NO_CONTENT)
-  async verifyEmail(@Query('token') verificationToken: string, @Req() req: Request) {
-    await this.authService.verifyEmail(verificationToken, req);
+  resendOtp(@CurrentUser() user: IJwtAccessPayload) {
+    return this.authService.resendOtp(user.sub);
+  }
+
+  @Post('verify-otp')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  verifyOtp(
+    @CurrentUser() user: IJwtAccessPayload,
+    @Body() body: VerificationOtpDto,
+    req: Request,
+    res: Response,
+  ) {
+    return this.authService.verifyOtp(user.sub, body.otp, req, res);
   }
 
   @Delete('logout')
