@@ -80,7 +80,6 @@ function DownloadButton({ id }: { id: string }) {
 
   return (
     <Button
-      variant="outline"
       // eslint-disable-next-line @typescript-eslint/no-misused-promises
       onClick={async () => {
         try {
@@ -179,9 +178,7 @@ export function ResumeDetailPage() {
 
   return (
     <div className="flex flex-col w-full items-center">
-      <AppHeader crumbs={crumbs}>
-        <DownloadButton id={id!} />
-      </AppHeader>
+      <AppHeader crumbs={crumbs} />
 
       {error && (
         <Empty>
@@ -228,14 +225,18 @@ export function ResumeDetailPage() {
       {!error && !isLoading && (
         <div className="flex flex-col grow max-w-2xl lg:px-0 px-6 w-full">
           <Tabs className="gap-8 grow">
-            <TabsList>
-              <TabsTrigger value="analysis">
-                <BrainCircuit /> Analysis
-              </TabsTrigger>
-              <TabsTrigger value="edit">
-                <PencilIcon /> Edit
-              </TabsTrigger>
-            </TabsList>
+            <div className="flex justify-between">
+              <TabsList>
+                <TabsTrigger value="analysis">
+                  <BrainCircuit /> Analysis
+                </TabsTrigger>
+                <TabsTrigger value="edit">
+                  <PencilIcon /> Edit
+                </TabsTrigger>
+              </TabsList>
+              <DownloadButton id={id!} />
+            </div>
+
             <TabsContent value="analysis" className="typeset pb-8">
               <SummarySection resume={detail} />
             </TabsContent>

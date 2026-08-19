@@ -1,12 +1,13 @@
 import { REGEXP_ONLY_DIGITS } from 'input-otp';
 import { RefreshCwIcon } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { SubmitEventHandler, useEffect, useRef, useState } from 'react';
 import { Navigate, useNavigate } from 'react-router';
 import { IUserResponse } from 'shared';
 import useSWR from 'swr';
 import useSWRMutation from 'swr/mutation';
 
-import authBg from '@/assets/auth-bg.webp';
+import authBgDark from '@/assets/auth-bg-dark.webp';
+import authBgLight from '@/assets/auth-bg-light.webp';
 import MichikanIcon from '@/assets/michikan-icon.svg?react';
 import { LoginForm } from '@/components/login-form';
 import { SignupForm } from '@/components/signup-form';
@@ -72,7 +73,7 @@ export const VerifyEmailPage = () => {
     await api.post(url, { json: { otp: otpValue } });
   });
 
-  const onSubmit = (event: React.FormEvent) => {
+  const onSubmit: SubmitEventHandler<HTMLFormElement> = (event) => {
     event.preventDefault();
     trigger()
       .then(() => navigate('/resumes'))
@@ -218,9 +219,14 @@ export function AuthFormPage({ type }: { type: 'login' | 'signup' }) {
       </div>
       <div className="relative hidden bg-muted lg:block">
         <img
-          src={authBg}
+          src={authBgDark}
           alt="Image"
-          className="absolute inset-0 h-full w-full object-cover dark:brightness-50"
+          className="absolute inset-0 h-full w-full object-cover hidden dark:block"
+        />
+        <img
+          src={authBgLight}
+          alt="Image"
+          className="absolute inset-0 h-full w-full object-cover dark:hidden"
         />
       </div>
     </div>

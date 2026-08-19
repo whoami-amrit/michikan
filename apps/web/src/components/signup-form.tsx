@@ -23,11 +23,7 @@ function PersonalInfo({ errors }: { errors: FieldErrors<ISignupDto> }) {
       </Field>
       <Field>
         <FieldLabel htmlFor="email">Email</FieldLabel>
-        <Input
-          {...register('userInfo.email')}
-          placeholder="me@example.com"
-          className="bg-background"
-        />
+        <Input {...register('userInfo.email')} placeholder="me@example.com" />
         {errors.userInfo?.email ? (
           <FieldError errors={[errors.userInfo.email]} />
         ) : (

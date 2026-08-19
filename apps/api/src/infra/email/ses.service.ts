@@ -3,6 +3,8 @@ import awsConfig from '@config/aws.config';
 import { Inject, Injectable } from '@nestjs/common';
 import type { ConfigType } from '@nestjs/config';
 
+import { buildOtpVerificationEmail } from './templates/otp-verification.template';
+
 @Injectable()
 export class SesService {
   constructor(
@@ -11,19 +13,24 @@ export class SesService {
     private readonly config: ConfigType<typeof awsConfig>,
   ) {}
 
-  async sendVerificationOtp(to: string, otp: number) {
+  async sendVerificationOtp(to: string, otp: number, expiryMinutes: number) {
+    const { subject, html, text } = buildOtpVerificationEmail(otp, expiryMinutes);
+
     const command = new SendEmailCommand({
       Destination: {
         ToAddresses: [to],
       },
       Message: {
         Body: {
+          Html: {
+            Data: html,
+          },
           Text: {
-            Data: `Please enter the following otp to verify your email address: ${otp}`,
+            Data: text,
           },
         },
         Subject: {
-          Data: 'Email Verification',
+          Data: subject,
         },
       },
       ConfigurationSetName: this.config.sesConfigurationSet,

@@ -111,7 +111,7 @@ export class AuthService {
       },
     });
 
-    await this.SesService.sendVerificationOtp(user.email, otp);
+    await this.SesService.sendVerificationOtp(user.email, otp, OTP_VALIDITY_MS / (60 * 1000));
   }
 
   async resendOtp(userId: User['id']): Promise<void> {

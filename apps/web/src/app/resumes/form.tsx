@@ -149,7 +149,7 @@ function SkillsTab() {
           <code className="inline">Node.js, NestJS, PostgreSQL, Redis</code>
         </FieldDescription>
         <div className="flex justify-end">
-          <Button onClick={() => append({ category: '', skills: '' })}>
+          <Button variant="secondary" onClick={() => append({ category: '', skills: '' })}>
             <PlusIcon />
             Add Category
           </Button>
@@ -214,7 +214,7 @@ function ExperienceTab() {
               STAR method:&nbsp;
               <a
                 href="https://www.levels.fyi/blog/applying-star-method-resumes.html"
-                className="text-primary hover:underline-offset-4 hover:underline"
+                className="text-blue-500 dark:text-blue-400 hover:underline-offset-4 hover:underline"
                 referrerPolicy="no-referrer"
                 target="_blank"
               >
@@ -223,7 +223,7 @@ function ExperienceTab() {
               ,&nbsp;
               <a
                 href="https://resumegenius.com/blog/resume-help/star-method-resume"
-                className="text-primary hover:underline-offset-4 hover:underline"
+                className="text-blue-500 dark:text-blue-400 hover:underline-offset-4 hover:underline"
                 referrerPolicy="no-referrer"
                 target="_blank"
               >
@@ -234,7 +234,7 @@ function ExperienceTab() {
               XYZ method:&nbsp;
               <a
                 href="https://www.inc.com/bill-murphy-jr/google-recruiters-say-these-5-resume-tips-including-x-y-z-formula-will-improve-your-odds-of-getting-hired-at-google.html"
-                className="text-primary hover:underline-offset-4 hover:underline"
+                className="text-blue-500 dark:text-blue-400 hover:underline-offset-4 hover:underline"
                 referrerPolicy="no-referrer"
                 target="_blank"
               >
@@ -243,7 +243,7 @@ function ExperienceTab() {
               , &nbsp;
               <a
                 href="https://elevenrecruiting.com/create-an-effective-resume-xyz-resume-format/"
-                className="text-primary hover:underline-offset-4 hover:underline"
+                className="text-blue-500 dark:text-blue-400 hover:underline-offset-4 hover:underline"
                 referrerPolicy="no-referrer"
                 target="_blank"
               >
@@ -254,7 +254,7 @@ function ExperienceTab() {
               CAR method:&nbsp;
               <a
                 href="https://ca.indeed.com/career-advice/resumes-cover-letters/challenge-action-result-resume"
-                className="text-primary hover:underline-offset-4 hover:underline"
+                className="text-blue-500 dark:text-blue-400 hover:underline-offset-4 hover:underline"
                 referrerPolicy="no-referrer"
                 target="_blank"
               >
@@ -263,7 +263,7 @@ function ExperienceTab() {
               , &nbsp;
               <a
                 href="https://www.topresume.com/career-advice/how-to-get-more-results-with-a-car-resume"
-                className="text-primary hover:underline-offset-4 hover:underline"
+                className="text-blue-500 dark:text-blue-400 hover:underline-offset-4 hover:underline"
                 referrerPolicy="no-referrer"
                 target="_blank"
               >
@@ -278,6 +278,7 @@ function ExperienceTab() {
         </FieldDescription>
         <div className="flex justify-end">
           <Button
+            variant="secondary"
             onClick={() =>
               append({
                 title: '',
@@ -419,6 +420,7 @@ function EducationTab() {
         </FieldDescription>
         <div className="flex justify-end">
           <Button
+            variant="secondary"
             onClick={() =>
               append({
                 degree: '',
@@ -546,6 +548,7 @@ function ProjectsTab() {
         </FieldDescription>
         <div className="flex justify-end">
           <Button
+            variant="secondary"
             onClick={() =>
               append({
                 title: '',
@@ -792,7 +795,7 @@ export function ResumeForm({ type, data, id, mutate }: ResumeFormProps) {
             <SummaryTab />
           </TabsContent>
         </Tabs>
-        <div className="flex justify-between self-end sticky border boder-t-border bottom-0 py-4 z-10 w-full after:content-[''] after:w-[calc(100%+24px)] after:bg-background after:absolute after:-left-3 after:h-full after:top-0 after:z-[-1]">
+        <div className="flex justify-between self-end sticky bottom-0 py-4 z-10 w-full before:content-[''] before:w-[calc(100%+24px)] before:bg-background before:border before:border-t-border before:border-transparent before:absolute before:-left-3 before:h-full before:top-0 before:z-[-1]">
           <div />
           <div className="flex gap-2 items-center">
             {isSubmitting && <Spinner className="size-4" />}
@@ -808,7 +811,11 @@ export function ResumeForm({ type, data, id, mutate }: ResumeFormProps) {
                 Reset
               </Button>
             )}
-            <Button type="submit" disabled={isSubmitting}>
+            <Button
+              variant={type !== 'new' ? 'outline' : 'default'}
+              type="submit"
+              disabled={isSubmitting}
+            >
               {type === 'new' ? 'Save' : 'Update'}
             </Button>
           </div>

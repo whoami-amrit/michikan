@@ -85,16 +85,24 @@ export default function JobsPage() {
           )}
 
           {isLoading && (
-            <div className="flex w-full max-w-sm flex-col gap-2">
-              {Array.from({ length: 5 }).map((_, index) => (
-                <div className="flex gap-4" key={index}>
-                  <Skeleton className="h-4 flex-1" />
-                  <Skeleton className="h-4 w-24" />
-                  <Skeleton className="h-4 w-20" />
-                </div>
-              ))}
+            <div className="flex flex-col gap-6 items-center">
+              <div className="flex w-full">
+                <div className="grow" />
+                <Skeleton className="h-8 w-32" />
+              </div>
+
+              <div className="flex w-full flex-col gap-4">
+                {Array.from({ length: 5 }).map((_, index) => (
+                  <div className="flex gap-4" key={index}>
+                    <Skeleton className="h-6 flex-1" />
+                    <Skeleton className="h-6 w-24" />
+                    <Skeleton className="h-6 w-20" />
+                  </div>
+                ))}
+              </div>
             </div>
           )}
+
           {!!data?.length && (
             <Table>
               <TableHeader>
