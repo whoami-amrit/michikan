@@ -76,8 +76,8 @@ export class AuthController {
   verifyOtp(
     @CurrentUser() user: IJwtAccessPayload,
     @Body() body: VerificationOtpDto,
-    req: Request,
-    res: Response,
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
   ) {
     return this.authService.verifyOtp(user.sub, body.otp, req, res);
   }

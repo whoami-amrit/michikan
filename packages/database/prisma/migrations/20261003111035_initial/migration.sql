@@ -2,7 +2,7 @@
 CREATE TYPE "WorkerStatus" AS ENUM ('IN_PROGRESS', 'COMPLETED', 'FAILED');
 
 -- CreateEnum
-CREATE TYPE "JobStatus" AS ENUM ('NOT_APPLIED', 'APPLIED', 'NOT_SHORTLISTED', 'SHORTLISTED', 'INTERVIEW_ONGOING', 'REJECTED', 'ACCEPTED');
+CREATE TYPE "JobStatus" AS ENUM ('NOT_APPLIED', 'APPLIED', 'SHORTLISTED', 'INTERVIEW_ONGOING', 'REJECTED', 'ACCEPTED');
 
 -- CreateEnum
 CREATE TYPE "Provider" AS ENUM ('GOOGLE', 'GITHUB', 'LOCAL');
@@ -38,14 +38,20 @@ CREATE TABLE "User" (
     "name" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "avatar" TEXT,
-    "yearsOfExperience" TEXT NOT NULL,
-    "preferredWorkSetting" "WorkSetting" NOT NULL,
-    "salaryExpectation" TEXT NOT NULL,
-    "activeResumeUserId" INTEGER,
-    "noClutter" BOOLEAN NOT NULL DEFAULT true,
 
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "VerifyOtp" (
+    "otpHash" TEXT NOT NULL,
+    "userId" INTEGER NOT NULL,
+    "expiresAt" TIMESTAMP(3) NOT NULL,
+    "attempts" INTEGER NOT NULL DEFAULT 0,
+    "firstAttemptAt" TIMESTAMP(3),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "VerifyOtp_pkey" PRIMARY KEY ("userId")
 );
 
 -- CreateTable
@@ -143,6 +149,9 @@ CREATE UNIQUE INDEX "Session_tokenHash_key" ON "Session"("tokenHash");
 
 -- AddForeignKey
 ALTER TABLE "Resume" ADD CONSTRAINT "Resume_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "VerifyOtp" ADD CONSTRAINT "VerifyOtp_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Account" ADD CONSTRAINT "Account_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

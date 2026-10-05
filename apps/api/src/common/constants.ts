@@ -14,6 +14,9 @@ export const JOB_FIT_ANALYZER_JOB_NAME = 'job-fit-analyzer' as const;
 export const RESUME_ANALYZER_JOB_NAME = 'resume-analyzer' as const;
 export const JOB_AT_A_GLANCE_JOB_NAME = 'job-at-a-glance' as const;
 
+export const EMAIL_QUEUE_NAME = 'email';
+export const OTP_EMAIL_JOB_NAME = 'otp-email';
+
 export const COMMON_BULL_QUEUE_OPTIONS: Omit<RegisterQueueOptions, 'name'> = {
   defaultJobOptions: {
     removeOnComplete: { count: 100, age: 24 * 3600 },

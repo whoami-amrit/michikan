@@ -1,4 +1,6 @@
+import { EMAIL_QUEUE_NAME, OTP_EMAIL_JOB_NAME } from '@common/constants';
 import appConfig from '@config/app.config';
+import { InjectQueue } from '@nestjs/bullmq';
 import {
   HttpException,
   HttpStatus,
@@ -12,6 +14,7 @@ import {
 import type { ConfigType } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import bcrypt from 'bcrypt';
+import { Queue } from 'bullmq';
 import crypto from 'crypto';
 import type { Session, User } from 'db';
 import { Provider } from 'db';
@@ -20,7 +23,6 @@ import { ILoginDto, ISignupDto } from 'shared';
 
 import { IJwtAccessPayload } from '../../common/types/jwt-payload.interface';
 import { PrismaService } from '../../infra/database/prisma.service';
-import { SesService } from '../../infra/email/ses.service';
 import {
   ACCESS_TOKEN_COOKIE_NAME,
   BCRYPT_SALT_ROUNDS,
@@ -30,7 +32,7 @@ import {
   REFRESH_TOKEN_COOKIE_NAME,
   TOKEN_VALIDITY_MAP,
 } from './constants';
-import { IJwtRefreshPayload, JwtTokenType } from './types';
+import { IJwtRefreshPayload, IOtpEmailJobData, JwtTokenType } from './types';
 
 @Injectable()
 export class AuthService {
@@ -39,7 +41,7 @@ export class AuthService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
-    private readonly SesService: SesService,
+    @InjectQueue(EMAIL_QUEUE_NAME) private readonly emailQueue: Queue<IOtpEmailJobData>,
     @Inject(appConfig.KEY)
     private readonly config: ConfigType<typeof appConfig>,
   ) {}
@@ -111,7 +113,11 @@ export class AuthService {
       },
     });
 
-    await this.SesService.sendVerificationOtp(user.email, otp, OTP_VALIDITY_MS / (60 * 1000));
+    await this.emailQueue.add(OTP_EMAIL_JOB_NAME, {
+      to: user.email,
+      otp,
+      expiryMinutes: OTP_VALIDITY_MS / (60 * 1000),
+    });
   }
 
   async resendOtp(userId: User['id']): Promise<void> {
@@ -370,8 +376,8 @@ export class AuthService {
 
   private extractSessionMetadata(req: Request): Pick<Session, 'ip' | 'userAgent'> {
     return {
-      ip: req.ip ?? req.socket.remoteAddress ?? 'unknown',
-      userAgent: req.headers['user-agent'] ?? 'unknown',
+      ip: req?.ip ?? req?.socket?.remoteAddress ?? 'unknown',
+      userAgent: req?.headers['user-agent'] ?? 'unknown',
     };
   }
 }
