@@ -113,7 +113,8 @@ if [ ! -d "${APP_HOME}/.TinyTeX" ]; then
   su -s /bin/bash "${APP_USER}" -c 'cd ~ && wget -qO- "https://tinytex.yihui.org/install-bin-unix.sh" | sh'
 fi
 TEX_BIN="$(ls -d "${APP_HOME}"/.TinyTeX/bin/* | head -1)"
-su -s /bin/bash "${APP_USER}" -c "'${TEX_BIN}/tlmgr' install relsize carlisle fontaxes enumitem titlesec xcharter xstring"
+# tlmgr refuses to install until it has updated itself (the TinyTeX bundle lags the repo)
+su -s /bin/bash "${APP_USER}" -c "cd ~ && '${TEX_BIN}/tlmgr' update --self && '${TEX_BIN}/tlmgr' install relsize carlisle fontaxes enumitem titlesec xcharter xstring"
 
 # Launcher: loads .env then execs node (OpenRC has no EnvironmentFile)
 cat > /usr/local/bin/michikan-run <<EOF
