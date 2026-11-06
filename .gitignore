@@ -92,3 +92,6 @@ next-env.d.ts
 .turbo
 .wrangler
 *.pem
+
+# TLS private keys
+*.key

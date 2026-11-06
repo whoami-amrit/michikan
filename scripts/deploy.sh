@@ -167,44 +167,59 @@ cat > /etc/logrotate.d/michikan <<'EOF'
 }
 EOF
 
-# Nginx: serve the SPA, proxy /api/ (HTTP only for now)
+# Nginx: serve the SPA, proxy /api/. TLS terminates here using a Cloudflare Origin CA cert
+# (Cloudflare SSL mode "Full (strict)"). The cert/key are placed manually, never by this script.
+CERT=/etc/nginx/certs/origin.pem
+KEY=/etc/nginx/certs/origin.key
+if [ ! -f "$CERT" ] || [ ! -f "$KEY" ]; then
+  echo "ERROR: $CERT and $KEY must exist on the server (Cloudflare Origin CA cert + key)." >&2
+  exit 1
+fi
+chmod 600 "$KEY"
 mkdir -p "${WEB_ROOT}"
 rm -f /etc/nginx/http.d/default.conf
+cat > /etc/nginx/michikan-app.inc <<EOF
+root ${WEB_ROOT};
+index index.html;
+client_max_body_size 10m;
+
+location / {
+    try_files \$uri \$uri/ /index.html;
+}
+
+location /api/ {
+    proxy_pass http://127.0.0.1:${API_PORT}/api/;
+    proxy_set_header Host \$host;
+    proxy_set_header X-Real-IP \$remote_addr;
+    proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto \$scheme;
+}
+
+location /assets/ {
+    expires 1y;
+    add_header Cache-Control "public, no-transform";
+}
+EOF
 cat > /etc/nginx/http.d/michikan.conf <<EOF
 server {
-    listen 80 default_server;
+    listen 443 ssl default_server;
     server_name _;
-    root ${WEB_ROOT};
-    index index.html;
-    client_max_body_size 10m;
-
-    location / {
-        try_files \$uri \$uri/ /index.html;
-    }
-
-    location /api/ {
-        proxy_pass http://127.0.0.1:${API_PORT}/api/;
-        proxy_set_header Host \$host;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto \$scheme;
-    }
-
-    location /assets/ {
-        expires 1y;
-        add_header Cache-Control "public, no-transform";
-    }
+    ssl_certificate     ${CERT};
+    ssl_certificate_key ${KEY};
+    ssl_protocols TLSv1.2 TLSv1.3;
+    include /etc/nginx/michikan-app.inc;
 }
 EOF
 nginx -t
 rc-update add nginx default >/dev/null
 rc-service nginx restart
 
-# Firewall: SSH + HTTP only. Rules are added before enabling so we never lock ourselves out.
+# Firewall: SSH + HTTPS only (Cloudflare Full strict; no port 80). Rules are added before enabling so we never lock ourselves out.
 # Non-fatal: the Linode kernel may lack netfilter modules; then use Linode Cloud Firewall instead.
-if ufw allow 22/tcp >/dev/null && ufw allow 80/tcp >/dev/null && ufw --force enable >/dev/null 2>&1; then
+if ufw allow 22/tcp >/dev/null && ufw allow 443/tcp >/dev/null && ufw --force enable >/dev/null 2>&1; then
   rc-update add ufw default >/dev/null 2>&1 || true
-  echo "ufw enabled (22, 80)"
+  ufw delete allow 80/tcp >/dev/null 2>&1 || true
+  echo "ufw enabled (22, 443)"
 else
   echo "WARNING: could not enable ufw; use a Linode Cloud Firewall to restrict ports." >&2
 fi
@@ -259,13 +274,28 @@ check "redis ping + noeviction" remote "redis-cli ping | grep -q PONG && redis-c
 check "api service running"     remote "rc-service michikan-api status | grep -q started"
 check "worker service running"  remote "rc-service michikan-worker status | grep -q started"
 check "bcrypt loads (musl)"     remote_app "cd ${APP_DIR}/apps/api && node -e \"require('bcrypt')\""
-check "pdflatex test compile"   remote_app "bash -c 'set -e; export PATH=\$(ls -d ~/.TinyTeX/bin/* | head -1):\$PATH; d=\$(mktemp -d); cd \$d; printf \"\\\\documentclass{article}\\\\usepackage{enumitem,titlesec,XCharter,relsize,xstring}\\\\begin{document}ok\\\\end{document}\" > t.tex; pdflatex -interaction=nonstopmode t.tex >/dev/null; test -s t.pdf'"
-check "GET / (nginx, SPA)"      curl -fsS --max-time 10 "http://${HOST_ADDR}/"
-check "GET /api/health (proxy)" curl -fsS --max-time 10 "http://${HOST_ADDR}/api/health"
+tex_test() {
+  remote_app bash -s <<'EOF'
+set -e
+export PATH="$(ls -d ~/.TinyTeX/bin/* | head -1):$PATH"
+d="$(mktemp -d)"; cd "$d"
+cat > t.tex <<'TEX'
+\documentclass{article}
+\usepackage{enumitem,titlesec,XCharter,relsize,xstring}
+\begin{document}ok\end{document}
+TEX
+pdflatex -interaction=nonstopmode t.tex >/dev/null
+test -s t.pdf
+EOF
+}
+check "pdflatex test compile"      tex_test
+check "GET / on server (nginx)"    remote "curl -fsSk -m 10 https://127.0.0.1/"
+check "GET /api/v1/health on server (proxy)" remote "curl -fsSk -m 10 https://127.0.0.1/api/v1/health"
+check "GET / from here (public :443)" curl -fsSk --max-time 10 "https://${HOST_ADDR}/"
 
 echo
 if [ "$FAIL" -eq 0 ]; then
-  log "Done. Deployed ${SHA:0:8} -> http://${HOST_ADDR}/"
+  log "Done. Deployed ${SHA:0:8} -> https://${HOST_ADDR}/"
 else
   log "Deployed ${SHA:0:8}, but some checks failed (see above)."
 fi
