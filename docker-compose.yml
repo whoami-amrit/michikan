@@ -1,17 +1,4 @@
 services:
-  db:
-    image: postgres:18.4
-    container_name: michi_db
-    restart: always
-    environment:
-      POSTGRES_USER: ${DB_ADMIN}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB: ${DB_NAME}
-    ports:
-      - '5432:5432'
-    volumes:
-      - postgres_data:/var/lib/postgresql
-
   redis:
     image: valkey/valkey:9
     container_name: michi_valkey
@@ -65,5 +52,4 @@ services:
     restart: always
 
 volumes:
-  postgres_data:
   valkey_data:

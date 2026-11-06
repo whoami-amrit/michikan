@@ -54,7 +54,7 @@ pnpm --filter db db:studio         # prisma studio
 
 All `dotenv-run --` prefixed scripts load env vars from the root `.env` (see `.env.example` for required keys: DB, JWT, Valkey, AWS S3/SES, `GEMINI_API_KEY`).
 
-Local infra: `docker compose up -d` brings up Postgres 18 and Valkey (Redis-compatible) for local dev. The same compose file also defines prebuilt `web`/`api`/`workers` service images used in prod deploys (see `scripts/deploy.sh`, `Dockerfile` multi-stage targets `web`/`api`/`workers`).
+Database: hosted Supabase Postgres (`DB_URL` = session pooler for runtime, `DIRECT_URL` = direct connection for Prisma migrations); there is no local Postgres. Local dev uses a natively installed Redis/Valkey (no Docker). `docker-compose.yml` only defines prebuilt `web`/`api`/`workers` service images used in prod deploys (see `scripts/deploy.sh`, `Dockerfile` multi-stage targets `web`/`api`/`workers`).
 
 ## Backend architecture (`apps/api`)
 
