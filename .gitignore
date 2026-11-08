@@ -95,3 +95,20 @@ next-env.d.ts
 
 # TLS private keys
 *.key
+
+# AI tooling
+.agents/
+.claude/
+.mcp.json
+skills-lock.json
+**/CLAUDE.md
+**/AGENTS.md
+**/GEMINI.md
+.cursor/
+.cursorrules
+.windsurf/
+.codex/
+.gemini/
+.aider*
+.clinerules
+.github/copilot-instructions.md
