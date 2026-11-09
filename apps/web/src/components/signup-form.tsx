@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { toast } from '@/components/ui/toast';
-import { API_PREFIX, getErrorToastContent } from '@/lib/utils';
+import { API_PREFIX, getErrorToastContent, resetCurrentUser } from '@/lib/utils';
 
 function PersonalInfo({ errors }: { errors: FieldErrors<ISignupDto> }) {
   const { register } = useFormContext<ISignupDto>();
@@ -62,7 +62,8 @@ export function SignupForm() {
   const onSubmit: SubmitHandler<ISignupDto> = async (data) => {
     try {
       await ky.post(`${API_PREFIX}/auth/signup`, { json: data });
-      await navigate('/resumes');
+      await resetCurrentUser();
+      await navigate('/verify-email');
     } catch (error) {
       toast.add({
         type: 'error',

@@ -1,6 +1,7 @@
 export interface IJwtRefreshPayload {
   sub: number;
   sid: string;
+  type: 'refresh';
 }
 
 export type JwtTokenType = 'access' | 'refresh';

@@ -1,5 +1,7 @@
 const ICON_URL = 'https://www.michikan.dev/icon-email.png';
 const BRAND_COLOR = '#8c52ff';
+const HEADING_FONT =
+  "'IBM Plex Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif";
 
 interface OtpVerificationEmailContent {
   subject: string;
@@ -12,6 +14,8 @@ export function buildOtpVerificationEmail(
   expiryMinutes: number,
 ): OtpVerificationEmailContent {
   const subject = 'Your Michikan verification code';
+
+  const copyright = `© ${new Date().getFullYear()} Amrit. All rights reserved.`;
 
   const html = `
 <!doctype html>
@@ -28,7 +32,14 @@ export function buildOtpVerificationEmail(
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:480px;background-color:#ffffff;border-radius:12px;overflow:hidden;">
             <tr>
               <td align="center" style="padding:32px 32px 8px 32px;">
-                <img src="${ICON_URL}" alt="Michikan" width="40" height="40" style="display:block;" />
+                <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto;">
+                  <tr>
+                    <td style="padding:0 8px 0 0;vertical-align:middle;">
+                      <img src="${ICON_URL}" alt="" width="28" height="28" style="display:block;border:0;" />
+                    </td>
+                    <td style="vertical-align:middle;font-family:${HEADING_FONT};font-size:18px;line-height:28px;font-weight:600;letter-spacing:-0.025em;color:#111111;">Michikan</td>
+                  </tr>
+                </table>
               </td>
             </tr>
             <tr>
@@ -54,7 +65,7 @@ export function buildOtpVerificationEmail(
             </tr>
             <tr>
               <td align="center" style="padding:32px 32px 24px 32px;">
-                <p style="margin:0;font-size:12px;line-height:18px;color:#aaaaaa;">Michikan</p>
+                <p style="margin:0;font-size:12px;line-height:18px;color:#aaaaaa;">${copyright}</p>
               </td>
             </tr>
           </table>
@@ -72,6 +83,8 @@ export function buildOtpVerificationEmail(
     '',
     `This code expires in ${expiryMinutes} minutes.`,
     "If you didn't request this, you can ignore this email.",
+    '',
+    copyright,
   ].join('\n');
 
   return { subject, html, text };

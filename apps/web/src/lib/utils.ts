@@ -1,6 +1,7 @@
 import { type ClassValue, clsx } from 'clsx';
 import ky, { isHTTPError } from 'ky';
 import type { IProblemDetails } from 'shared';
+import { mutate } from 'swr';
 import { twMerge } from 'tailwind-merge';
 
 import { HttpStatus } from './constants';
@@ -35,6 +36,26 @@ export const getErrorToastContent = (
   return { title, description };
 };
 
+export const CURRENT_USER_KEY = '/users/me';
+
+export const resetCurrentUser = () => mutate(CURRENT_USER_KEY, undefined, { revalidate: false });
+
+// Concurrent 401s share one refresh request instead of each firing their own
+// (which would rotate the refresh token several times in parallel).
+let refreshInFlight: Promise<unknown> | null = null;
+
+const refreshSession = (): Promise<unknown> => {
+  if (refreshInFlight) {
+    return refreshInFlight;
+  }
+
+  refreshInFlight = ky.get(`${API_PREFIX}/auth/refresh`).finally(() => {
+    refreshInFlight = null;
+  });
+
+  return refreshInFlight;
+};
+
 export const api = ky.create({
   prefix: API_PREFIX,
   hooks: {
@@ -42,7 +63,7 @@ export const api = ky.create({
       async ({ response }) => {
         if (response.status === HttpStatus.UNAUTHORIZED) {
           try {
-            await ky.get(`${API_PREFIX}/auth/refresh`);
+            await refreshSession();
 
             return ky.retry();
           } catch (refreshError) {

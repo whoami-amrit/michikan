@@ -22,7 +22,7 @@ import {
 } from '@/components/ui/sidebar';
 import { useMainContext } from '@/lib/contexts/main/hook';
 import { useUserContext } from '@/lib/contexts/user/hook';
-import { api } from '@/lib/utils';
+import { api, resetCurrentUser } from '@/lib/utils';
 
 export function NavUser() {
   const { isMobile } = useSidebar();
@@ -90,6 +90,7 @@ export function NavUser() {
               onClick={() => {
                 api
                   .delete('auth/logout')
+                  .then(() => resetCurrentUser())
                   .then(() => {
                     void navigate('/login');
                   })

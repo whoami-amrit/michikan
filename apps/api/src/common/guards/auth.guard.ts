@@ -41,7 +41,13 @@ export class AuthGuard implements CanActivate {
     ]);
 
     try {
-      req.user = this.jwt.verify<IJwtAccessPayload>(token);
+      const payload = this.jwt.verify<IJwtAccessPayload>(token);
+
+      if (payload.type !== 'access') {
+        throw new UnauthorizedException();
+      }
+
+      req.user = payload;
 
       if (!allowUnverified && !req.user.verified) {
         throw new ForbiddenException('Email verification required');

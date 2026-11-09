@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { toast } from '@/components/ui/toast';
-import { API_PREFIX, getErrorToastContent } from '@/lib/utils';
+import { API_PREFIX, getErrorToastContent, resetCurrentUser } from '@/lib/utils';
 
 export function LoginForm() {
   const navigate = useNavigate();
@@ -34,6 +34,7 @@ export function LoginForm() {
       // and redirect to /login; so we should use ky directly here otherwise it
       // will cause a page reload
       await ky.post(`${API_PREFIX}/auth/login`, { json: data });
+      await resetCurrentUser();
       await navigate('/resumes');
     } catch (error) {
       toast.add({

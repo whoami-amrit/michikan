@@ -5,7 +5,7 @@ import useSWR from 'swr';
 
 import { Spinner } from '@/components/ui/spinner';
 import { HttpStatus } from '@/lib/constants';
-import { api } from '@/lib/utils';
+import { api, CURRENT_USER_KEY } from '@/lib/utils';
 
 import { userContext } from './hook';
 
@@ -14,8 +14,8 @@ export const UserContextProvider = ({ children }: { children: React.ReactNode })
     isLoading,
     data: user,
     error,
-  } = useSWR<IUserResponse, Error>('/users/me', {
-    fetcher: async () => await api.get('/users/me').json<IUserResponse>(),
+  } = useSWR<IUserResponse, Error>(CURRENT_USER_KEY, {
+    fetcher: async () => await api.get(CURRENT_USER_KEY).json<IUserResponse>(),
   });
 
   if (isLoading) {

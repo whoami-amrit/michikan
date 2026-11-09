@@ -30,7 +30,7 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import { Spinner } from '@/components/ui/spinner';
 import { toast } from '@/components/ui/toast';
-import { api, getErrorToastContent } from '@/lib/utils';
+import { api, CURRENT_USER_KEY, getErrorToastContent, resetCurrentUser } from '@/lib/utils';
 
 const RESEND_OTP_COOLDOWN = 60;
 
@@ -39,9 +39,12 @@ export const VerifyEmailPage = () => {
   const [resendTime, setResendTime] = useState(RESEND_OTP_COOLDOWN);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   // note: can't use useUserContext here, out of scope
-  const { isLoading: isUserDetailLoading, data: user } = useSWR<IUserResponse, Error>('/users/me', {
-    fetcher: async () => await api.get('/users/me').json<IUserResponse>(),
-  });
+  const { isLoading: isUserDetailLoading, data: user } = useSWR<IUserResponse, Error>(
+    CURRENT_USER_KEY,
+    {
+      fetcher: async () => await api.get(CURRENT_USER_KEY).json<IUserResponse>(),
+    },
+  );
 
   const navigate = useNavigate();
 
@@ -76,6 +79,7 @@ export const VerifyEmailPage = () => {
   const onSubmit: SubmitEventHandler<HTMLFormElement> = (event) => {
     event.preventDefault();
     trigger()
+      .then(() => resetCurrentUser())
       .then(() => navigate('/resumes'))
       .catch((error) => {
         toast.add({

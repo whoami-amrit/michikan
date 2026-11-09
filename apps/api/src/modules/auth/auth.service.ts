@@ -32,7 +32,7 @@ import {
   REFRESH_TOKEN_COOKIE_NAME,
   TOKEN_VALIDITY_MAP,
 } from './constants';
-import { IJwtRefreshPayload, IOtpEmailJobData, JwtTokenType } from './types';
+import { IJwtRefreshPayload, IOtpEmailJobData } from './types';
 
 @Injectable()
 export class AuthService {
@@ -145,9 +145,12 @@ export class AuthService {
       },
     });
 
+    const refreshPayload = await this.decodeRefreshToken(req.cookies?.[REFRESH_TOKEN_COOKIE_NAME]);
+    const sessionId = refreshPayload?.sub === userId ? refreshPayload.sid : crypto.randomUUID();
+
     await this.getTokensAndUpsertSession(
       account.userId,
-      crypto.randomUUID(),
+      sessionId,
       !!account.emailVerified,
       account.provider,
       req,
@@ -237,6 +240,9 @@ export class AuthService {
     }
 
     const payload = await this.verifyToken<IJwtRefreshPayload>(refreshToken, req);
+    if (payload.type !== 'refresh') {
+      throw new UnauthorizedException('Token is invalid or expired');
+    }
 
     const session = await this.prisma.session.findUnique({
       where: { id: payload.sid, userId: payload.sub },
@@ -315,29 +321,28 @@ export class AuthService {
   }
 
   private async getTokens(userId: User['id'], sessionId: string, verified: boolean) {
-    const accessToken = await this.getSignedToken<IJwtAccessPayload>('access', {
+    const accessToken = await this.getSignedToken({
       sub: userId,
       plan: 'free',
       verified,
+      type: 'access',
     });
 
-    const refreshToken = await this.getSignedToken<IJwtRefreshPayload>('refresh', {
+    const refreshToken = await this.getSignedToken({
       sub: userId,
       sid: sessionId,
+      type: 'refresh',
     });
     const refreshTokenHash = await bcrypt.hash(refreshToken, BCRYPT_SALT_ROUNDS);
 
     return { accessToken, refreshToken, refreshTokenHash };
   }
 
-  private async getSignedToken<T extends object>(type: JwtTokenType, payload: T) {
-    return this.jwtService.signAsync(
-      { ...payload, type },
-      {
-        secret: this.config.jwtSecret,
-        expiresIn: `${TOKEN_VALIDITY_MAP[type]}Ms`,
-      },
-    );
+  private async getSignedToken(payload: IJwtAccessPayload | IJwtRefreshPayload) {
+    return this.jwtService.signAsync(payload, {
+      secret: this.config.jwtSecret,
+      expiresIn: `${TOKEN_VALIDITY_MAP[payload.type]}Ms`,
+    });
   }
 
   private async verifyToken<T extends object>(token: string, req: Request) {
@@ -352,6 +357,21 @@ export class AuthService {
       );
 
       throw new UnauthorizedException('Token is invalid or expired');
+    }
+  }
+
+  private async decodeRefreshToken(token: unknown): Promise<IJwtRefreshPayload | null> {
+    if (typeof token !== 'string' || !token) {
+      return null;
+    }
+
+    try {
+      const payload = await this.jwtService.verifyAsync<IJwtRefreshPayload>(token, {
+        secret: this.config.jwtSecret,
+      });
+      return payload.type === 'refresh' ? payload : null;
+    } catch {
+      return null;
     }
   }
 
