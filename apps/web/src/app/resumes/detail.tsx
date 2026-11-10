@@ -1,7 +1,5 @@
 import { ResumeAnalysisError, ResumeAnalysisStatus, WorkerStatus } from 'db';
-import dompurify from 'dompurify';
 import { BotOff, BrainCircuit, FileDown, PencilIcon, SearchSlash } from 'lucide-react';
-import { marked } from 'marked';
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import {
@@ -9,10 +7,12 @@ import {
   ICreateResumeDto,
   IGetResumeResponse,
   IRenderStatusResponse,
+  ISSUE_LABELS,
 } from 'shared';
 import useSWR from 'swr';
 
 import AppHeader from '@/components/app-header';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   Empty,
@@ -128,6 +128,36 @@ const isAnalysisInProgress = (resume?: IGetResumeResponse) =>
   resume?.analysisStatus === ResumeAnalysisStatus.QUEUED ||
   resume?.analysisStatus === ResumeAnalysisStatus.GENERATING;
 
+function AnalysisReport({ report }: { report: NonNullable<IGetResumeResponse['analysisReport']> }) {
+  return (
+    <div className="flex flex-col gap-6 pb-8">
+      <div className="flex items-baseline gap-2">
+        <span className="text-5xl font-semibold tabular-nums">{report.score}</span>
+        <span className="text-muted-foreground">/ 100</span>
+      </div>
+
+      {report.findings.length === 0 ? (
+        <span className="text-muted-foreground">No issues found.</span>
+      ) : (
+        <div className="flex flex-col gap-4">
+          {report.findings.map((finding) => (
+            <div
+              key={`${finding.section_id}-${finding.issue}`}
+              className="flex flex-col gap-1 rounded-lg border p-4"
+            >
+              <div className="flex items-center gap-2">
+                <Badge variant="secondary">{finding.section_id}</Badge>
+                <span className="font-medium">{ISSUE_LABELS[finding.issue]}</span>
+              </div>
+              <span className="text-sm text-muted-foreground">{finding.fix}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function SummarySection({ resume }: { resume?: IGetResumeResponse }) {
   if (!resume) {
     return <Spinner />;
@@ -174,14 +204,7 @@ function SummarySection({ resume }: { resume?: IGetResumeResponse }) {
         return null;
       }
 
-      return (
-        <article
-          className="typeset pb-8"
-          dangerouslySetInnerHTML={{
-            __html: dompurify.sanitize(marked(resume.analysisReport, { async: false })),
-          }}
-        />
-      );
+      return <AnalysisReport report={resume.analysisReport} />;
 
     default:
       return (

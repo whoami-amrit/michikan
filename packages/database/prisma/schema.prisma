@@ -72,7 +72,7 @@ model Resume {
   resumeRenderWorkers ResumeRenderWorker[]
   jobs                Job[]
 
-  analysisReport String?
+  analysisReport Json?
   analysisStatus ResumeAnalysisStatus @default(IDLE)
   analysisError  ResumeAnalysisError?
 

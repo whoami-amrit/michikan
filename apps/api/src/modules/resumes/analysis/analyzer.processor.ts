@@ -2,26 +2,24 @@ import { ANALYSER_QUEUE_NAME, RESUME_ANALYZER_JOB_NAME } from '@common/constants
 import { OnWorkerEvent, Processor, WorkerHost } from '@nestjs/bullmq';
 import { Injectable, Logger } from '@nestjs/common';
 import { Job, UnrecoverableError } from 'bullmq';
-import { ResumeAnalysisError, ResumeAnalysisStatus } from 'db';
-import { z } from 'zod';
+import { Prisma, ResumeAnalysisError, ResumeAnalysisStatus } from 'db';
+import {
+  computeScore,
+  flattenResume,
+  hashResumeJson,
+  IResumeJson,
+  llmFeedbackSchema,
+  postProcessLlmFindings,
+  RESUME_FEEDBACK_JSON_SCHEMA,
+  RESUME_FEEDBACK_SCHEMA_NAME,
+  ResumeAnalysisSnapshot,
+} from 'shared';
 
 import { AiFatalError, AiRetryableError } from '../../../infra/ai/ai.errors';
 import { AiService } from '../../../infra/ai/ai.service';
 import { PrismaService } from '../../../infra/database/prisma.service';
-import { getResumeAnalysisPrompt } from './template';
+import { RESUME_ANALYSIS_SYSTEM_PROMPT } from './resume-analysis.prompt';
 import { IAnalyzerJobData } from './types';
-
-const MARKDOWN_SCHEMA_NAME = 'resume_markdown_report';
-const MARKDOWN_JSON_SCHEMA = {
-  type: 'object',
-  properties: { markdown: { type: 'string' } },
-  required: ['markdown'],
-  additionalProperties: false,
-};
-const markdownSchema = z.object({ markdown: z.string().min(1) });
-const MARKDOWN_SYSTEM_PROMPT =
-  'Respond with a JSON object with a single field "markdown" that holds the full review as a markdown string.';
-const MARKDOWN_MAX_TOKENS = 4000;
 
 class AnalysisUnrecoverableError extends UnrecoverableError {
   constructor(
@@ -91,27 +89,37 @@ export class AnalyzerService extends WorkerHost {
         data: {
           analysisStatus: ResumeAnalysisStatus.GENERATING,
           analysisError: null,
-          analysisReport: null,
+          analysisReport: Prisma.DbNull,
         },
       });
 
-      const prompt = getResumeAnalysisPrompt(JSON.stringify(resume.json, null, 2));
+      const { payload, idMap } = flattenResume(resume.json as unknown as IResumeJson, new Date());
 
       const { data } = await this.aiService.generateJson({
-        system: MARKDOWN_SYSTEM_PROMPT,
-        user: prompt,
-        schemaName: MARKDOWN_SCHEMA_NAME,
-        jsonSchema: MARKDOWN_JSON_SCHEMA,
-        zodSchema: markdownSchema,
-        maxTokens: MARKDOWN_MAX_TOKENS,
+        system: RESUME_ANALYSIS_SYSTEM_PROMPT,
+        user: payload,
+        schemaName: RESUME_FEEDBACK_SCHEMA_NAME,
+        jsonSchema: RESUME_FEEDBACK_JSON_SCHEMA,
+        zodSchema: llmFeedbackSchema,
       });
+
+      const findings = postProcessLlmFindings(data, idMap);
+
+      const snapshot: ResumeAnalysisSnapshot = {
+        version: 1,
+        score: computeScore(findings),
+        resumeJsonHash: hashResumeJson(resume.json),
+        analysedAt: new Date().toISOString(),
+        idMap,
+        findings,
+      };
 
       await this.prismaService.resume.update({
         where: { id: resumeId },
         data: {
           analysisStatus: ResumeAnalysisStatus.DONE,
           analysisError: null,
-          analysisReport: data.markdown,
+          analysisReport: snapshot,
         },
       });
     } catch (error) {

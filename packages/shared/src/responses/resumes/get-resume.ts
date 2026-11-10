@@ -1,3 +1,7 @@
 import { Resume } from 'db';
 
-export type IGetResumeResponse = Resume;
+import type { ResumeAnalysisSnapshot } from '../../analysis';
+
+export type IGetResumeResponse = Omit<Resume, 'analysisReport'> & {
+  analysisReport: ResumeAnalysisSnapshot | null;
+};

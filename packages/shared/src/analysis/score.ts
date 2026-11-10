@@ -1,0 +1,25 @@
+import type { Finding, FindingIssueCode } from './types';
+
+const HIGH_SEVERITY_PENALTY = 10;
+const MEDIUM_SEVERITY_PENALTY = 5;
+const LOW_SEVERITY_PENALTY = 2;
+
+export const SCORE_WEIGHTS: Readonly<Record<FindingIssueCode, number>> = Object.freeze({
+  PII: HIGH_SEVERITY_PENALTY,
+  UNPAID_AS_WORK: HIGH_SEVERITY_PENALTY,
+  NO_RESULT: MEDIUM_SEVERITY_PENALTY,
+  VAGUE_CLAIM: MEDIUM_SEVERITY_PENALTY,
+  WEAK_OWNERSHIP: MEDIUM_SEVERITY_PENALTY,
+  UNJUSTIFIED_SUMMARY: MEDIUM_SEVERITY_PENALTY,
+  TOOL_CENTRIC: MEDIUM_SEVERITY_PENALTY,
+  HIDDEN_SKILL: LOW_SEVERITY_PENALTY,
+  ORPHAN_SKILL: LOW_SEVERITY_PENALTY,
+  TECH_CASING: LOW_SEVERITY_PENALTY,
+});
+
+export const MAX_SCORE = 100;
+
+export function computeScore(findings: readonly Pick<Finding, 'issue'>[]): number {
+  const penalty = findings.reduce((total, { issue }) => total + SCORE_WEIGHTS[issue], 0);
+  return Math.max(0, MAX_SCORE - penalty);
+}

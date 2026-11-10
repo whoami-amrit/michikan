@@ -17,6 +17,7 @@ import {
   IGetResumesResponse,
   IRenderStatusResponse,
   IUpdateResumeDto,
+  resumeAnalysisSnapshotSchema,
 } from 'shared';
 
 import { PrismaService } from '../../infra/database/prisma.service';
@@ -112,10 +113,18 @@ export class ResumeService {
     });
   }
 
-  get(userId: number, resumeId: number): Promise<IGetResumeResponse | null> {
-    return this.prisma.resume.findUnique({
+  async get(userId: number, resumeId: number): Promise<IGetResumeResponse | null> {
+    const resume = await this.prisma.resume.findUnique({
       where: { id: resumeId, userId },
     });
+
+    if (!resume) {
+      return null;
+    }
+
+    const snapshot = resumeAnalysisSnapshotSchema.safeParse(resume.analysisReport);
+
+    return { ...resume, analysisReport: snapshot.success ? snapshot.data : null };
   }
 
   getAll(userId: number): Promise<IGetResumesResponse[]> {
