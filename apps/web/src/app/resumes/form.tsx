@@ -15,7 +15,6 @@ import { CreateResumeSchema, ICreateResumeDto, ICreateResumeDtoInput, IResumeJso
 
 import { Button } from '@/components/ui/button';
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { DatePickerSimple } from '@/components/ui/date-picker';
 import {
   Field,
   FieldDescription,
@@ -27,6 +26,7 @@ import {
   FieldSet,
 } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
+import { MonthPicker } from '@/components/ui/month-picker';
 import { Spinner } from '@/components/ui/spinner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
@@ -359,13 +359,9 @@ function ExperienceTab() {
                       name={`json.experience.${index}.startDate`}
                       control={control}
                       render={({ field }) => (
-                        <DatePickerSimple
+                        <MonthPicker
                           {...field}
-                          value={
-                            field.value && typeof field.value === 'string'
-                              ? new Date(field.value)
-                              : undefined
-                          }
+                          value={typeof field.value === 'string' ? field.value : undefined}
                         />
                       )}
                     />
@@ -377,13 +373,9 @@ function ExperienceTab() {
                       name={`json.experience.${index}.endDate`}
                       control={control}
                       render={({ field }) => (
-                        <DatePickerSimple
+                        <MonthPicker
                           {...field}
-                          value={
-                            field.value && typeof field.value === 'string'
-                              ? new Date(field.value)
-                              : undefined
-                          }
+                          value={typeof field.value === 'string' ? field.value : undefined}
                         />
                       )}
                     />
@@ -445,13 +437,10 @@ function EducationTab() {
                     name={`json.education.${index}.graduationDate`}
                     control={control}
                     render={({ field }) => (
-                      <DatePickerSimple
+                      <MonthPicker
                         {...field}
-                        value={
-                          field.value && typeof field.value === 'string'
-                            ? new Date(field.value)
-                            : undefined
-                        }
+                        value={typeof field.value === 'string' ? field.value : undefined}
+                        endMonth={GRADUATION_END_MONTH}
                       />
                     )}
                   />
@@ -644,6 +633,8 @@ function SummaryTab() {
     </FieldGroup>
   );
 }
+
+const GRADUATION_END_MONTH = new Date(new Date().getFullYear() + 8, 11);
 
 const LOCAL_STORAGE_KEY = 'new-resume-form';
 
