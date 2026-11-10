@@ -8,11 +8,12 @@ import appConfig, { type IAppConfig } from '@config/app.config';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { Queue } from 'bullmq';
-import { Resume } from 'db';
+import { Resume, ResumeAnalysisStatus } from 'db';
 import {
   hashResumeJson,
   ICreateRenderWorkerResponse,
   ICreateResumeDto,
+  IGetResumeResponse,
   IGetResumesResponse,
   IRenderStatusResponse,
   IUpdateResumeDto,
@@ -43,6 +44,7 @@ export class ResumeService {
         name: createResumeDto.name,
         description: createResumeDto.description,
         userId,
+        analysisStatus: ResumeAnalysisStatus.QUEUED,
       },
     });
 
@@ -67,12 +69,21 @@ export class ResumeService {
       throw new NotFoundException('Resume not found');
     }
 
+    const jsonChanged =
+      hashResumeJson(originalResume.json) !== hashResumeJson(updateResumeDto.json);
+
     const updatedResume = await this.prisma.resume.update({
       where: { id: resumeId, userId },
-      data: updateResumeDto,
+      data: {
+        ...updateResumeDto,
+        ...(jsonChanged && {
+          analysisStatus: ResumeAnalysisStatus.QUEUED,
+          analysisError: null,
+        }),
+      },
     });
 
-    if (hashResumeJson(originalResume.json) !== hashResumeJson(updateResumeDto.json)) {
+    if (jsonChanged) {
       await this.analyserQueue.add(
         ANALYSER_QUEUE_NAME,
         {
@@ -101,7 +112,7 @@ export class ResumeService {
     });
   }
 
-  get(userId: number, resumeId: number): Promise<Resume | null> {
+  get(userId: number, resumeId: number): Promise<IGetResumeResponse | null> {
     return this.prisma.resume.findUnique({
       where: { id: resumeId, userId },
     });

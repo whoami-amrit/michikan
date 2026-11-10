@@ -1,11 +1,11 @@
 import { ANALYSER_QUEUE_NAME, RESUME_ANALYZER_JOB_NAME } from '@common/constants';
-import { Processor, WorkerHost } from '@nestjs/bullmq';
+import { OnWorkerEvent, Processor, WorkerHost } from '@nestjs/bullmq';
 import { Injectable, Logger } from '@nestjs/common';
 import { Job, UnrecoverableError } from 'bullmq';
-import { ReportGenerationStatus } from 'db';
+import { ResumeAnalysisError, ResumeAnalysisStatus } from 'db';
 import { z } from 'zod';
 
-import { AiFatalError } from '../../../infra/ai/ai.errors';
+import { AiFatalError, AiRetryableError } from '../../../infra/ai/ai.errors';
 import { AiService } from '../../../infra/ai/ai.service';
 import { PrismaService } from '../../../infra/database/prisma.service';
 import { getResumeAnalysisPrompt } from './template';
@@ -22,6 +22,31 @@ const markdownSchema = z.object({ markdown: z.string().min(1) });
 const MARKDOWN_SYSTEM_PROMPT =
   'Respond with a JSON object with a single field "markdown" that holds the full review as a markdown string.';
 const MARKDOWN_MAX_TOKENS = 4000;
+
+class AnalysisUnrecoverableError extends UnrecoverableError {
+  constructor(
+    message: string,
+    readonly analysisError: ResumeAnalysisError,
+  ) {
+    super(message);
+    this.name = 'AnalysisUnrecoverableError';
+  }
+}
+
+const toAnalysisError = (error: unknown): ResumeAnalysisError => {
+  if (error instanceof AnalysisUnrecoverableError) {
+    return error.analysisError;
+  }
+
+  if (
+    (error instanceof AiFatalError || error instanceof AiRetryableError) &&
+    (error.reason === 'provider' || error.reason === 'credits')
+  ) {
+    return ResumeAnalysisError.PROVIDER_UNAVAILABLE;
+  }
+
+  return ResumeAnalysisError.INTERNAL;
+};
 
 @Injectable()
 @Processor(ANALYSER_QUEUE_NAME)
@@ -57,14 +82,15 @@ export class AnalyzerService extends WorkerHost {
     if (!resume) {
       const errorString = `No resume for this job id ${resumeId}`;
       this.logger.error(errorString);
-      throw new UnrecoverableError(errorString);
+      throw new AnalysisUnrecoverableError(errorString, ResumeAnalysisError.INTERNAL);
     }
 
     try {
       await this.prismaService.resume.update({
         where: { id: resumeId },
         data: {
-          analysisReportGenerateStatus: ReportGenerationStatus.GENERATING,
+          analysisStatus: ResumeAnalysisStatus.GENERATING,
+          analysisError: null,
           analysisReport: null,
         },
       });
@@ -83,7 +109,8 @@ export class AnalyzerService extends WorkerHost {
       await this.prismaService.resume.update({
         where: { id: resumeId },
         data: {
-          analysisReportGenerateStatus: ReportGenerationStatus.DONE,
+          analysisStatus: ResumeAnalysisStatus.DONE,
+          analysisError: null,
           analysisReport: data.markdown,
         },
       });
@@ -93,18 +120,39 @@ export class AnalyzerService extends WorkerHost {
         error instanceof Error ? error.stack : { error },
       );
 
-      await this.prismaService.resume.update({
-        where: { id: resumeId },
-        data: {
-          analysisReportGenerateStatus: ReportGenerationStatus.FAILED,
-        },
-      });
-
       if (error instanceof AiFatalError) {
-        throw new UnrecoverableError(error.message);
+        throw new AnalysisUnrecoverableError(error.message, toAnalysisError(error));
       }
 
       throw error;
+    }
+  }
+
+  @OnWorkerEvent('failed')
+  async onFailed(job: Job<IAnalyzerJobData> | undefined, error: Error) {
+    if (!job) {
+      return;
+    }
+
+    const attempts = job.opts.attempts ?? 1;
+    const isFinal = error instanceof UnrecoverableError || job.attemptsMade >= attempts;
+
+    if (!isFinal) {
+      return;
+    }
+
+    try {
+      await this.prismaService.resume.updateMany({
+        where: { id: job.data.resumeId },
+        data: {
+          analysisStatus: ResumeAnalysisStatus.FAILED,
+          analysisError: toAnalysisError(error),
+        },
+      });
+    } catch (updateError) {
+      this.logger.error(
+        `Failed to mark resume ${job.data.resumeId} as FAILED: ${String(updateError)}`,
+      );
     }
   }
 }

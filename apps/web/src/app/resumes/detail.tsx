@@ -1,10 +1,15 @@
-import { Resume, WorkerStatus } from 'db';
+import { ResumeAnalysisError, ResumeAnalysisStatus, WorkerStatus } from 'db';
 import dompurify from 'dompurify';
-import { BotOff, BrainCircuit, FileDown, PencilIcon, RefreshCw, SearchSlash } from 'lucide-react';
+import { BotOff, BrainCircuit, FileDown, PencilIcon, SearchSlash } from 'lucide-react';
 import { marked } from 'marked';
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
-import { ICreateRenderWorkerResponse, ICreateResumeDto, IRenderStatusResponse } from 'shared';
+import {
+  ICreateRenderWorkerResponse,
+  ICreateResumeDto,
+  IGetResumeResponse,
+  IRenderStatusResponse,
+} from 'shared';
 import useSWR from 'swr';
 
 import AppHeader from '@/components/app-header';
@@ -117,39 +122,80 @@ function DownloadButton({ id }: { id: string }) {
   );
 }
 
-function SummarySection({ resume }: { resume?: Resume }) {
-  if (!resume || resume.analysisReportGenerateStatus === 'GENERATING') {
+const ANALYSIS_POLL_INTERVAL_MS = 3000;
+
+const isAnalysisInProgress = (resume?: IGetResumeResponse) =>
+  resume?.analysisStatus === ResumeAnalysisStatus.QUEUED ||
+  resume?.analysisStatus === ResumeAnalysisStatus.GENERATING;
+
+function SummarySection({ resume }: { resume?: IGetResumeResponse }) {
+  if (!resume) {
     return <Spinner />;
   }
 
-  if (resume.analysisReportGenerateStatus === 'FAILED') {
-    return (
-      <Empty>
-        <EmptyHeader>
-          <EmptyMedia variant="icon">
-            <BotOff />
-          </EmptyMedia>
-          <EmptyTitle>Summary generation failed</EmptyTitle>
-          <EmptyDescription>Cat spilled coffee on our AI :/ Please try again</EmptyDescription>
-        </EmptyHeader>
-        <EmptyContent>
-          <Button variant="outline">
-            <RefreshCw />
-            Retry
-          </Button>
-        </EmptyContent>
-      </Empty>
-    );
-  }
+  switch (resume.analysisStatus) {
+    case ResumeAnalysisStatus.QUEUED:
+    case ResumeAnalysisStatus.GENERATING:
+      return (
+        <Empty>
+          <EmptyHeader>
+            <EmptyMedia variant="icon">
+              <Spinner />
+            </EmptyMedia>
+            <EmptyTitle>Analysing your resume</EmptyTitle>
+            <EmptyDescription>
+              {resume.analysisStatus === ResumeAnalysisStatus.QUEUED
+                ? 'Your resume is in the queue. This page updates on its own.'
+                : 'This usually takes a few seconds. This page updates on its own.'}
+            </EmptyDescription>
+          </EmptyHeader>
+        </Empty>
+      );
 
-  return (
-    <article
-      className="typeset pb-8"
-      dangerouslySetInnerHTML={{
-        __html: dompurify.sanitize(marked(resume.analysisReport!, { async: false })),
-      }}
-    />
-  );
+    case ResumeAnalysisStatus.FAILED:
+      return (
+        <Empty>
+          <EmptyHeader>
+            <EmptyMedia variant="icon">
+              <BotOff />
+            </EmptyMedia>
+            <EmptyTitle>Analysis failed</EmptyTitle>
+            <EmptyDescription>
+              {resume.analysisError === ResumeAnalysisError.PROVIDER_UNAVAILABLE
+                ? 'The analysis service is unavailable right now. Try again later.'
+                : 'Something went wrong while analysing your resume.'}
+            </EmptyDescription>
+          </EmptyHeader>
+        </Empty>
+      );
+
+    case ResumeAnalysisStatus.DONE:
+      if (!resume.analysisReport) {
+        return null;
+      }
+
+      return (
+        <article
+          className="typeset pb-8"
+          dangerouslySetInnerHTML={{
+            __html: dompurify.sanitize(marked(resume.analysisReport, { async: false })),
+          }}
+        />
+      );
+
+    default:
+      return (
+        <Empty>
+          <EmptyHeader>
+            <EmptyMedia variant="icon">
+              <BrainCircuit />
+            </EmptyMedia>
+            <EmptyTitle>No analysis yet</EmptyTitle>
+            <EmptyDescription>This resume has not been analysed yet.</EmptyDescription>
+          </EmptyHeader>
+        </Empty>
+      );
+  }
 }
 
 export function ResumeDetailPage() {
@@ -162,8 +208,9 @@ export function ResumeDetailPage() {
     isLoading,
     error,
     mutate,
-  } = useSWR<Resume, undefined>(`/resumes/${id}`, {
-    fetcher: () => api.get(`/resumes/${id}`).json<Resume>(),
+  } = useSWR<IGetResumeResponse, undefined>(`/resumes/${id}`, {
+    fetcher: () => api.get(`/resumes/${id}`).json<IGetResumeResponse>(),
+    refreshInterval: (latest) => (isAnalysisInProgress(latest) ? ANALYSIS_POLL_INTERVAL_MS : 0),
   });
 
   const crumbs = useBreadcrumbs([

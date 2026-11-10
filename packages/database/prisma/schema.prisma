@@ -46,10 +46,18 @@ enum ExperienceLevel {
   SENIOR
 }
 
-enum ReportGenerationStatus {
+enum ResumeAnalysisStatus {
+  IDLE
+  QUEUED
   GENERATING
   DONE
   FAILED
+}
+
+enum ResumeAnalysisError {
+  QUOTA_EXCEEDED
+  PROVIDER_UNAVAILABLE
+  INTERNAL
 }
 
 model Resume {
@@ -64,8 +72,9 @@ model Resume {
   resumeRenderWorkers ResumeRenderWorker[]
   jobs                Job[]
 
-  analysisReport               String?
-  analysisReportGenerateStatus ReportGenerationStatus @default(GENERATING)
+  analysisReport String?
+  analysisStatus ResumeAnalysisStatus @default(IDLE)
+  analysisError  ResumeAnalysisError?
 
   @@index([userId])
 }
