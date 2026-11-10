@@ -1,11 +1,4 @@
-import {
-  FileTextIcon,
-  FolderIcon,
-  SearchIcon,
-  SidebarCloseIcon,
-  SidebarOpenIcon,
-  XIcon,
-} from 'lucide-react';
+import { FileTextIcon, FolderIcon, SidebarCloseIcon, SidebarOpenIcon, XIcon } from 'lucide-react';
 import * as React from 'react';
 
 import MichikanIcon from '@/assets/michikan-icon.svg?react';
@@ -26,11 +19,6 @@ import { Button } from './ui/button';
 
 const data = {
   navMain: [
-    {
-      title: 'Analysis',
-      url: '/analysis',
-      icon: <SearchIcon />,
-    },
     {
       title: 'Jobs',
       url: '/jobs',

@@ -10,9 +10,7 @@ export const RENDER_QUEUE_NAME = 'resumes';
 export const RENDER_PDF_JOB_NAME = 'render-pdf';
 
 export const ANALYSER_QUEUE_NAME = 'analysis';
-export const JOB_FIT_ANALYZER_JOB_NAME = 'job-fit-analyzer' as const;
 export const RESUME_ANALYZER_JOB_NAME = 'resume-analyzer' as const;
-export const JOB_AT_A_GLANCE_JOB_NAME = 'job-at-a-glance' as const;
 
 export const EMAIL_QUEUE_NAME = 'email';
 export const OTP_EMAIL_JOB_NAME = 'otp-email';
