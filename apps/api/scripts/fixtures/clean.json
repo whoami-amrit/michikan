@@ -1,0 +1,50 @@
+{
+  "personalInfo": {
+    "name": "Morgan Chen",
+    "email": "mchen-dev@gmail.com",
+    "github": "https://github.com/mchen-dev"
+  },
+  "skills": [
+    {
+      "category": "Languages",
+      "skills": "TypeScript, Python"
+    },
+    {
+      "category": "Frameworks",
+      "skills": "React, Django"
+    },
+    {
+      "category": "Databases",
+      "skills": "PostgreSQL"
+    },
+    {
+      "category": "Tools",
+      "skills": "Docker"
+    }
+  ],
+  "experience": [
+    {
+      "title": "Software Engineer",
+      "company": "Brightline Logistics",
+      "startDate": "2021-03-15",
+      "endDate": "2024-02-15",
+      "isCurrentRole": false,
+      "highlights": "Built React dashboard in TypeScript that cut dispatcher scheduling time from 25 to 9 minutes\nRewrote Django order APIs in Python, reducing p95 latency from 800 ms to 120 ms\nContainerized the build pipeline with Docker, shrinking CI runs from 40 to 12 minutes\nDesigned PostgreSQL indexes for shipment search, serving 50,000 daily queries without timeouts"
+    }
+  ],
+  "projects": [
+    {
+      "title": "Trail Notes",
+      "technologies": "React, TypeScript",
+      "highlights": "Built offline-first note app used by 300 hiking club members"
+    }
+  ],
+  "education": [
+    {
+      "institution": "State University",
+      "degree": "Bachelor of Science",
+      "field": "Computer Science",
+      "graduationDate": "2021-05-15"
+    }
+  ]
+}

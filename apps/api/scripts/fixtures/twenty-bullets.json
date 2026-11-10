@@ -1,0 +1,40 @@
+{
+  "personalInfo": {
+    "name": "Sam Okafor",
+    "email": "sam-duties@gmail.com",
+    "github": "https://github.com/sam-duties"
+  },
+  "skills": [
+    {
+      "category": "Languages",
+      "skills": "Java, SQL"
+    }
+  ],
+  "experience": [
+    {
+      "title": "Software Engineer",
+      "company": "Harbor Retail",
+      "startDate": "2022-01-15",
+      "endDate": "2024-03-15",
+      "isCurrentRole": false,
+      "highlights": "Attended daily standups with the engineering team\nResponsible for maintaining the Java backend\nReviewed pull requests from teammates\nWrote documentation for internal services\nParticipated in sprint planning meetings\nWorked with the QA team on test plans\nMaintained SQL queries for monthly reports\nUpdated the Java build scripts\nHandled support tickets from customers\nMonitored application dashboards"
+    },
+    {
+      "title": "Associate Software Engineer",
+      "company": "Pinecrest Insurance",
+      "startDate": "2019-06-15",
+      "endDate": "2021-12-15",
+      "isCurrentRole": false,
+      "highlights": "Joined weekly architecture discussions\nManaged the team backlog in Jira\nFixed bugs reported by the support team\nUpdated Java dependencies when asked\nWrote SQL scripts for data requests\nHelped onboard new engineers\nKept release notes up to date\nRan manual regression tests before releases\nAnswered questions from the product team\nCleaned up old code in the repository"
+    }
+  ],
+  "projects": [],
+  "education": [
+    {
+      "institution": "State University",
+      "degree": "Bachelor of Science",
+      "field": "Information Systems",
+      "graduationDate": "2019-05-15"
+    }
+  ]
+}
