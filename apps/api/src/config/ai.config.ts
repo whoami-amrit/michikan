@@ -2,13 +2,15 @@ import { registerAs } from '@nestjs/config';
 import { z } from 'zod';
 
 const schema = z.object({
-  geminiApiKey: z.string(),
+  openRouterApiKey: z.string().min(1),
+  appUrl: z.string().min(1),
 });
 
 export interface IAIConfig extends z.infer<typeof schema> {}
 
 export default registerAs('ai', () => {
   return schema.parse({
-    geminiApiKey: process.env.GEMINI_API_KEY,
+    openRouterApiKey: process.env.OPENROUTER_API_KEY,
+    appUrl: process.env.HOSTNAME,
   });
 });

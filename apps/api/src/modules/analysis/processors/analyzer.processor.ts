@@ -2,13 +2,26 @@ import { ANALYSER_QUEUE_NAME, RESUME_ANALYZER_JOB_NAME } from '@common/constants
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Injectable, Logger } from '@nestjs/common';
 import { Job, UnrecoverableError } from 'bullmq';
-import { error } from 'console';
 import { ReportGenerationStatus } from 'db';
+import { z } from 'zod';
 
+import { AiFatalError } from '../../../infra/ai/ai.errors';
+import { AiService } from '../../../infra/ai/ai.service';
 import { PrismaService } from '../../../infra/database/prisma.service';
 import { IAnalyzerJobData } from '../../jobs/types';
-import { AiService } from './ai.service';
 import { getResumeAnalysisPrompt } from './template';
+
+const MARKDOWN_SCHEMA_NAME = 'resume_markdown_report';
+const MARKDOWN_JSON_SCHEMA = {
+  type: 'object',
+  properties: { markdown: { type: 'string' } },
+  required: ['markdown'],
+  additionalProperties: false,
+};
+const markdownSchema = z.object({ markdown: z.string().min(1) });
+const MARKDOWN_SYSTEM_PROMPT =
+  'Respond with a JSON object with a single field "markdown" that holds the full review as a markdown string.';
+const MARKDOWN_MAX_TOKENS = 4000;
 
 @Injectable()
 @Processor(ANALYSER_QUEUE_NAME)
@@ -43,7 +56,7 @@ export class AnalyzerService extends WorkerHost {
 
     if (!resume) {
       const errorString = `No resume for this job id ${resumeId}`;
-      this.logger.error(errorString, error instanceof Error ? error.stack : undefined);
+      this.logger.error(errorString);
       throw new UnrecoverableError(errorString);
     }
 
@@ -58,13 +71,20 @@ export class AnalyzerService extends WorkerHost {
 
       const prompt = getResumeAnalysisPrompt(JSON.stringify(resume.json, null, 2));
 
-      const response = await this.aiService.execute(prompt);
+      const { data } = await this.aiService.generateJson({
+        system: MARKDOWN_SYSTEM_PROMPT,
+        user: prompt,
+        schemaName: MARKDOWN_SCHEMA_NAME,
+        jsonSchema: MARKDOWN_JSON_SCHEMA,
+        zodSchema: markdownSchema,
+        maxTokens: MARKDOWN_MAX_TOKENS,
+      });
 
       await this.prismaService.resume.update({
         where: { id: resumeId },
         data: {
           analysisReportGenerateStatus: ReportGenerationStatus.DONE,
-          analysisReport: response,
+          analysisReport: data.markdown,
         },
       });
     } catch (error) {
@@ -79,6 +99,10 @@ export class AnalyzerService extends WorkerHost {
           analysisReportGenerateStatus: ReportGenerationStatus.FAILED,
         },
       });
+
+      if (error instanceof AiFatalError) {
+        throw new UnrecoverableError(error.message);
+      }
 
       throw error;
     }

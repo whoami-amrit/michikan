@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 
 import { AppConfigModule } from './config/config.module';
+import { AiModule } from './infra/ai/ai.module';
 import { DatabaseModule } from './infra/database/database.module';
 import { EmailModule } from './infra/email/email.module';
 import { LoggerModule } from './infra/logger/logger.module';
@@ -18,6 +19,7 @@ import { RenderResumeProcessor } from './modules/resumes/processors/render-resum
     DatabaseModule,
     StorageModule,
     EmailModule,
+    AiModule,
     AnalyzerModule,
   ],
   providers: [RenderResumeProcessor, OtpEmailProcessor],
