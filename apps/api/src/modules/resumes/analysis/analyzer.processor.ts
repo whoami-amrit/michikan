@@ -8,8 +8,8 @@ import { z } from 'zod';
 import { AiFatalError } from '../../../infra/ai/ai.errors';
 import { AiService } from '../../../infra/ai/ai.service';
 import { PrismaService } from '../../../infra/database/prisma.service';
-import { IAnalyzerJobData } from '../../jobs/types';
 import { getResumeAnalysisPrompt } from './template';
+import { IAnalyzerJobData } from './types';
 
 const MARKDOWN_SCHEMA_NAME = 'resume_markdown_report';
 const MARKDOWN_JSON_SCHEMA = {

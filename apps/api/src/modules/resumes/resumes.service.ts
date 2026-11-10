@@ -20,7 +20,7 @@ import {
 
 import { PrismaService } from '../../infra/database/prisma.service';
 import { S3Service } from '../../infra/storage/s3.service';
-import { IAnalyzerJobData } from '../jobs/types';
+import { IAnalyzerJobData } from './analysis/types';
 import { IRenderPdfWorker } from './types';
 
 @Injectable()
