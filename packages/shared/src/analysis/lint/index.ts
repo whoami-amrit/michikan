@@ -157,7 +157,9 @@ class LineFindings {
 
   add(issue: LintIssueCode, key: string, fix: string): void {
     const id = `${issue}:${key.toLowerCase()}`;
-    if (this.seen.has(id)) return;
+    if (this.seen.has(id)) {
+      return;
+    }
     this.seen.add(id);
     this.out.push({ source: 'linter', section_id: this.sectionId, issue, fix });
   }
@@ -168,7 +170,9 @@ function pronouns(line: string): string[] {
 }
 
 function hasTrailingPeriod(line: string): boolean {
-  if (!line.endsWith('.') || line.endsWith('..')) return false;
+  if (!line.endsWith('.') || line.endsWith('..')) {
+    return false;
+  }
 
   const last = line.slice(line.lastIndexOf(' ') + 1);
   return !(ABBREVIATIONS.has(last.toLowerCase()) || DOTTED_ABBREVIATION.test(last));
@@ -177,12 +181,18 @@ function hasTrailingPeriod(line: string): boolean {
 function symbols(line: string): string[] {
   const found: string[] = [];
 
-  if (/(?:^|\s)&(?:\s|$)/.test(line)) found.push('&');
+  if (/(?:^|\s)&(?:\s|$)/.test(line)) {
+    found.push('&');
+  }
 
-  if (chunksOf(line).some(isSlashedWords)) found.push('/');
+  if (chunksOf(line).some(isSlashedWords)) {
+    found.push('/');
+  }
 
   for (let i = 0; i < line.length; i++) {
-    if (line[i] !== "'" && line[i] !== '’') continue;
+    if (line[i] !== "'" && line[i] !== '’') {
+      continue;
+    }
     if (isStrayApostrophe(line, i)) {
       found.push("'");
       break;
@@ -193,7 +203,9 @@ function symbols(line: string): string[] {
 }
 
 function isSlashedWords(chunk: string): boolean {
-  if (!SLASH_WORDS.test(chunk)) return false;
+  if (!SLASH_WORDS.test(chunk)) {
+    return false;
+  }
   return !chunk.split('/').every((part) => ALL_CAPS.test(part));
 }
 
@@ -201,9 +213,15 @@ function isStrayApostrophe(line: string, index: number): boolean {
   const prev = line[index - 1] ?? '';
   const next = line[index + 1] ?? '';
 
-  if (LETTER.test(prev) && LETTER.test(next)) return false;
-  if ((prev === 's' || prev === 'S') && !LETTER.test(next)) return false;
-  if (DIGIT.test(next)) return false;
+  if (LETTER.test(prev) && LETTER.test(next)) {
+    return false;
+  }
+  if ((prev === 's' || prev === 'S') && !LETTER.test(next)) {
+    return false;
+  }
+  if (DIGIT.test(next)) {
+    return false;
+  }
   return true;
 }
 
@@ -213,18 +231,28 @@ function spelledNumbers(line: string): string[] {
 
   chunks.forEach((chunk, i) => {
     const lower = chunk.toLowerCase();
-    if (!NUMBER_WORDS.has(lower)) return;
+    if (!NUMBER_WORDS.has(lower)) {
+      return;
+    }
 
-    if (i > 0 && chunk !== lower) return;
+    if (i > 0 && chunk !== lower) {
+      return;
+    }
 
     const prev = chunks[i - 1]?.toLowerCase();
     const next = chunks[i + 1]?.toLowerCase();
 
-    if (MAGNITUDES.has(lower) && prev !== undefined && DIGIT.test(prev.slice(-1))) return;
+    if (MAGNITUDES.has(lower) && prev !== undefined && DIGIT.test(prev.slice(-1))) {
+      return;
+    }
 
     if (lower === 'one') {
-      if (next === undefined || ONE_NEXT_SKIP.has(next)) return;
-      if (prev !== undefined && ONE_PREV_SKIP.has(prev)) return;
+      if (next === undefined || ONE_NEXT_SKIP.has(next)) {
+        return;
+      }
+      if (prev !== undefined && ONE_PREV_SKIP.has(prev)) {
+        return;
+      }
     }
 
     found.push(chunk);
@@ -238,8 +266,12 @@ function openingPhrase(line: string, phrases: readonly string[]): string | undef
   const lower = start.toLowerCase();
 
   for (const phrase of phrases) {
-    if (!lower.startsWith(phrase)) continue;
-    if (WORD_START.test(lower.slice(phrase.length, phrase.length + 1))) continue;
+    if (!lower.startsWith(phrase)) {
+      continue;
+    }
+    if (WORD_START.test(lower.slice(phrase.length, phrase.length + 1))) {
+      continue;
+    }
     return start.slice(0, phrase.length);
   }
   return undefined;
@@ -265,7 +297,9 @@ function lintBullet(sectionId: SectionId, line: string, out: Finding[]): void {
   }
 
   const weak = openingPhrase(line, WEAK_VERB_PHRASES);
-  if (weak) found.add('WEAK_VERB', weak, `Replace "${weak}" with a stronger action verb`);
+  if (weak) {
+    found.add('WEAK_VERB', weak, `Replace "${weak}" with a stronger action verb`);
+  }
 
   const overwrought = openingPhrase(line, OVERWROUGHT_VERB_PHRASES);
   if (overwrought) {
@@ -285,7 +319,9 @@ function lintBullet(sectionId: SectionId, line: string, out: Finding[]): void {
 
 function lintBWords(line: string, found: LineFindings): void {
   for (const word of wordsOf(line)) {
-    if (B_WORDS.has(word.toLowerCase())) found.add('B_WORD', word, `Delete "${word}"`);
+    if (B_WORDS.has(word.toLowerCase())) {
+      found.add('B_WORD', word, `Delete "${word}"`);
+    }
   }
 }
 
@@ -320,7 +356,9 @@ function lintSkills(groups: SkillGroups, out: Finding[]): void {
       skills: group.skills?.trim() ?? '',
     }))
     .filter((group) => group.category || group.skills);
-  if (entries.length === 0) return;
+  if (entries.length === 0) {
+    return;
+  }
 
   const found = new LineFindings('SK', out);
 
@@ -338,7 +376,9 @@ function lintSkills(groups: SkillGroups, out: Finding[]): void {
   for (const { category, skills } of entries) {
     for (const matcher of PROFICIENCY_MATCHERS) {
       const phrase = matcher.exec(`${category} ${skills}`)?.[0];
-      if (phrase) found.add('SKILL_PROFICIENCY', phrase, `Remove "${phrase}"`);
+      if (phrase) {
+        found.add('SKILL_PROFICIENCY', phrase, `Remove "${phrase}"`);
+      }
     }
   }
 
@@ -370,13 +410,19 @@ export function lintResume(json: LintableResume): Finding[] {
   const out: Finding[] = [];
 
   const email = json.personalInfo?.email?.trim();
-  if (email) lintEmail(email, out);
+  if (email) {
+    lintEmail(email, out);
+  }
 
   const summary =
     typeof json.summary === 'string' ? json.summary.trim().replace(/\s*\r?\n\s*/g, ' ') : '';
-  if (summary) lintSummary(summary, out);
+  if (summary) {
+    lintSummary(summary, out);
+  }
 
-  if (json.skills) lintSkills(json.skills, out);
+  if (json.skills) {
+    lintSkills(json.skills, out);
+  }
 
   (json.experience ?? []).forEach((entry, i) => {
     splitHighlights(entry.highlights).forEach((line, m) => {

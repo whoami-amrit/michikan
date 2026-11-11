@@ -21,7 +21,9 @@ export function postProcessLlmFindings(
 
   const best = new Map<string, LlmFeedback['feedback'][number]>();
   for (const item of raw.feedback) {
-    if (item.section_id === 'PI' || !appearance.has(item.section_id)) continue;
+    if (item.section_id === 'PI' || !appearance.has(item.section_id)) {
+      continue;
+    }
 
     const key =
       item.section_id === 'SK' && SK_MULTI_CODES.has(item.issue)

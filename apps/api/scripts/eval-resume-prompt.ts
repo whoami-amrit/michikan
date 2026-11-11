@@ -106,8 +106,11 @@ async function analyse(ai: AiService, label: string, json: IResumeJson): Promise
       zodSchema: llmFeedbackSchema,
     });
 
-    if (usage.cost === null) costUnknown = true;
-    else totalCost += usage.cost;
+    if (usage.cost === null) {
+      costUnknown = true;
+    } else {
+      totalCost += usage.cost;
+    }
 
     const run: Run = {
       label,
@@ -213,10 +216,14 @@ async function runCacheProbe(ai: AiService, golden: IResumeJson): Promise<CheckR
   for (let attempt = 2; attempt <= CACHE_MAX_ATTEMPTS; attempt++) {
     await sleep(CACHE_RETRY_DELAY_MS);
     const outcome = await analyse(ai, `golden (cache probe ${attempt})`, golden);
-    if ('error' in outcome) return fail(2, NAME_2, [outcome.error]);
+    if ('error' in outcome) {
+      return fail(2, NAME_2, [outcome.error]);
+    }
 
     seen.push(outcome.run.usage.cachedTokens);
-    if (outcome.run.usage.cachedTokens >= PREFIX_MIN_TOKENS) break;
+    if (outcome.run.usage.cachedTokens >= PREFIX_MIN_TOKENS) {
+      break;
+    }
   }
 
   const cached = seen.at(-1) ?? 0;
@@ -226,7 +233,9 @@ async function runCacheProbe(ai: AiService, golden: IResumeJson): Promise<CheckR
 }
 
 function checkGolden(outcome: Outcome): CheckResult {
-  if ('error' in outcome) return fail(3, NAME_3, [outcome.error]);
+  if ('error' in outcome) {
+    return fail(3, NAME_3, [outcome.error]);
+  }
 
   const actual = outcome.run.findings.map(pairKey);
   const expected = GOLDEN_PAIRS.map(([id, issue]) => `${id}:${issue}`);
@@ -240,7 +249,9 @@ function checkGolden(outcome: Outcome): CheckResult {
 }
 
 function checkClean(outcome: Outcome): CheckResult {
-  if ('error' in outcome) return fail(4, NAME_4, [outcome.error]);
+  if ('error' in outcome) {
+    return fail(4, NAME_4, [outcome.error]);
+  }
 
   const { raw, findings } = outcome.run;
   return verdict(4, NAME_4, raw.feedback.length === 0, [
@@ -347,7 +358,9 @@ async function runBiasChecks(ai: AiService, goldenOutcome: Outcome): Promise<Che
 
 async function runIgnoredRules(ai: AiService): Promise<CheckResult> {
   const outcome = await analyse(ai, 'ignored rules', loadResume('ignored-rules.json'));
-  if ('error' in outcome) return fail(8, NAME_8, [outcome.error]);
+  if ('error' in outcome) {
+    return fail(8, NAME_8, [outcome.error]);
+  }
 
   return verdict(8, NAME_8, outcome.run.raw.feedback.length === 0, [
     `findings: ${describe(outcome.run.raw.feedback)}`,
@@ -356,8 +369,12 @@ async function runIgnoredRules(ai: AiService): Promise<CheckResult> {
 
 async function runInjection(ai: AiService, goldenOutcome: Outcome): Promise<CheckResult> {
   const outcome = await analyse(ai, 'prompt injection', loadResume('injection.json'));
-  if ('error' in outcome) return fail(9, NAME_9, [outcome.error]);
-  if ('error' in goldenOutcome) return fail(9, NAME_9, ['needs the golden call as reference']);
+  if ('error' in outcome) {
+    return fail(9, NAME_9, [outcome.error]);
+  }
+  if ('error' in goldenOutcome) {
+    return fail(9, NAME_9, ['needs the golden call as reference']);
+  }
 
   const got = new Set(outcome.run.findings.map(pairKey));
   const missing = goldenOutcome.run.findings.map(pairKey).filter((k) => !got.has(k));
@@ -370,7 +387,9 @@ async function runInjection(ai: AiService, goldenOutcome: Outcome): Promise<Chec
 
 async function runSelectionLimits(ai: AiService): Promise<CheckResult> {
   const outcome = await analyse(ai, '20 bullets', loadResume('twenty-bullets.json'));
-  if ('error' in outcome) return fail(10, NAME_10, [outcome.error]);
+  if ('error' in outcome) {
+    return fail(10, NAME_10, [outcome.error]);
+  }
 
   const { raw, findings } = outcome.run;
   const ids = raw.feedback.map((f) => f.section_id);
@@ -391,7 +410,9 @@ function printReport(results: CheckResult[]) {
   console.log('\n=== resume prompt eval ===');
   for (const r of results.sort((a, b) => a.id - b.id)) {
     console.log(`\n[${r.status}] check ${r.id}: ${r.name}`);
-    for (const line of r.details.slice(0, MAX_DETAIL_LINES)) console.log(`       ${line}`);
+    for (const line of r.details.slice(0, MAX_DETAIL_LINES)) {
+      console.log(`       ${line}`);
+    }
     if (r.details.length > MAX_DETAIL_LINES) {
       console.log(`       ... ${r.details.length - MAX_DETAIL_LINES} more`);
     }
@@ -468,7 +489,9 @@ async function main() {
   let sampleRuns = 0;
   for (const [i, resume] of sampleSet.entries()) {
     const outcome = await analyse(ai, `sample ${i + 1}`, resume);
-    if ('run' in outcome) sampleRuns++;
+    if ('run' in outcome) {
+      sampleRuns++;
+    }
   }
   results.push(checkInventedNumbers(sampleRuns));
   results.push(checkFixLength());

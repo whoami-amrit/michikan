@@ -13,7 +13,9 @@ const EN_DASH = '–';
 
 export function formatMonth(date: string): string {
   const ms = Date.parse(date);
-  if (Number.isNaN(ms)) return date.trim();
+  if (Number.isNaN(ms)) {
+    return date.trim();
+  }
 
   const d = new Date(ms);
   return `${String(d.getUTCFullYear()).padStart(4, '0')}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`;

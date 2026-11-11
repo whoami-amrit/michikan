@@ -35,13 +35,18 @@ export function resolveFinding(
   json: ICreateResumeDtoInput['json'] | undefined,
 ): ResolvedFinding | undefined {
   const path = idMap[finding.section_id];
-  if (!path) return undefined;
+  if (!path) {
+    return undefined;
+  }
 
   const [base = '', lineIndex] = path.split('#');
   let fieldName = `json.${base.replace(/\[(\d+)\]/g, '.$1')}`;
 
-  if (base === 'personalInfo') fieldName += '.email';
-  else if (/^projects\[\d+\]$/.test(base)) fieldName += '.title';
+  if (base === 'personalInfo') {
+    fieldName += '.email';
+  } else if (/^projects\[\d+\]$/.test(base)) {
+    fieldName += '.title';
+  }
 
   const resolved: ResolvedFinding = {
     finding,
@@ -66,8 +71,12 @@ function textareaLine(text: string | undefined, keptIndex: number): number {
   const lines = (text ?? '').split(/\r?\n/);
 
   for (let i = 0; i < lines.length; i++) {
-    if (lines[i]?.trim()) kept++;
-    if (kept === keptIndex) return i + 1;
+    if (lines[i]?.trim()) {
+      kept++;
+    }
+    if (kept === keptIndex) {
+      return i + 1;
+    }
   }
   return keptIndex + 1;
 }
@@ -94,18 +103,25 @@ export function useResumeLint(
   const debounced = useDebouncedValue(json, LINT_DEBOUNCE_MS);
 
   return useMemo(() => {
-    if (!debounced) return EMPTY;
+    if (!debounced) {
+      return EMPTY;
+    }
 
     const idMap = buildIdMap(debounced);
     const byAnchor = new Map<string, ResolvedFinding[]>();
 
     for (const finding of lintResume(debounced)) {
       const resolved = resolveFinding(finding, idMap, debounced);
-      if (!resolved) continue;
+      if (!resolved) {
+        continue;
+      }
 
       const list = byAnchor.get(resolved.anchorId);
-      if (list) list.push(resolved);
-      else byAnchor.set(resolved.anchorId, [resolved]);
+      if (list) {
+        list.push(resolved);
+      } else {
+        byAnchor.set(resolved.anchorId, [resolved]);
+      }
     }
 
     return byAnchor;
@@ -126,7 +142,9 @@ export interface ResumeJumpTarget {
 export function selectTextareaLine(textarea: HTMLTextAreaElement, line: number): void {
   const lines = textarea.value.split('\n');
   const text = lines[line - 1];
-  if (text === undefined) return;
+  if (text === undefined) {
+    return;
+  }
 
   const start = lines
     .slice(0, line - 1)

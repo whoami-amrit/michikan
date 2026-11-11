@@ -14,12 +14,16 @@ export interface IdMapSource {
 export function buildIdMap(json: IdMapSource): Record<SectionId, JsonPath> {
   const idMap: Record<SectionId, JsonPath> = { PI: 'personalInfo' };
 
-  if (typeof json.summary === 'string' && json.summary.trim()) idMap.SUM = 'summary';
+  if (typeof json.summary === 'string' && json.summary.trim()) {
+    idMap.SUM = 'summary';
+  }
 
   const hasSkills = (json.skills ?? []).some(
     (entry) => Boolean(entry.category?.trim()) || Boolean(entry.skills?.trim()),
   );
-  if (hasSkills) idMap.SK = 'skills';
+  if (hasSkills) {
+    idMap.SK = 'skills';
+  }
 
   (json.experience ?? []).forEach((entry, i) => {
     idMap[`E${i + 1}`] = `experience[${i}]`;

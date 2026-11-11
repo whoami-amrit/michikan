@@ -29,7 +29,9 @@ const SECTION_ID = /^(PI|SUM|SK|ED|E|P)(\d+)?(?:\.(\d+))?$/;
 
 function sectionRank(sectionId: string): [number, number, number] {
   const match = SECTION_ID.exec(sectionId);
-  if (!match) return [SECTION_ORDER.length, 0, 0];
+  if (!match) {
+    return [SECTION_ORDER.length, 0, 0];
+  }
 
   const [, kind, entry, bullet] = match;
   return [

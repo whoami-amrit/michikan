@@ -102,11 +102,15 @@ export class AiService {
     this.logError(status, body?.error, generationId);
     const message = `OpenRouter responded with HTTP ${status}`;
 
-    if (status === 402) return new AiFatalError(message, 'credits', generationId);
+    if (status === 402) {
+      return new AiFatalError(message, 'credits', generationId);
+    }
     if (status === 408 || status === 429 || status >= 500) {
       return new AiRetryableError(message, 'provider', generationId);
     }
-    if (status >= 400) return new AiFatalError(message, 'client', generationId);
+    if (status >= 400) {
+      return new AiFatalError(message, 'client', generationId);
+    }
     return new AiRetryableError(message, 'provider', generationId);
   }
 

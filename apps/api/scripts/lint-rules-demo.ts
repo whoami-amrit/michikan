@@ -149,7 +149,9 @@ const CASES: Case[] = [
 let failures = 0;
 const check = (ok: boolean, message: string) => {
   console.log(`${ok ? 'PASS' : 'FAIL'}  ${message}`);
-  if (!ok) failures++;
+  if (!ok) {
+    failures++;
+  }
 };
 const fixOk = (finding: Finding) => finding.fix.trim().split(/\s+/).length <= 10;
 
@@ -206,7 +208,9 @@ const golden = ResumeJsonSchema.parse(
 lintResume(golden); // warm up
 const RUNS = 200;
 const start = process.hrtime.bigint();
-for (let i = 0; i < RUNS; i++) lintResume(golden);
+for (let i = 0; i < RUNS; i++) {
+  lintResume(golden);
+}
 const perRunMs = Number(process.hrtime.bigint() - start) / 1e6 / RUNS;
 check(perRunMs < 5, `lintResume on the §3.3 example: ${perRunMs.toFixed(3)} ms (target < 5 ms)`);
 console.log(

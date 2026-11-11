@@ -707,7 +707,9 @@ export function ResumeForm({ type, data, id, mutate, jumpTo }: ResumeFormProps) 
   }
 
   useEffect(() => {
-    if (!jumpTo) return;
+    if (!jumpTo) {
+      return;
+    }
 
     let frame = 0;
     let attempts = 0;
@@ -716,7 +718,9 @@ export function ResumeForm({ type, data, id, mutate, jumpTo }: ResumeFormProps) 
       const element = document.getElementById(jumpTo.anchorId);
 
       if (!element) {
-        if (attempts++ < 10) frame = requestAnimationFrame(moveToField);
+        if (attempts++ < 10) {
+          frame = requestAnimationFrame(moveToField);
+        }
         return;
       }
 

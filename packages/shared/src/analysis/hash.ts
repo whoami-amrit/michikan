@@ -51,7 +51,9 @@ function utf8Bytes(input: string): number[] {
 function firstPrimes(count: number): number[] {
   const primes: number[] = [];
   for (let n = 2; primes.length < count; n++) {
-    if (primes.every((p) => n % p !== 0)) primes.push(n);
+    if (primes.every((p) => n % p !== 0)) {
+      primes.push(n);
+    }
   }
   return primes;
 }
@@ -68,7 +70,9 @@ function sha256Hex(input: string): string {
   const bitLength = bytes.length * 8;
 
   bytes.push(0x80);
-  while (bytes.length % 64 !== 56) bytes.push(0);
+  while (bytes.length % 64 !== 56) {
+    bytes.push(0);
+  }
   const high = Math.floor(bitLength / 2 ** 32);
   const low = bitLength >>> 0;
   bytes.push(high >>> 24, (high >>> 16) & 0xff, (high >>> 8) & 0xff, high & 0xff);

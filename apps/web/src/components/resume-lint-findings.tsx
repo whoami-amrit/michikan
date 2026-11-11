@@ -4,7 +4,9 @@ import { useFieldLintFindings } from '@/lib/resume-lint';
 
 export function ResumeLintFindings({ fieldName }: { fieldName: string }) {
   const findings = useFieldLintFindings(fieldName);
-  if (findings.length === 0) return null;
+  if (findings.length === 0) {
+    return null;
+  }
 
   return (
     <ul data-slot="resume-lint-findings" className="flex flex-col gap-1">

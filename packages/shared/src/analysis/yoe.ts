@@ -13,11 +13,15 @@ export function computeYoe(experience: readonly YoeEntry[] | undefined, now: Dat
   const ranges: [number, number][] = [];
 
   for (const entry of experience ?? []) {
-    if (INTERN_TITLE.test(entry.title)) continue;
+    if (INTERN_TITLE.test(entry.title)) {
+      continue;
+    }
 
     const start = Date.parse(entry.startDate);
     const end = entry.isCurrentRole || !entry.endDate ? nowMs : Date.parse(entry.endDate);
-    if (Number.isNaN(start) || Number.isNaN(end) || end < start) continue;
+    if (Number.isNaN(start) || Number.isNaN(end) || end < start) {
+      continue;
+    }
 
     ranges.push([start, end]);
   }
@@ -30,11 +34,15 @@ export function computeYoe(experience: readonly YoeEntry[] | undefined, now: Dat
     if (current && range[0] <= current[1]) {
       current[1] = Math.max(current[1], range[1]);
     } else {
-      if (current) totalMs += current[1] - current[0];
+      if (current) {
+        totalMs += current[1] - current[0];
+      }
       current = [range[0], range[1]];
     }
   }
-  if (current) totalMs += current[1] - current[0];
+  if (current) {
+    totalMs += current[1] - current[0];
+  }
 
   const years = totalMs / MS_PER_MONTH / 12;
   return Math.round(years * 10) / 10;
