@@ -457,8 +457,7 @@ async function main() {
     return;
   }
 
-  // same client the worker uses; `appUrl` is only the HTTP-Referer attribution header
-  const ai = new AiService({ openRouterApiKey: apiKey, appUrl: 'http://localhost' });
+  const ai = new AiService({ openRouterApiKey: apiKey });
 
   console.log('running checks against the live API...');
   const golden = loadResume('golden.json');

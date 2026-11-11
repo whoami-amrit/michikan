@@ -68,7 +68,6 @@ export class AiService {
         headers: {
           Authorization: `Bearer ${this.config.openRouterApiKey}`,
           'Content-Type': 'application/json',
-          'HTTP-Referer': this.config.appUrl,
           'X-OpenRouter-Title': 'Michikan',
         },
         body: JSON.stringify(body),
