@@ -206,8 +206,13 @@ export class ResumeService {
     }
 
     const snapshot = resumeAnalysisSnapshotSchema.safeParse(resume.analysisReport);
+    const analysisReport = snapshot.success ? snapshot.data : null;
+    const isAnalysisStale =
+      resume.analysisStatus === ResumeAnalysisStatus.DONE &&
+      analysisReport !== null &&
+      analysisReport.resumeJsonUpdatedAt !== resume.jsonUpdatedAt.toISOString();
 
-    return { ...resume, analysisReport: snapshot.success ? snapshot.data : null };
+    return { ...resume, analysisReport, isAnalysisStale };
   }
 
   getAll(userId: number): Promise<IGetResumesResponse[]> {

@@ -39,7 +39,6 @@ import { toast } from '@/components/ui/toast';
 import { useBreadcrumbs } from '@/hooks/use-breadcrumbs';
 import { HttpStatus } from '@/lib/constants';
 import { useUserContext } from '@/lib/contexts/user/hook';
-import { isReportStale } from '@/lib/resume-analysis';
 import { type ResolvedFinding, type ResumeJumpTarget } from '@/lib/resume-lint';
 import { api, getErrorToastContent } from '@/lib/utils';
 
@@ -201,7 +200,7 @@ function AnalyseControls({
   }, [inProgress, mutateUsage]);
 
   const isFailed = resume.analysisStatus === ResumeAnalysisStatus.FAILED;
-  const isStale = isReportStale(resume);
+  const isStale = resume.isAnalysisStale;
   const isRetry =
     isFailed && (autoAnalyse || resume.analysisError !== ResumeAnalysisError.QUOTA_EXCEEDED);
   const showButton = !autoAnalyse || isFailed;
@@ -332,7 +331,7 @@ function SummarySection({
 
       return (
         <div className="flex flex-col gap-6">
-          {isReportStale(resume) && <StaleBanner autoAnalyse={autoAnalyse} />}
+          {resume.isAnalysisStale && <StaleBanner autoAnalyse={autoAnalyse} />}
           <AnalysisReport
             report={resume.analysisReport}
             resumeJson={resume.json}
@@ -376,7 +375,7 @@ export function ResumeDetailPage() {
   } = useSWR<IGetResumeResponse, undefined>(`/resumes/${id}`, {
     fetcher: () => api.get(`/resumes/${id}`).json<IGetResumeResponse>(),
     refreshInterval: (latest) =>
-      isAnalysisInProgress(latest) || (autoAnalyse && latest && isReportStale(latest))
+      isAnalysisInProgress(latest) || (autoAnalyse && latest?.isAnalysisStale)
         ? ANALYSIS_POLL_INTERVAL_MS
         : 0,
   });
