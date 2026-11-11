@@ -23,6 +23,7 @@ import { ILoginDto, ISignupDto } from 'shared';
 
 import { IJwtAccessPayload } from '../../common/types/jwt-payload.interface';
 import { PrismaService } from '../../infra/database/prisma.service';
+import { getEffectivePlan } from '../users/plan';
 import {
   ACCESS_TOKEN_COOKIE_NAME,
   BCRYPT_SALT_ROUNDS,
@@ -321,9 +322,14 @@ export class AuthService {
   }
 
   private async getTokens(userId: User['id'], sessionId: string, verified: boolean) {
+    const user = await this.prisma.user.findUniqueOrThrow({
+      where: { id: userId },
+      select: { plan: true, planExpiresAt: true },
+    });
+
     const accessToken = await this.getSignedToken({
       sub: userId,
-      plan: 'free',
+      plan: getEffectivePlan(user),
       verified,
       type: 'access',
     });

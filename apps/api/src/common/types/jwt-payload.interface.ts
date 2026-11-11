@@ -1,6 +1,8 @@
+import type { Plan } from 'db';
+
 export interface IJwtAccessPayload {
   sub: number;
-  plan: 'free' | 'pro';
+  plan: Plan;
   verified: boolean;
   type: 'access';
 }

@@ -1,4 +1,4 @@
-import { ChevronsUpDownIcon, LogOutIcon, MoonIcon, SunIcon } from 'lucide-react';
+import { ChevronsUpDownIcon, LogOutIcon, MoonIcon, SunIcon, UserIcon } from 'lucide-react';
 import { useNavigate } from 'react-router';
 
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -59,6 +59,14 @@ export function NavUser() {
             align="end"
             sideOffset={4}
           >
+            <DropdownMenuItem
+              onClick={() => {
+                void navigate('/user');
+              }}
+            >
+              <UserIcon />
+              Account
+            </DropdownMenuItem>
             <DropdownMenuSub>
               <DropdownMenuSubTrigger>
                 {theme === 'light' ? <SunIcon /> : <MoonIcon />}

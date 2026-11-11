@@ -6,11 +6,13 @@ import {
 import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
 
+import { AiQuotaModule } from './analysis/ai-quota.module';
 import { ResumeController } from './resumes.controller';
 import { ResumeService } from './resumes.service';
 
 @Module({
   imports: [
+    AiQuotaModule,
     BullModule.registerQueue({
       name: RENDER_QUEUE_NAME,
       ...COMMON_BULL_QUEUE_OPTIONS,

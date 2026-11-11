@@ -3,6 +3,7 @@ import { BotOff, BrainCircuit, FileDown, PencilIcon, SearchSlash } from 'lucide-
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import {
+  IAiUsageResponse,
   ICreateRenderWorkerResponse,
   ICreateResumeDto,
   IGetResumeResponse,
@@ -159,6 +160,24 @@ function AnalysisReport({ report }: { report: NonNullable<IGetResumeResponse['an
   );
 }
 
+function QuotaExceededMessage() {
+  const { data: usage } = useSWR<IAiUsageResponse>('/users/me/ai-usage', {
+    fetcher: () => api.get('/users/me/ai-usage').json<IAiUsageResponse>(),
+  });
+
+  if (!usage) {
+    return 'You have reached your analysis limit.';
+  }
+
+  if (usage.window === 'lifetime') {
+    return `You've used your ${usage.limit} free runs.`;
+  }
+
+  return usage.resetsAt
+    ? `Limit reached. Resets at ${new Date(usage.resetsAt).toLocaleString()}.`
+    : 'Limit reached.';
+}
+
 function SummarySection({ resume }: { resume?: IGetResumeResponse }) {
   if (!resume) {
     return <Spinner />;
@@ -190,11 +209,19 @@ function SummarySection({ resume }: { resume?: IGetResumeResponse }) {
             <EmptyMedia variant="icon">
               <BotOff />
             </EmptyMedia>
-            <EmptyTitle>Analysis failed</EmptyTitle>
+            <EmptyTitle>
+              {resume.analysisError === ResumeAnalysisError.QUOTA_EXCEEDED
+                ? 'Limit reached'
+                : 'Analysis failed'}
+            </EmptyTitle>
             <EmptyDescription>
-              {resume.analysisError === ResumeAnalysisError.PROVIDER_UNAVAILABLE
-                ? 'The analysis service is unavailable right now. Try again later.'
-                : 'Something went wrong while analysing your resume.'}
+              {resume.analysisError === ResumeAnalysisError.QUOTA_EXCEEDED ? (
+                <QuotaExceededMessage />
+              ) : resume.analysisError === ResumeAnalysisError.PROVIDER_UNAVAILABLE ? (
+                'The analysis service is unavailable right now. Try again later.'
+              ) : (
+                'Something went wrong while analysing your resume.'
+              )}
             </EmptyDescription>
           </EmptyHeader>
         </Empty>

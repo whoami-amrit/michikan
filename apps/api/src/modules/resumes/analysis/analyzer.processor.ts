@@ -2,7 +2,7 @@ import { ANALYSER_QUEUE_NAME, RESUME_ANALYZER_JOB_NAME } from '@common/constants
 import { OnWorkerEvent, Processor, WorkerHost } from '@nestjs/bullmq';
 import { Injectable, Logger } from '@nestjs/common';
 import { Job, UnrecoverableError } from 'bullmq';
-import { Prisma, ResumeAnalysisError, ResumeAnalysisStatus } from 'db';
+import { AiRunStatus, Prisma, ResumeAnalysisError, ResumeAnalysisStatus } from 'db';
 import {
   computeScore,
   flattenResume,
@@ -19,6 +19,7 @@ import {
 import { AiFatalError, AiRetryableError } from '../../../infra/ai/ai.errors';
 import { AiService } from '../../../infra/ai/ai.service';
 import { PrismaService } from '../../../infra/database/prisma.service';
+import { AiQuotaService } from './ai-quota.service';
 import { RESUME_ANALYSIS_SYSTEM_PROMPT } from './resume-analysis.prompt';
 import { IAnalyzerJobData } from './types';
 
@@ -55,6 +56,7 @@ export class AnalyzerService extends WorkerHost {
   constructor(
     private readonly aiService: AiService,
     private readonly prismaService: PrismaService,
+    private readonly aiQuotaService: AiQuotaService,
   ) {
     super();
   }
@@ -75,7 +77,36 @@ export class AnalyzerService extends WorkerHost {
 
   private async handleResumeAnalysis({
     resumeId,
+    aiRunId,
   }: IAnalyzerJobData & { type: typeof RESUME_ANALYZER_JOB_NAME }) {
+    if (typeof aiRunId !== 'number') {
+      throw new AnalysisUnrecoverableError(
+        `Job for resume ${resumeId} has no aiRunId`,
+        ResumeAnalysisError.INTERNAL,
+      );
+    }
+
+    const aiRun = await this.prismaService.aiRun.findUnique({ where: { id: aiRunId } });
+
+    if (!aiRun) {
+      throw new AnalysisUnrecoverableError(
+        `No AiRun ${aiRunId} for resume ${resumeId}`,
+        ResumeAnalysisError.INTERNAL,
+      );
+    }
+
+    if (aiRun.status === AiRunStatus.SUCCEEDED) {
+      this.logger.warn(`AiRun ${aiRunId} already succeeded, skipping duplicate job`);
+      return;
+    }
+
+    if (aiRun.status !== AiRunStatus.RESERVED) {
+      throw new AnalysisUnrecoverableError(
+        `AiRun ${aiRunId} is ${aiRun.status}, not RESERVED`,
+        ResumeAnalysisError.INTERNAL,
+      );
+    }
+
     const resume = await this.prismaService.resume.findUnique({ where: { id: resumeId } });
 
     if (!resume) {
@@ -97,7 +128,7 @@ export class AnalyzerService extends WorkerHost {
       const resumeJson = resume.json as unknown as IResumeJson;
       const { payload, idMap } = flattenResume(resumeJson, new Date());
 
-      const { data } = await this.aiService.generateJson({
+      const { data, usage } = await this.aiService.generateJson({
         system: RESUME_ANALYSIS_SYSTEM_PROMPT,
         user: payload,
         schemaName: RESUME_FEEDBACK_SCHEMA_NAME,
@@ -116,13 +147,17 @@ export class AnalyzerService extends WorkerHost {
         findings,
       };
 
-      await this.prismaService.resume.update({
-        where: { id: resumeId },
-        data: {
-          analysisStatus: ResumeAnalysisStatus.DONE,
-          analysisError: null,
-          analysisReport: snapshot,
-        },
+      await this.prismaService.$transaction(async (tx) => {
+        await tx.resume.update({
+          where: { id: resumeId },
+          data: {
+            analysisStatus: ResumeAnalysisStatus.DONE,
+            analysisError: null,
+            analysisReport: snapshot,
+          },
+        });
+
+        await this.aiQuotaService.settleSucceeded(aiRunId, usage, tx);
       });
     } catch (error) {
       this.logger.error(
@@ -149,6 +184,19 @@ export class AnalyzerService extends WorkerHost {
 
     if (!isFinal) {
       return;
+    }
+
+    if (typeof job.data.aiRunId === 'number') {
+      const generationId =
+        error instanceof AiFatalError || error instanceof AiRetryableError
+          ? error.generationId
+          : undefined;
+
+      try {
+        await this.aiQuotaService.settleFailed(job.data.aiRunId, generationId);
+      } catch (settleError) {
+        this.logger.error(`Failed to settle AiRun ${job.data.aiRunId}: ${String(settleError)}`);
+      }
     }
 
     try {

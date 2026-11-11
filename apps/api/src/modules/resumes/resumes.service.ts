@@ -7,8 +7,8 @@ import {
 import appConfig, { type IAppConfig } from '@config/app.config';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { Queue } from 'bullmq';
-import { Resume, ResumeAnalysisStatus } from 'db';
+import { JobsOptions, Queue } from 'bullmq';
+import { Resume, ResumeAnalysisError, ResumeAnalysisStatus } from 'db';
 import {
   hashResumeJson,
   ICreateRenderWorkerResponse,
@@ -22,6 +22,8 @@ import {
 
 import { PrismaService } from '../../infra/database/prisma.service';
 import { S3Service } from '../../infra/storage/s3.service';
+import { QuotaExceededError } from './analysis/ai-quota.errors';
+import { AiQuotaService } from './analysis/ai-quota.service';
 import { IAnalyzerJobData } from './analysis/types';
 import { IRenderPdfWorker } from './types';
 
@@ -35,6 +37,7 @@ export class ResumeService {
     @InjectQueue(RENDER_QUEUE_NAME) private readonly renderQueue: Queue<IRenderPdfWorker>,
     @InjectQueue(ANALYSER_QUEUE_NAME) private readonly analyserQueue: Queue<IAnalyzerJobData>,
     @Inject(appConfig.KEY) private readonly config: IAppConfig,
+    private readonly aiQuotaService: AiQuotaService,
   ) {}
 
   async create(userId: number, createResumeDto: ICreateResumeDto): Promise<Resume> {
@@ -45,16 +48,12 @@ export class ResumeService {
         name: createResumeDto.name,
         description: createResumeDto.description,
         userId,
-        analysisStatus: ResumeAnalysisStatus.QUEUED,
       },
     });
 
-    await this.analyserQueue.add(ANALYSER_QUEUE_NAME, {
-      type: RESUME_ANALYZER_JOB_NAME,
-      resumeId: resume.id,
-    });
+    await this.reserveAndQueueAnalysis(userId, resume.id);
 
-    return resume;
+    return this.prisma.resume.findUniqueOrThrow({ where: { id: resume.id } });
   }
 
   async update(
@@ -77,34 +76,72 @@ export class ResumeService {
       where: { id: resumeId, userId },
       data: {
         ...updateResumeDto,
-        ...(jsonChanged && {
-          analysisStatus: ResumeAnalysisStatus.QUEUED,
-          analysisError: null,
-        }),
       },
     });
 
-    if (jsonChanged) {
-      await this.analyserQueue.add(
-        ANALYSER_QUEUE_NAME,
-        {
-          type: RESUME_ANALYZER_JOB_NAME,
-          resumeId,
-        },
-        {
-          deduplication: {
-            id: String(resumeId),
-            ttl: 5000,
-            extend: true,
-            replace: true,
-          },
-          delay: 5000,
-          removeOnComplete: true,
-        },
-      );
+    if (!jsonChanged) {
+      return updatedResume;
     }
 
-    return updatedResume;
+    await this.reserveAndQueueAnalysis(userId, resumeId, {
+      deduplication: {
+        id: String(resumeId),
+        ttl: 5000,
+        extend: true,
+        replace: true,
+      },
+      delay: 5000,
+      removeOnComplete: true,
+    });
+
+    return this.prisma.resume.findUniqueOrThrow({ where: { id: resumeId } });
+  }
+
+  private async reserveAndQueueAnalysis(
+    userId: number,
+    resumeId: number,
+    jobOptions?: JobsOptions,
+  ): Promise<void> {
+    let reservation: Awaited<ReturnType<AiQuotaService['reserve']>>;
+
+    try {
+      reservation = await this.aiQuotaService.reserve(userId, resumeId);
+    } catch (error) {
+      if (error instanceof QuotaExceededError) {
+        await this.prisma.resume.update({
+          where: { id: resumeId },
+          data: {
+            analysisStatus: ResumeAnalysisStatus.FAILED,
+            analysisError: ResumeAnalysisError.QUOTA_EXCEEDED,
+          },
+        });
+        return;
+      }
+
+      throw error;
+    }
+
+    try {
+      await this.analyserQueue.add(
+        ANALYSER_QUEUE_NAME,
+        { type: RESUME_ANALYZER_JOB_NAME, resumeId, aiRunId: reservation.aiRun.id },
+        jobOptions,
+      );
+    } catch (error) {
+      if (!reservation.reused) {
+        await this.aiQuotaService.settleFailed(reservation.aiRun.id);
+      }
+
+      await this.prisma.resume.update({
+        where: { id: resumeId },
+        data: {
+          analysisStatus: ResumeAnalysisStatus.FAILED,
+          analysisError: ResumeAnalysisError.INTERNAL,
+        },
+      });
+
+      throw error;
+    }
   }
 
   delete(resumeId: number, userId: number): Promise<Resume> {

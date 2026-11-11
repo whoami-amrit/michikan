@@ -25,6 +25,7 @@ import Layout from './layout';
 import { ResumeDetailPage } from './resumes/detail';
 import ResumesPage from './resumes/list';
 import { NewResumePage } from './resumes/new';
+import UserPage from './user';
 
 function App() {
   const { mutate } = useSWRConfig();
@@ -83,6 +84,7 @@ function App() {
                     <Route path="new" element={<NewJobPage />} />
                     <Route path=":id" element={<JobDetailPage />} />
                   </Route>
+                  <Route path="user" element={<UserPage />} />
                   <Route path="resumes">
                     <Route index element={<ResumesPage />} />
                     <Route path="new" element={<NewResumePage />} />

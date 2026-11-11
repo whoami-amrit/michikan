@@ -23,6 +23,7 @@
     "test:cov": "dotenv-run -- jest --coverage",
     "test:debug": "dotenv-run -- node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "dotenv-run -- jest --config ./test/jest-e2e.json",
+    "grant-pro": "dotenv-run -- ts-node -r tsconfig-paths/register --transpile-only scripts/grant-pro.ts",
     "demo:lint-rules": "ts-node -r tsconfig-paths/register --transpile-only scripts/lint-rules-demo.ts",
     "eval:resume-prompt": "dotenv-run -- ts-node -r tsconfig-paths/register --transpile-only scripts/eval-resume-prompt.ts",
     "check:cycles": "madge --circular --extensions ts src --exclude \".*/generated/.*\""

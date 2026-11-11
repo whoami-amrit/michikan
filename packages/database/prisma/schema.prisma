@@ -19,6 +19,21 @@ enum WorkerStatus {
   FAILED
 }
 
+enum Plan {
+  FREE
+  PRO
+}
+
+enum AiRunKind {
+  RESUME_ANALYSIS
+}
+
+enum AiRunStatus {
+  RESERVED
+  SUCCEEDED
+  FAILED
+}
+
 enum JobStatus {
   NOT_APPLIED
   APPLIED
@@ -75,6 +90,7 @@ model Resume {
   analysisReport Json?
   analysisStatus ResumeAnalysisStatus @default(IDLE)
   analysisError  ResumeAnalysisError?
+  aiRuns         AiRun[]
 
   @@index([userId])
 }
@@ -94,7 +110,31 @@ model User {
   resumeRenderWorkers ResumeRenderWorker[]
   jobs                Job[]
 
+  plan          Plan      @default(FREE)
+  planExpiresAt DateTime?
+  aiRuns        AiRun[]
+
   verifyOtps VerifyOtp?
+}
+
+model AiRun {
+  id               Int         @id @default(autoincrement())
+  user             User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId           Int
+  resume           Resume?     @relation(fields: [resumeId], references: [id], onDelete: SetNull)
+  resumeId         Int?
+  kind             AiRunKind
+  status           AiRunStatus @default(RESERVED)
+  generationId     String?
+  promptTokens     Int?
+  cachedTokens     Int?
+  completionTokens Int?
+  cost             Decimal?    @db.Decimal(12, 8)
+  createdAt        DateTime    @default(now())
+  settledAt        DateTime?
+
+  @@index([userId, createdAt])
+  @@index([resumeId, status])
 }
 
 model VerifyOtp {
