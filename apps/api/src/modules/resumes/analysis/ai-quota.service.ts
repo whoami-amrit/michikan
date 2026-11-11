@@ -1,10 +1,10 @@
+import { getEffectivePlan } from '@common/utils/plan';
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { type AiRun, AiRunKind, AiRunStatus, Plan, Prisma, ResumeAnalysisStatus } from 'db';
 import { IAiUsageResponse } from 'shared';
 
 import type { AiUsage } from '../../../infra/ai/ai.service';
 import { PrismaService } from '../../../infra/database/prisma.service';
-import { getEffectivePlan } from '../../users/plan';
 import { QuotaExceededError } from './ai-quota.errors';
 
 export const FREE_RUN_LIMIT = 10;

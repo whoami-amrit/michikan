@@ -1,4 +1,5 @@
 import { EMAIL_QUEUE_NAME, OTP_EMAIL_JOB_NAME } from '@common/constants';
+import { getEffectivePlan } from '@common/utils/plan';
 import appConfig from '@config/app.config';
 import { InjectQueue } from '@nestjs/bullmq';
 import {
@@ -23,7 +24,6 @@ import { ILoginDto, ISignupDto } from 'shared';
 
 import { IJwtAccessPayload } from '../../common/types/jwt-payload.interface';
 import { PrismaService } from '../../infra/database/prisma.service';
-import { getEffectivePlan } from '../users/plan';
 import {
   ACCESS_TOKEN_COOKIE_NAME,
   BCRYPT_SALT_ROUNDS,

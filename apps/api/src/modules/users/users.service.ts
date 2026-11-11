@@ -1,10 +1,10 @@
 import { IJwtAccessPayload } from '@common/types/jwt-payload.interface';
+import { getEffectivePlan } from '@common/utils/plan';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from 'db';
 import { IUpdatePreferencesDto, IUserPreferencesResponse, IUserResponse } from 'shared';
 
 import { PrismaService } from '../../infra/database/prisma.service';
-import { getEffectivePlan } from './plan';
 
 @Injectable()
 export class UsersService {
