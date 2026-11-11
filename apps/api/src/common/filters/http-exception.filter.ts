@@ -9,7 +9,7 @@ import {
 import { Prisma } from 'db';
 import { Request, Response } from 'express';
 import { ZodValidationException } from 'nestjs-zod';
-import { AI_QUOTA_EXCEEDED_CODE, IProblemDetails } from 'shared';
+import { IProblemDetails } from 'shared';
 import { ZodError } from 'zod';
 
 import { QuotaExceededError } from '../../modules/resumes/analysis/ai-quota.errors';
@@ -53,9 +53,8 @@ export class HttpExceptionFilter implements ExceptionFilter {
 
     if (exception instanceof QuotaExceededError) {
       return {
-        status: HttpStatus.TOO_MANY_REQUESTS,
+        status: HttpStatus.PAYMENT_REQUIRED,
         title: 'Analysis limit reached',
-        code: AI_QUOTA_EXCEEDED_CODE,
         resetsAt: exception.resetsAt?.toISOString() ?? null,
       };
     }

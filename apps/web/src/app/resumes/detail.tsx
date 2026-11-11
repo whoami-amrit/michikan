@@ -13,7 +13,6 @@ import {
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import {
-  AI_QUOTA_EXCEEDED_CODE,
   IAiUsageResponse,
   ICreateRenderWorkerResponse,
   ICreateResumeDto,
@@ -216,13 +215,11 @@ function AnalyseControls({
       await api.post(`/resumes/${id}/analysis`).json<IQueueAnalysisResponse>();
       onQueued();
     } catch (error) {
-      if (isHTTPError(error) && error.response.status === HttpStatus.TOO_MANY_REQUESTS) {
+      if (isHTTPError(error) && error.response.status === HttpStatus.PAYMENT_REQUIRED) {
         const problem = error.data as IProblemDetails | undefined;
 
-        if (problem?.code === AI_QUOTA_EXCEEDED_CODE) {
-          setQuota({ resetsAt: problem.resetsAt ?? null });
-          return;
-        }
+        setQuota({ resetsAt: problem?.resetsAt ?? null });
+        return;
       }
 
       toast.add({ type: 'error', ...getErrorToastContent(error) });
