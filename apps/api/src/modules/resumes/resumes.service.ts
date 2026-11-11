@@ -9,6 +9,7 @@ import { InjectQueue } from '@nestjs/bullmq';
 import { Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { JobsOptions, Queue } from 'bullmq';
 import { Resume, ResumeAnalysisError, ResumeAnalysisStatus } from 'db';
+import hash from 'object-hash';
 import {
   hashResumeJson,
   ICreateRenderWorkerResponse,
@@ -245,7 +246,7 @@ export class ResumeService {
 
     const resumeRenderJob = await this.prisma.resumeRenderWorker.create({
       data: {
-        sourceHash: hashResumeJson(resume.json),
+        sourceHash: hash(resume.json),
         resumeId,
         userId,
       },
@@ -267,7 +268,7 @@ export class ResumeService {
       return null;
     }
 
-    const latestSourceHash = hashResumeJson(resume.json);
+    const latestSourceHash = hash(resume.json);
 
     const previousJob = await this.prisma.resumeRenderWorker.findFirst({
       where: {
