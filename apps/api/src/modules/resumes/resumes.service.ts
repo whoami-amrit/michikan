@@ -1,3 +1,5 @@
+import { isDeepStrictEqual } from 'node:util';
+
 import {
   ANALYSER_QUEUE_NAME,
   RENDER_PDF_JOB_NAME,
@@ -73,8 +75,8 @@ export class ResumeService {
       throw new NotFoundException('Resume not found');
     }
 
-    const jsonChanged =
-      hashResumeJson(originalResume.json) !== hashResumeJson(updateResumeDto.json);
+    const incomingJson: unknown = JSON.parse(JSON.stringify(updateResumeDto.json));
+    const jsonChanged = !isDeepStrictEqual(originalResume.json, incomingJson);
 
     const updatedResume = await this.prisma.resume.update({
       where: { id: resumeId, userId },
