@@ -3,19 +3,12 @@ import { CurrentUser } from '@common/decorators/current-user.decorator';
 import type { IJwtAccessPayload } from '@common/types/jwt-payload.interface';
 import { Body, Controller, Get, HttpCode, HttpStatus, Patch } from '@nestjs/common';
 import { createZodDto } from 'nestjs-zod';
-import {
-  IAiUsageResponse,
-  IUserPreferencesResponse,
-  IUserResponse,
-  UpdatePreferencesSchema,
-  UpdateUserSchema,
-} from 'shared';
+import { IAiUsageResponse, IUserResponse, UpdateUserSchema } from 'shared';
 
 import { AiQuotaService } from '../resumes/analysis/ai-quota.service';
 import { UsersService } from './users.service';
 
 class UpdateUserDto extends createZodDto(UpdateUserSchema) {}
-class UpdatePreferencesDto extends createZodDto(UpdatePreferencesSchema) {}
 
 @AllowUnverified()
 @Controller('users')
@@ -39,13 +32,5 @@ export class UsersController {
   @HttpCode(HttpStatus.NO_CONTENT)
   updateUser(@CurrentUser() { sub: userId }: IJwtAccessPayload, @Body() data: UpdateUserDto) {
     return this.usersService.updateUserById(userId, data);
-  }
-
-  @Patch('me/preferences')
-  updatePreferences(
-    @CurrentUser() { sub: userId }: IJwtAccessPayload,
-    @Body() data: UpdatePreferencesDto,
-  ): Promise<IUserPreferencesResponse> {
-    return this.usersService.updatePreferences(userId, data);
   }
 }

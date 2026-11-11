@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { IAiUsageResponse, IUserPreferencesResponse, IUserResponse } from 'shared';
+import { IAiUsageResponse, IUserResponse } from 'shared';
 import useSWR, { mutate } from 'swr';
 
 import AppHeader from '@/components/app-header';
@@ -86,11 +86,9 @@ function SettingsCard() {
     setIsSaving(true);
 
     try {
-      const preferences = await api
-        .patch('/users/me/preferences', { json: { autoAnalyseResume } })
-        .json<IUserPreferencesResponse>();
+      await api.patch(CURRENT_USER_KEY, { json: { autoAnalyseResume } });
 
-      await mutate<IUserResponse>(CURRENT_USER_KEY, { ...user, ...preferences }, false);
+      await mutate<IUserResponse>(CURRENT_USER_KEY, { ...user, autoAnalyseResume }, false);
     } catch (error) {
       toast.add({ type: 'error', ...getErrorToastContent(error) });
     } finally {
