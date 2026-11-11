@@ -13,6 +13,7 @@ import {
 import { useNavigate } from 'react-router';
 import { CreateResumeSchema, ICreateResumeDto, ICreateResumeDtoInput, IResumeJson } from 'shared';
 
+import { ResumeLintFindings } from '@/components/resume-lint-findings';
 import { Button } from '@/components/ui/button';
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -31,6 +32,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/components/ui/toast';
+import { resumeFieldId, resumeLintContext, useResumeLint } from '@/lib/resume-lint';
 import { api, convertNullsToUndefined, getErrorToastContent } from '@/lib/utils';
 
 type ResumeFormProps =
@@ -84,8 +86,13 @@ function PersonalInfoTab() {
           </Field>
           <Field>
             <FieldLabel required>Email</FieldLabel>
-            <Input {...register('json.personalInfo.email')} placeholder="hello@world.me" />
+            <Input
+              {...register('json.personalInfo.email')}
+              id={resumeFieldId('json.personalInfo.email')}
+              placeholder="hello@world.me"
+            />
             <FieldError errors={[errors.json?.personalInfo?.email]} />
+            <ResumeLintFindings fieldName="json.personalInfo.email" />
           </Field>
           <Field>
             <FieldLabel>Github or Gitlab</FieldLabel>
@@ -139,7 +146,7 @@ function SkillsTab() {
 
   return (
     <FieldGroup>
-      <FieldSet>
+      <FieldSet id={resumeFieldId('json.skills')}>
         <FieldLegend>Skills</FieldLegend>
         <FieldDescription>
           Organize your technical skills by category
@@ -182,6 +189,7 @@ function SkillsTab() {
             </Button>
           </FieldGroup>
         ))}
+        <ResumeLintFindings fieldName="json.skills" />
       </FieldSet>
     </FieldGroup>
   );
@@ -345,7 +353,9 @@ function ExperienceTab() {
                   <Textarea
                     className="max-h-80"
                     {...register(`json.experience.${index}.highlights`)}
+                    id={resumeFieldId(`json.experience.${index}.highlights`)}
                   />
+                  <ResumeLintFindings fieldName={`json.experience.${index}.highlights`} />
                   <FieldDescription>
                     Each new line becomes its own bullet point on your resume — so give every
                     accomplishment its own line. Skip filler; one sharp, quantified line beats three
@@ -559,9 +569,11 @@ function ProjectsTab() {
                   <FieldLabel required>Project Title</FieldLabel>
                   <Input
                     {...register(`json.projects.${index}.title`)}
+                    id={resumeFieldId(`json.projects.${index}.title`)}
                     placeholder="Ex. Software Engineer"
                   />
                   <FieldError errors={[errors.json?.projects?.[index]?.title]} />
+                  <ResumeLintFindings fieldName={`json.projects.${index}.title`} />
                 </Field>
               </CardTitle>
               <CardAction>
@@ -577,7 +589,9 @@ function ProjectsTab() {
                   <Textarea
                     className="max-h-44"
                     {...register(`json.projects.${index}.highlights`)}
+                    id={resumeFieldId(`json.projects.${index}.highlights`)}
                   />
+                  <ResumeLintFindings fieldName={`json.projects.${index}.highlights`} />
                   <FieldDescription>
                     Each new line becomes its own bullet point on your resume. Order them from most
                     impressive and relevant to least.
@@ -626,8 +640,13 @@ function SummaryTab() {
         </FieldDescription>
 
         <Field>
-          <Textarea className="min-h-44 max-h-64" {...register('json.summary')} />
+          <Textarea
+            className="min-h-44 max-h-64"
+            {...register('json.summary')}
+            id={resumeFieldId('json.summary')}
+          />
           <FieldError errors={[errors.json?.summary]} />
+          <ResumeLintFindings fieldName="json.summary" />
         </Field>
       </FieldSet>
     </FieldGroup>
@@ -685,6 +704,7 @@ export function ResumeForm({ type, data, id, mutate }: ResumeFormProps) {
     formState: { errors, isSubmitting },
     subscribe,
   } = methods;
+  const lintFindings = useResumeLint(methods.control);
 
   useEffect(() => {
     if (type === 'edit') {
@@ -735,83 +755,85 @@ export function ResumeForm({ type, data, id, mutate }: ResumeFormProps) {
 
   return (
     <FormProvider {...methods}>
-      <form
-        // eslint-disable-next-line @typescript-eslint/no-misused-promises
-        onSubmit={handleSubmit(onSubmit)}
-        className="flex flex-col gap-6 grow"
-      >
-        <FieldGroup className="sm:grid-cols-3 grid gap-4">
-          <Field>
-            <FieldLabel required>Name</FieldLabel>
-            <Input
-              disabled={type === 'edit'}
-              {...methods.register('name')}
-              placeholder="Enter resume name"
-            />
-            <FieldError errors={[errors.name]} />
-          </Field>
-          <Field className="sm:col-span-2">
-            <FieldLabel>Description</FieldLabel>
-            <Input {...methods.register('description')} placeholder="Enter resume description" />
-            <FieldError errors={[errors.description]} />
-          </Field>
-        </FieldGroup>
-        <Tabs className="gap-8 grow" defaultValue={TabKeys.PersonalInfo}>
-          <div className="overflow-auto w-full">
-            <TabsList variant={'line'}>
-              {tabs.map(([tabKey, tabLabel]) => (
-                <TabsTrigger key={tabKey} value={tabKey}>
-                  {errors.json?.[tabKey] && <AlertCircle className="text-red-400" />}
-                  {tabLabel}
-                </TabsTrigger>
-              ))}
-            </TabsList>
-          </div>
-          <TabsContent value={TabKeys.PersonalInfo}>
-            <PersonalInfoTab />
-          </TabsContent>
-          <TabsContent value={TabKeys.Skills}>
-            <SkillsTab />
-          </TabsContent>
-          <TabsContent value={TabKeys.Experience}>
-            <ExperienceTab />
-          </TabsContent>
-          <TabsContent value={TabKeys.Education}>
-            <EducationTab />
-          </TabsContent>
-          <TabsContent value={TabKeys.Projects}>
-            <ProjectsTab />
-          </TabsContent>
-          <TabsContent value={TabKeys.Summary}>
-            <SummaryTab />
-          </TabsContent>
-        </Tabs>
-        <div className="flex justify-between self-end sticky bottom-0 py-4 z-10 w-full before:content-[''] before:w-[calc(100%+24px)] before:bg-background before:border before:border-t-border before:border-transparent before:absolute before:-left-3 before:h-full before:top-0 before:z-[-1]">
-          <div />
-          <div className="flex gap-2 items-center">
-            {isSubmitting && <Spinner className="size-4" />}
-            {type === 'new' && (
+      <resumeLintContext.Provider value={lintFindings}>
+        <form
+          // eslint-disable-next-line @typescript-eslint/no-misused-promises
+          onSubmit={handleSubmit(onSubmit)}
+          className="flex flex-col gap-6 grow"
+        >
+          <FieldGroup className="sm:grid-cols-3 grid gap-4">
+            <Field>
+              <FieldLabel required>Name</FieldLabel>
+              <Input
+                disabled={type === 'edit'}
+                {...methods.register('name')}
+                placeholder="Enter resume name"
+              />
+              <FieldError errors={[errors.name]} />
+            </Field>
+            <Field className="sm:col-span-2">
+              <FieldLabel>Description</FieldLabel>
+              <Input {...methods.register('description')} placeholder="Enter resume description" />
+              <FieldError errors={[errors.description]} />
+            </Field>
+          </FieldGroup>
+          <Tabs className="gap-8 grow" defaultValue={TabKeys.PersonalInfo}>
+            <div className="overflow-auto w-full">
+              <TabsList variant={'line'}>
+                {tabs.map(([tabKey, tabLabel]) => (
+                  <TabsTrigger key={tabKey} value={tabKey}>
+                    {errors.json?.[tabKey] && <AlertCircle className="text-red-400" />}
+                    {tabLabel}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </div>
+            <TabsContent value={TabKeys.PersonalInfo}>
+              <PersonalInfoTab />
+            </TabsContent>
+            <TabsContent value={TabKeys.Skills}>
+              <SkillsTab />
+            </TabsContent>
+            <TabsContent value={TabKeys.Experience}>
+              <ExperienceTab />
+            </TabsContent>
+            <TabsContent value={TabKeys.Education}>
+              <EducationTab />
+            </TabsContent>
+            <TabsContent value={TabKeys.Projects}>
+              <ProjectsTab />
+            </TabsContent>
+            <TabsContent value={TabKeys.Summary}>
+              <SummaryTab />
+            </TabsContent>
+          </Tabs>
+          <div className="flex justify-between self-end sticky bottom-0 py-4 z-10 w-full before:content-[''] before:w-[calc(100%+24px)] before:bg-background before:border before:border-t-border before:border-transparent before:absolute before:-left-3 before:h-full before:top-0 before:z-[-1]">
+            <div />
+            <div className="flex gap-2 items-center">
+              {isSubmitting && <Spinner className="size-4" />}
+              {type === 'new' && (
+                <Button
+                  type="reset"
+                  onClick={() => {
+                    reset();
+                    localStorage.removeItem(LOCAL_STORAGE_KEY);
+                  }}
+                  variant="secondary"
+                >
+                  Reset
+                </Button>
+              )}
               <Button
-                type="reset"
-                onClick={() => {
-                  reset();
-                  localStorage.removeItem(LOCAL_STORAGE_KEY);
-                }}
-                variant="secondary"
+                variant={type !== 'new' ? 'outline' : 'default'}
+                type="submit"
+                disabled={isSubmitting}
               >
-                Reset
+                {type === 'new' ? 'Save' : 'Update'}
               </Button>
-            )}
-            <Button
-              variant={type !== 'new' ? 'outline' : 'default'}
-              type="submit"
-              disabled={isSubmitting}
-            >
-              {type === 'new' ? 'Save' : 'Update'}
-            </Button>
+            </div>
           </div>
-        </div>
-      </form>
+        </form>
+      </resumeLintContext.Provider>
     </FormProvider>
   );
 }

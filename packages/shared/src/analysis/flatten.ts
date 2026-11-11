@@ -1,4 +1,6 @@
 import type { IResumeJson } from '../types/resume-json';
+import { splitHighlights } from './highlights';
+import { buildIdMap } from './id-map';
 import type { JsonPath, SectionId } from './types';
 import { computeYoe } from './yoe';
 
@@ -8,13 +10,6 @@ export interface FlattenedResume {
 }
 
 const EN_DASH = '–';
-
-export function splitHighlights(highlights: string | undefined): string[] {
-  return (highlights ?? '')
-    .split(/\r?\n/)
-    .map((line) => line.trim())
-    .filter((line) => line.length > 0);
-}
 
 export function formatMonth(date: string): string {
   const ms = Date.parse(date);
@@ -26,14 +21,13 @@ export function formatMonth(date: string): string {
 
 export function flattenResume(json: IResumeJson, now: Date): FlattenedResume {
   const lines: string[] = [];
-  const idMap: Record<SectionId, JsonPath> = { PI: 'personalInfo' };
+  const idMap = buildIdMap(json);
 
   lines.push(`YOE: ${computeYoe(json.experience, now).toFixed(1)}`);
 
   const summary = json.summary?.trim().replace(/\s*\r?\n\s*/g, ' ');
   if (summary) {
     lines.push(`SUM: ${summary}`);
-    idMap.SUM = 'summary';
   }
 
   const skillGroups = (json.skills ?? [])
@@ -42,7 +36,6 @@ export function flattenResume(json: IResumeJson, now: Date): FlattenedResume {
     .map((entry) => `${entry.category}: ${entry.skills}`);
   if (skillGroups.length > 0) {
     lines.push(`SK: ${skillGroups.join(' | ')}`);
-    idMap.SK = 'skills';
   }
 
   (json.experience ?? []).forEach((entry, i) => {
@@ -52,11 +45,9 @@ export function flattenResume(json: IResumeJson, now: Date): FlattenedResume {
     lines.push(
       `${id}: ${entry.title.trim()} @ ${entry.company.trim()}, ${formatMonth(entry.startDate)}${EN_DASH}${end}`,
     );
-    idMap[id] = `experience[${i}]`;
 
     splitHighlights(entry.highlights).forEach((bullet, m) => {
       lines.push(`${id}.${m + 1}: ${bullet}`);
-      idMap[`${id}.${m + 1}`] = `experience[${i}].highlights#${m}`;
     });
   });
 
@@ -65,11 +56,9 @@ export function flattenResume(json: IResumeJson, now: Date): FlattenedResume {
     const technologies = entry.technologies?.trim();
 
     lines.push(`${id}: ${entry.title.trim()}${technologies ? ` [${technologies}]` : ''}`);
-    idMap[id] = `projects[${i}]`;
 
     splitHighlights(entry.highlights).forEach((bullet, m) => {
       lines.push(`${id}.${m + 1}: ${bullet}`);
-      idMap[`${id}.${m + 1}`] = `projects[${i}].highlights#${m}`;
     });
   });
 
@@ -80,7 +69,6 @@ export function flattenResume(json: IResumeJson, now: Date): FlattenedResume {
     lines.push(
       `${id}: ${[entry.degree.trim(), field, formatMonth(entry.graduationDate)].filter(Boolean).join(', ')}`,
     );
-    idMap[id] = `education[${i}]`;
   });
 
   return { payload: lines.join('\n'), idMap };

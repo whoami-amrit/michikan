@@ -1,11 +1,11 @@
 import z from 'zod';
 
-import { LLM_ISSUE_CODES } from './types';
+import { ISSUE_CODES } from './types';
 
 export const findingSchema = z.object({
   source: z.enum(['linter', 'llm']),
   section_id: z.string(),
-  issue: z.enum(LLM_ISSUE_CODES),
+  issue: z.enum(ISSUE_CODES),
   fix: z.string(),
 });
 
