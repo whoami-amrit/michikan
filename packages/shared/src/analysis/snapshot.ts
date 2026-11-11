@@ -12,7 +12,7 @@ export const findingSchema = z.object({
 export const resumeAnalysisSnapshotSchema = z.object({
   version: z.literal(1),
   score: z.number().int().min(0).max(100),
-  resumeJsonHash: z.string(),
+  resumeJsonUpdatedAt: z.string(),
   analysedAt: z.string(),
   idMap: z.record(z.string(), z.string()),
   findings: z.array(findingSchema),

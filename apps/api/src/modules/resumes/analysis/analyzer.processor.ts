@@ -6,7 +6,6 @@ import { AiRunStatus, Prisma, ResumeAnalysisError, ResumeAnalysisStatus } from '
 import {
   computeScore,
   flattenResume,
-  hashResumeJson,
   IResumeJson,
   lintResume,
   llmFeedbackSchema,
@@ -141,7 +140,7 @@ export class AnalyzerService extends WorkerHost {
       const snapshot: ResumeAnalysisSnapshot = {
         version: 1,
         score: computeScore(findings),
-        resumeJsonHash: hashResumeJson(resume.json),
+        resumeJsonUpdatedAt: resume.jsonUpdatedAt.toISOString(),
         analysedAt: new Date().toISOString(),
         idMap,
         findings,

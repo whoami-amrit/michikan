@@ -1,5 +1,5 @@
 import { ResumeAnalysisStatus } from 'db';
-import { hashResumeJson, type ICreateResumeDtoInput, type IGetResumeResponse } from 'shared';
+import { type ICreateResumeDtoInput, type IGetResumeResponse } from 'shared';
 
 import { type ResolvedFinding, resolveFinding } from '@/lib/resume-lint';
 
@@ -11,7 +11,7 @@ type ResumeJson = ICreateResumeDtoInput['json'];
 export const isReportStale = (resume: IGetResumeResponse) =>
   resume.analysisStatus === ResumeAnalysisStatus.DONE &&
   resume.analysisReport !== null &&
-  resume.analysisReport.resumeJsonHash !== hashResumeJson(resume.json);
+  resume.analysisReport.resumeJsonUpdatedAt !== new Date(resume.jsonUpdatedAt).toISOString();
 
 export interface GroupedFinding {
   finding: ReportFinding;

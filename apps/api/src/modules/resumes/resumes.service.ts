@@ -13,7 +13,6 @@ import { JobsOptions, Queue } from 'bullmq';
 import { Resume, ResumeAnalysisError, ResumeAnalysisStatus } from 'db';
 import hash from 'object-hash';
 import {
-  hashResumeJson,
   ICreateRenderWorkerResponse,
   ICreateResumeDto,
   IGetResumeResponse,
@@ -82,6 +81,7 @@ export class ResumeService {
       where: { id: resumeId, userId },
       data: {
         ...updateResumeDto,
+        ...(jsonChanged && { jsonUpdatedAt: new Date() }),
       },
     });
 
@@ -106,7 +106,10 @@ export class ResumeService {
 
     const snapshot = resumeAnalysisSnapshotSchema.safeParse(resume.analysisReport);
 
-    if (snapshot.success && snapshot.data.resumeJsonHash === hashResumeJson(resume.json)) {
+    if (
+      snapshot.success &&
+      snapshot.data.resumeJsonUpdatedAt === resume.jsonUpdatedAt.toISOString()
+    ) {
       return;
     }
 
