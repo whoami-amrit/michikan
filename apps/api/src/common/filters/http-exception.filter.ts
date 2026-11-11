@@ -9,8 +9,10 @@ import {
 import { Prisma } from 'db';
 import { Request, Response } from 'express';
 import { ZodValidationException } from 'nestjs-zod';
-import { IProblemDetails } from 'shared';
+import { AI_QUOTA_EXCEEDED_CODE, IProblemDetails } from 'shared';
 import { ZodError } from 'zod';
+
+import { QuotaExceededError } from '../../modules/resumes/analysis/ai-quota.errors';
 
 @Catch()
 export class HttpExceptionFilter implements ExceptionFilter {
@@ -21,7 +23,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
 
-    const { status, title, detail } = this.resolveException(exception);
+    const { status, title, detail, ...extra } = this.resolveException(exception);
 
     this.logger.debug(
       `[${request.method}] ${request.url} → ${status}: ${title}`,
@@ -32,6 +34,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
       status,
       title: title,
       detail,
+      ...extra,
       instance: request.url,
       timestamp: new Date().toISOString(),
     });
@@ -45,6 +48,15 @@ export class HttpExceptionFilter implements ExceptionFilter {
         status: HttpStatus.BAD_REQUEST,
         title: 'Invalid data provided',
         detail: zodError.issues?.map((err) => `${err.path.join('.')} - ${err.message}`),
+      };
+    }
+
+    if (exception instanceof QuotaExceededError) {
+      return {
+        status: HttpStatus.TOO_MANY_REQUESTS,
+        title: 'Analysis limit reached',
+        code: AI_QUOTA_EXCEEDED_CODE,
+        resetsAt: exception.resetsAt?.toISOString() ?? null,
       };
     }
 

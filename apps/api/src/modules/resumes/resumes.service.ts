@@ -15,6 +15,7 @@ import {
   ICreateResumeDto,
   IGetResumeResponse,
   IGetResumesResponse,
+  IQueueAnalysisResponse,
   IRenderStatusResponse,
   IUpdateResumeDto,
   resumeAnalysisSnapshotSchema,
@@ -121,6 +122,24 @@ export class ResumeService {
       throw error;
     }
 
+    await this.enqueueAnalysis(resumeId, reservation, jobOptions);
+  }
+
+  async requestAnalysis(userId: number, resumeId: number): Promise<IQueueAnalysisResponse> {
+    const reservation = await this.aiQuotaService.reserve(userId, resumeId);
+
+    if (!reservation.reused) {
+      await this.enqueueAnalysis(resumeId, reservation);
+    }
+
+    return { status: 'QUEUED', aiRunId: reservation.aiRun.id };
+  }
+
+  private async enqueueAnalysis(
+    resumeId: number,
+    reservation: Awaited<ReturnType<AiQuotaService['reserve']>>,
+    jobOptions?: JobsOptions,
+  ): Promise<void> {
     try {
       await this.analyserQueue.add(
         ANALYSER_QUEUE_NAME,

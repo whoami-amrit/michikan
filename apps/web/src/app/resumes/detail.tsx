@@ -1,12 +1,16 @@
 import { ResumeAnalysisError, ResumeAnalysisStatus, WorkerStatus } from 'db';
-import { BotOff, BrainCircuit, FileDown, PencilIcon, SearchSlash } from 'lucide-react';
-import { useState } from 'react';
+import { isHTTPError } from 'ky';
+import { BotOff, BrainCircuit, FileDown, PencilIcon, SearchSlash, Sparkles } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import {
+  AI_QUOTA_EXCEEDED_CODE,
   IAiUsageResponse,
   ICreateRenderWorkerResponse,
   ICreateResumeDto,
   IGetResumeResponse,
+  IProblemDetails,
+  IQueueAnalysisResponse,
   IRenderStatusResponse,
   ISSUE_LABELS,
 } from 'shared';
@@ -28,6 +32,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from '@/components/ui/toast';
 import { useBreadcrumbs } from '@/hooks/use-breadcrumbs';
+import { HttpStatus } from '@/lib/constants';
 import { api, getErrorToastContent } from '@/lib/utils';
 
 import { ResumeForm } from './form';
@@ -160,22 +165,105 @@ function AnalysisReport({ report }: { report: NonNullable<IGetResumeResponse['an
   );
 }
 
+const AI_USAGE_KEY = '/users/me/ai-usage';
+
+const FREE_RUN_LIMIT_FALLBACK = 10;
+
+const getQuotaMessage = (resetsAt: string | null, limit = FREE_RUN_LIMIT_FALLBACK) =>
+  resetsAt
+    ? `Limit reached. Resets at ${new Date(resetsAt).toLocaleString()}.`
+    : `You've used your ${limit} free runs.`;
+
+const getUsageLabel = (usage: IAiUsageResponse) => {
+  const left = Math.max(usage.limit - usage.used, 0);
+
+  return usage.window === 'lifetime'
+    ? `${left} of ${usage.limit} free runs left`
+    : `${left} / ${usage.limit} left today`;
+};
+
 function QuotaExceededMessage() {
-  const { data: usage } = useSWR<IAiUsageResponse>('/users/me/ai-usage', {
-    fetcher: () => api.get('/users/me/ai-usage').json<IAiUsageResponse>(),
+  const { data: usage } = useSWR<IAiUsageResponse>(AI_USAGE_KEY, {
+    fetcher: () => api.get(AI_USAGE_KEY).json<IAiUsageResponse>(),
   });
 
   if (!usage) {
     return 'You have reached your analysis limit.';
   }
 
-  if (usage.window === 'lifetime') {
-    return `You've used your ${usage.limit} free runs.`;
-  }
+  return getQuotaMessage(usage.resetsAt, usage.limit);
+}
 
-  return usage.resetsAt
-    ? `Limit reached. Resets at ${new Date(usage.resetsAt).toLocaleString()}.`
-    : 'Limit reached.';
+function AnalyseControls({
+  id,
+  resume,
+  onQueued,
+}: {
+  id: string;
+  resume: IGetResumeResponse;
+  onQueued: () => void;
+}) {
+  const { data: usage, mutate: mutateUsage } = useSWR<IAiUsageResponse>(AI_USAGE_KEY, {
+    fetcher: () => api.get(AI_USAGE_KEY).json<IAiUsageResponse>(),
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [quota, setQuota] = useState<{ resetsAt: string | null }>();
+
+  const wasInProgress = useRef(isAnalysisInProgress(resume));
+  const inProgress = isAnalysisInProgress(resume);
+
+  useEffect(() => {
+    if (wasInProgress.current && !inProgress) {
+      void mutateUsage();
+    }
+
+    wasInProgress.current = inProgress;
+  }, [inProgress, mutateUsage]);
+
+  const isRetry =
+    resume.analysisStatus === ResumeAnalysisStatus.FAILED &&
+    resume.analysisError !== ResumeAnalysisError.QUOTA_EXCEEDED;
+
+  const analyse = async () => {
+    setIsSubmitting(true);
+    setQuota(undefined);
+
+    try {
+      await api.post(`/resumes/${id}/analysis`).json<IQueueAnalysisResponse>();
+      onQueued();
+    } catch (error) {
+      if (isHTTPError(error) && error.response.status === HttpStatus.TOO_MANY_REQUESTS) {
+        const problem = error.data as IProblemDetails | undefined;
+
+        if (problem?.code === AI_QUOTA_EXCEEDED_CODE) {
+          setQuota({ resetsAt: problem.resetsAt ?? null });
+          return;
+        }
+      }
+
+      toast.add({ type: 'error', ...getErrorToastContent(error) });
+    } finally {
+      setIsSubmitting(false);
+      void mutateUsage();
+    }
+  };
+
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="flex items-center gap-3">
+        <Button disabled={isSubmitting || inProgress} onClick={() => void analyse()}>
+          {isSubmitting || inProgress ? <Spinner className="size-4" /> : <Sparkles />}
+          {isRetry ? 'Retry' : 'Analyse'}
+        </Button>
+        {usage && <span className="text-sm text-muted-foreground">{getUsageLabel(usage)}</span>}
+      </div>
+      {quota && (
+        <span role="alert" className="text-sm text-destructive">
+          {getQuotaMessage(quota.resetsAt, usage?.limit)}
+        </span>
+      )}
+    </div>
+  );
 }
 
 function SummarySection({ resume }: { resume?: IGetResumeResponse }) {
@@ -335,7 +423,23 @@ export function ResumeDetailPage() {
               <DownloadButton id={id!} />
             </div>
 
-            <TabsContent value="analysis" className="typeset pb-8">
+            <TabsContent value="analysis" className="typeset flex flex-col gap-6 pb-8">
+              {detail && (
+                <AnalyseControls
+                  id={id!}
+                  resume={detail}
+                  onQueued={() => {
+                    void mutate(
+                      {
+                        ...detail,
+                        analysisStatus: ResumeAnalysisStatus.QUEUED,
+                        analysisError: null,
+                      },
+                      { revalidate: true },
+                    );
+                  }}
+                />
+              )}
               <SummarySection resume={detail} />
             </TabsContent>
             <TabsContent value="edit" className="flex flex-col">

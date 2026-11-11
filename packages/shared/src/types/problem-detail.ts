@@ -4,4 +4,6 @@ export interface IProblemDetails {
   detail?: string | string[];
   timestamp: string;
   instance: string;
+  code?: string;
+  resetsAt?: string | null;
 }
