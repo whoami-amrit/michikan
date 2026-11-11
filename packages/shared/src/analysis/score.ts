@@ -4,7 +4,7 @@ const HIGH_SEVERITY_PENALTY = 10;
 const MEDIUM_SEVERITY_PENALTY = 5;
 const LOW_SEVERITY_PENALTY = 2;
 
-export const SCORE_WEIGHTS: Readonly<Record<FindingIssueCode, number>> = Object.freeze({
+export const SCORE_WEIGHTS = Object.freeze({
   PII: HIGH_SEVERITY_PENALTY,
   UNPAID_AS_WORK: HIGH_SEVERITY_PENALTY,
   BANNED_VERB: HIGH_SEVERITY_PENALTY,
@@ -31,7 +31,7 @@ export const SCORE_WEIGHTS: Readonly<Record<FindingIssueCode, number>> = Object.
   GITHUB_AS_SKILL: LOW_SEVERITY_PENALTY,
   LEGACY_EMAIL: LOW_SEVERITY_PENALTY,
   PROJECT_IN_TITLE: LOW_SEVERITY_PENALTY,
-});
+} satisfies Record<FindingIssueCode, number>);
 
 export const MAX_SCORE = 100;
 

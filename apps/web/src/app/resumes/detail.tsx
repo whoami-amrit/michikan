@@ -140,13 +140,14 @@ function AnalysisReport({ report }: { report: NonNullable<IGetResumeResponse['an
         <span className="text-muted-foreground">No issues found.</span>
       ) : (
         <div className="flex flex-col gap-4">
-          {report.findings.map((finding) => (
+          {report.findings.map((finding, index) => (
             <div
-              key={`${finding.section_id}-${finding.issue}`}
+              key={`${finding.source}-${finding.section_id}-${finding.issue}-${index}`}
               className="flex flex-col gap-1 rounded-lg border p-4"
             >
               <div className="flex items-center gap-2">
                 <Badge variant="secondary">{finding.section_id}</Badge>
+                <Badge variant="outline">{finding.source === 'linter' ? 'Rule' : 'AI'}</Badge>
                 <span className="font-medium">{ISSUE_LABELS[finding.issue]}</span>
               </div>
               <span className="text-sm text-muted-foreground">{finding.fix}</span>

@@ -1,6 +1,6 @@
 import type { FindingIssueCode } from './types';
 
-export const ISSUE_LABELS: Readonly<Record<FindingIssueCode, string>> = Object.freeze({
+export const ISSUE_LABELS = Object.freeze({
   PII: 'Personal information',
   UNPAID_AS_WORK: 'Unpaid activity listed as work',
   UNJUSTIFIED_SUMMARY: 'Summary not needed',
@@ -27,4 +27,4 @@ export const ISSUE_LABELS: Readonly<Record<FindingIssueCode, string>> = Object.f
   BASIC_SKILL: 'Basic skill listed',
   GITHUB_AS_SKILL: 'GitHub listed instead of Git',
   PROJECT_IN_TITLE: 'Project title contains "Project"',
-});
+} satisfies Record<FindingIssueCode, string>);

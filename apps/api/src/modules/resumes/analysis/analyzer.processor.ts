@@ -8,6 +8,7 @@ import {
   flattenResume,
   hashResumeJson,
   IResumeJson,
+  lintResume,
   llmFeedbackSchema,
   postProcessLlmFindings,
   RESUME_FEEDBACK_JSON_SCHEMA,
@@ -93,7 +94,8 @@ export class AnalyzerService extends WorkerHost {
         },
       });
 
-      const { payload, idMap } = flattenResume(resume.json as unknown as IResumeJson, new Date());
+      const resumeJson = resume.json as unknown as IResumeJson;
+      const { payload, idMap } = flattenResume(resumeJson, new Date());
 
       const { data } = await this.aiService.generateJson({
         system: RESUME_ANALYSIS_SYSTEM_PROMPT,
@@ -103,7 +105,7 @@ export class AnalyzerService extends WorkerHost {
         zodSchema: llmFeedbackSchema,
       });
 
-      const findings = postProcessLlmFindings(data, idMap);
+      const findings = [...postProcessLlmFindings(data, idMap), ...lintResume(resumeJson)];
 
       const snapshot: ResumeAnalysisSnapshot = {
         version: 1,
