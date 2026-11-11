@@ -28,6 +28,8 @@ import { AiQuotaService } from './analysis/ai-quota.service';
 import { IAnalyzerJobData } from './analysis/types';
 import { IRenderPdfWorker } from './types';
 
+const AUTO_ANALYSE_DEBOUNCE_MS = 60_000;
+
 @Injectable()
 export class ResumeService {
   private readonly logger = new Logger(ResumeService.name);
@@ -52,7 +54,7 @@ export class ResumeService {
       },
     });
 
-    await this.reserveAndQueueAnalysis(userId, resume.id);
+    await this.autoAnalyse(userId, resume);
 
     return this.prisma.resume.findUniqueOrThrow({ where: { id: resume.id } });
   }
@@ -84,18 +86,37 @@ export class ResumeService {
       return updatedResume;
     }
 
-    await this.reserveAndQueueAnalysis(userId, resumeId, {
+    await this.autoAnalyse(userId, updatedResume);
+
+    return this.prisma.resume.findUniqueOrThrow({ where: { id: resumeId } });
+  }
+
+  private async autoAnalyse(userId: number, resume: Resume): Promise<void> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { autoAnalyseResume: true },
+    });
+
+    if (!user?.autoAnalyseResume) {
+      return;
+    }
+
+    const snapshot = resumeAnalysisSnapshotSchema.safeParse(resume.analysisReport);
+
+    if (snapshot.success && snapshot.data.resumeJsonHash === hashResumeJson(resume.json)) {
+      return;
+    }
+
+    await this.reserveAndQueueAnalysis(userId, resume.id, {
+      delay: AUTO_ANALYSE_DEBOUNCE_MS,
       deduplication: {
-        id: String(resumeId),
-        ttl: 5000,
+        id: String(resume.id),
+        ttl: AUTO_ANALYSE_DEBOUNCE_MS,
         extend: true,
         replace: true,
       },
-      delay: 5000,
       removeOnComplete: true,
     });
-
-    return this.prisma.resume.findUniqueOrThrow({ where: { id: resumeId } });
   }
 
   private async reserveAndQueueAnalysis(

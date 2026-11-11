@@ -33,6 +33,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from '@/components/ui/toast';
 import { useBreadcrumbs } from '@/hooks/use-breadcrumbs';
 import { HttpStatus } from '@/lib/constants';
+import { useUserContext } from '@/lib/contexts/user/hook';
 import { api, getErrorToastContent } from '@/lib/utils';
 
 import { ResumeForm } from './form';
@@ -197,10 +198,12 @@ function QuotaExceededMessage() {
 function AnalyseControls({
   id,
   resume,
+  autoAnalyse,
   onQueued,
 }: {
   id: string;
   resume: IGetResumeResponse;
+  autoAnalyse: boolean;
   onQueued: () => void;
 }) {
   const { data: usage, mutate: mutateUsage } = useSWR<IAiUsageResponse>(AI_USAGE_KEY, {
@@ -220,9 +223,10 @@ function AnalyseControls({
     wasInProgress.current = inProgress;
   }, [inProgress, mutateUsage]);
 
+  const isFailed = resume.analysisStatus === ResumeAnalysisStatus.FAILED;
   const isRetry =
-    resume.analysisStatus === ResumeAnalysisStatus.FAILED &&
-    resume.analysisError !== ResumeAnalysisError.QUOTA_EXCEEDED;
+    isFailed && (autoAnalyse || resume.analysisError !== ResumeAnalysisError.QUOTA_EXCEEDED);
+  const showButton = !autoAnalyse || isFailed;
 
   const analyse = async () => {
     setIsSubmitting(true);
@@ -251,10 +255,12 @@ function AnalyseControls({
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-center gap-3">
-        <Button disabled={isSubmitting || inProgress} onClick={() => void analyse()}>
-          {isSubmitting || inProgress ? <Spinner className="size-4" /> : <Sparkles />}
-          {isRetry ? 'Retry' : 'Analyse'}
-        </Button>
+        {showButton && (
+          <Button disabled={isSubmitting || inProgress} onClick={() => void analyse()}>
+            {isSubmitting || inProgress ? <Spinner className="size-4" /> : <Sparkles />}
+            {isRetry ? 'Retry' : 'Analyse'}
+          </Button>
+        )}
         {usage && <span className="text-sm text-muted-foreground">{getUsageLabel(usage)}</span>}
       </div>
       {quota && (
@@ -266,7 +272,13 @@ function AnalyseControls({
   );
 }
 
-function SummarySection({ resume }: { resume?: IGetResumeResponse }) {
+function SummarySection({
+  resume,
+  autoAnalyse,
+}: {
+  resume?: IGetResumeResponse;
+  autoAnalyse: boolean;
+}) {
   if (!resume) {
     return <Spinner />;
   }
@@ -330,7 +342,11 @@ function SummarySection({ resume }: { resume?: IGetResumeResponse }) {
               <BrainCircuit />
             </EmptyMedia>
             <EmptyTitle>No analysis yet</EmptyTitle>
-            <EmptyDescription>This resume has not been analysed yet.</EmptyDescription>
+            <EmptyDescription>
+              {autoAnalyse
+                ? 'Analysis will run after your next edit.'
+                : 'This resume has not been analysed yet.'}
+            </EmptyDescription>
           </EmptyHeader>
         </Empty>
       );
@@ -341,6 +357,7 @@ export function ResumeDetailPage() {
   const { id } = useParams<{ id: string }>();
 
   const navigate = useNavigate();
+  const autoAnalyse = useUserContext()?.autoAnalyseResume ?? false;
 
   const {
     data: detail,
@@ -428,6 +445,7 @@ export function ResumeDetailPage() {
                 <AnalyseControls
                   id={id!}
                   resume={detail}
+                  autoAnalyse={autoAnalyse}
                   onQueued={() => {
                     void mutate(
                       {
@@ -440,7 +458,7 @@ export function ResumeDetailPage() {
                   }}
                 />
               )}
-              <SummarySection resume={detail} />
+              <SummarySection resume={detail} autoAnalyse={autoAnalyse} />
             </TabsContent>
             <TabsContent value="edit" className="flex flex-col">
               <ResumeForm

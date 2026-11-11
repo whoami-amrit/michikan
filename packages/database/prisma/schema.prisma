@@ -114,6 +114,8 @@ model User {
   planExpiresAt DateTime?
   aiRuns        AiRun[]
 
+  autoAnalyseResume Boolean @default(false)
+
   verifyOtps VerifyOtp?
 }
 

@@ -1,7 +1,7 @@
 import { IJwtAccessPayload } from '@common/types/jwt-payload.interface';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from 'db';
-import { IUserResponse } from 'shared';
+import { IUpdatePreferencesDto, IUserPreferencesResponse, IUserResponse } from 'shared';
 
 import { PrismaService } from '../../infra/database/prisma.service';
 import { getEffectivePlan } from './plan';
@@ -26,8 +26,22 @@ export class UsersService {
       createdAt: user.createdAt,
       plan: getEffectivePlan(user),
       planExpiresAt: user.planExpiresAt?.toISOString() ?? null,
+      autoAnalyseResume: user.autoAnalyseResume,
       verified,
     };
+  }
+
+  async updatePreferences(
+    id: number,
+    { autoAnalyseResume }: IUpdatePreferencesDto,
+  ): Promise<IUserPreferencesResponse> {
+    const { autoAnalyseResume: updated } = await this.prisma.user.update({
+      where: { id },
+      data: { autoAnalyseResume },
+      select: { autoAnalyseResume: true },
+    });
+
+    return { autoAnalyseResume: updated };
   }
 
   async updateUserById(id: number, data: Prisma.UserUpdateInput): Promise<void> {

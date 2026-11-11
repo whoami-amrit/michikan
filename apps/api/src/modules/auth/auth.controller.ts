@@ -35,7 +35,7 @@ export class AuthController {
     @Body() signupDto: SignupDto,
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
-  ): Promise<Omit<IUserResponse, 'plan' | 'planExpiresAt' | 'verified'>> {
+  ): Promise<Omit<IUserResponse, 'plan' | 'planExpiresAt' | 'autoAnalyseResume' | 'verified'>> {
     const user = await this.authService.signup(signupDto, req, res);
 
     return {

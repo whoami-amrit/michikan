@@ -1,13 +1,17 @@
-import { IAiUsageResponse } from 'shared';
-import useSWR from 'swr';
+import { useState } from 'react';
+import { IAiUsageResponse, IUserPreferencesResponse, IUserResponse } from 'shared';
+import useSWR, { mutate } from 'swr';
 
 import AppHeader from '@/components/app-header';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Switch } from '@/components/ui/switch';
+import { toast } from '@/components/ui/toast';
 import { useBreadcrumbs } from '@/hooks/use-breadcrumbs';
 import { useUserContext } from '@/lib/contexts/user/hook';
-import { api } from '@/lib/utils';
+import { api, CURRENT_USER_KEY, getErrorToastContent } from '@/lib/utils';
 
 const formatDateTime = (iso: string) => new Date(iso).toLocaleString();
 
@@ -70,6 +74,52 @@ function UsageCard() {
   );
 }
 
+function SettingsCard() {
+  const user = useUserContext();
+  const [isSaving, setIsSaving] = useState(false);
+
+  if (!user) {
+    return null;
+  }
+
+  const setAutoAnalyse = async (autoAnalyseResume: boolean) => {
+    setIsSaving(true);
+
+    try {
+      const preferences = await api
+        .patch('/users/me/preferences', { json: { autoAnalyseResume } })
+        .json<IUserPreferencesResponse>();
+
+      await mutate<IUserResponse>(CURRENT_USER_KEY, { ...user, ...preferences }, false);
+    } catch (error) {
+      toast.add({ type: 'error', ...getErrorToastContent(error) });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Settings</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="flex items-center justify-between gap-4">
+          <Label htmlFor="auto-analyse-resume" className="font-normal leading-snug">
+            Analyse resumes automatically when I save. Each run counts toward your limit.
+          </Label>
+          <Switch
+            id="auto-analyse-resume"
+            checked={user.autoAnalyseResume}
+            disabled={isSaving}
+            onCheckedChange={(checked) => void setAutoAnalyse(checked)}
+          />
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function UserPage() {
   const crumbs = useBreadcrumbs([{ label: 'Account' }]);
 
@@ -79,6 +129,7 @@ export default function UserPage() {
       <div className="flex w-full max-w-2xl grow flex-col gap-6 px-6 pb-8 lg:px-0">
         <PlanCard />
         <UsageCard />
+        <SettingsCard />
       </div>
     </div>
   );
