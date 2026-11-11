@@ -75,11 +75,11 @@ export class AiQuotaService {
 
       if (!existing) {
         const plan = getEffectivePlan(user, now);
-        const { limit, resetsAt } = quotaFor(plan, now);
+        const { limit } = quotaFor(plan, now);
         const used = await this.countUsed(tx, userId, plan, now);
 
         if (used >= limit) {
-          throw new QuotaExceededError(resetsAt);
+          throw new QuotaExceededError();
         }
       }
 

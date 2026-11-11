@@ -17,7 +17,6 @@ import {
   ICreateRenderWorkerResponse,
   ICreateResumeDto,
   IGetResumeResponse,
-  IProblemDetails,
   IQueueAnalysisResponse,
   IRenderStatusResponse,
 } from 'shared';
@@ -188,7 +187,7 @@ function AnalyseControls({
     fetcher: () => api.get(AI_USAGE_KEY).json<IAiUsageResponse>(),
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [quota, setQuota] = useState<{ resetsAt: string | null }>();
+  const [quota, setQuota] = useState(false);
 
   const wasInProgress = useRef(isAnalysisInProgress(resume));
   const inProgress = isAnalysisInProgress(resume);
@@ -209,16 +208,14 @@ function AnalyseControls({
 
   const analyse = async () => {
     setIsSubmitting(true);
-    setQuota(undefined);
+    setQuota(false);
 
     try {
       await api.post(`/resumes/${id}/analysis`).json<IQueueAnalysisResponse>();
       onQueued();
     } catch (error) {
       if (isHTTPError(error) && error.response.status === HttpStatus.PAYMENT_REQUIRED) {
-        const problem = error.data as IProblemDetails | undefined;
-
-        setQuota({ resetsAt: problem?.resetsAt ?? null });
+        setQuota(true);
         return;
       }
 
@@ -242,7 +239,7 @@ function AnalyseControls({
       </div>
       {quota && (
         <span role="alert" className="text-sm text-destructive">
-          {getQuotaMessage(quota.resetsAt, usage?.limit)}
+          <QuotaExceededMessage />
         </span>
       )}
     </div>

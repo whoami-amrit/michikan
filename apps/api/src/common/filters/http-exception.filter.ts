@@ -55,7 +55,6 @@ export class HttpExceptionFilter implements ExceptionFilter {
       return {
         status: HttpStatus.PAYMENT_REQUIRED,
         title: 'Analysis limit reached',
-        resetsAt: exception.resetsAt?.toISOString() ?? null,
       };
     }
 
