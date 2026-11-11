@@ -1,6 +1,15 @@
 import { ResumeAnalysisError, ResumeAnalysisStatus, WorkerStatus } from 'db';
 import { isHTTPError } from 'ky';
-import { BotOff, BrainCircuit, FileDown, PencilIcon, SearchSlash, Sparkles } from 'lucide-react';
+import {
+  BotOff,
+  BrainCircuit,
+  FileDown,
+  PencilIcon,
+  RefreshCw,
+  SearchSlash,
+  Sparkles,
+  TriangleAlert,
+} from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import {
@@ -12,12 +21,10 @@ import {
   IProblemDetails,
   IQueueAnalysisResponse,
   IRenderStatusResponse,
-  ISSUE_LABELS,
 } from 'shared';
 import useSWR from 'swr';
 
 import AppHeader from '@/components/app-header';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   Empty,
@@ -34,8 +41,11 @@ import { toast } from '@/components/ui/toast';
 import { useBreadcrumbs } from '@/hooks/use-breadcrumbs';
 import { HttpStatus } from '@/lib/constants';
 import { useUserContext } from '@/lib/contexts/user/hook';
+import { isReportStale } from '@/lib/resume-analysis';
+import { type ResolvedFinding, type ResumeJumpTarget } from '@/lib/resume-lint';
 import { api, getErrorToastContent } from '@/lib/utils';
 
+import { AnalysisReport } from './analysis-report';
 import { ResumeForm } from './form';
 
 const download = (url: string) => {
@@ -135,37 +145,6 @@ const isAnalysisInProgress = (resume?: IGetResumeResponse) =>
   resume?.analysisStatus === ResumeAnalysisStatus.QUEUED ||
   resume?.analysisStatus === ResumeAnalysisStatus.GENERATING;
 
-function AnalysisReport({ report }: { report: NonNullable<IGetResumeResponse['analysisReport']> }) {
-  return (
-    <div className="flex flex-col gap-6 pb-8">
-      <div className="flex items-baseline gap-2">
-        <span className="text-5xl font-semibold tabular-nums">{report.score}</span>
-        <span className="text-muted-foreground">/ 100</span>
-      </div>
-
-      {report.findings.length === 0 ? (
-        <span className="text-muted-foreground">No issues found.</span>
-      ) : (
-        <div className="flex flex-col gap-4">
-          {report.findings.map((finding, index) => (
-            <div
-              key={`${finding.source}-${finding.section_id}-${finding.issue}-${index}`}
-              className="flex flex-col gap-1 rounded-lg border p-4"
-            >
-              <div className="flex items-center gap-2">
-                <Badge variant="secondary">{finding.section_id}</Badge>
-                <Badge variant="outline">{finding.source === 'linter' ? 'Rule' : 'AI'}</Badge>
-                <span className="font-medium">{ISSUE_LABELS[finding.issue]}</span>
-              </div>
-              <span className="text-sm text-muted-foreground">{finding.fix}</span>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
 const AI_USAGE_KEY = '/users/me/ai-usage';
 
 const FREE_RUN_LIMIT_FALLBACK = 10;
@@ -224,6 +203,7 @@ function AnalyseControls({
   }, [inProgress, mutateUsage]);
 
   const isFailed = resume.analysisStatus === ResumeAnalysisStatus.FAILED;
+  const isStale = isReportStale(resume);
   const isRetry =
     isFailed && (autoAnalyse || resume.analysisError !== ResumeAnalysisError.QUOTA_EXCEEDED);
   const showButton = !autoAnalyse || isFailed;
@@ -258,7 +238,7 @@ function AnalyseControls({
         {showButton && (
           <Button disabled={isSubmitting || inProgress} onClick={() => void analyse()}>
             {isSubmitting || inProgress ? <Spinner className="size-4" /> : <Sparkles />}
-            {isRetry ? 'Retry' : 'Analyse'}
+            {isRetry ? 'Retry' : isStale ? 'Re-analyse' : 'Analyse'}
           </Button>
         )}
         {usage && <span className="text-sm text-muted-foreground">{getUsageLabel(usage)}</span>}
@@ -272,12 +252,36 @@ function AnalyseControls({
   );
 }
 
+function StaleBanner({ autoAnalyse }: { autoAnalyse: boolean }) {
+  return (
+    <div
+      role="status"
+      className="flex items-start gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-amber-700 dark:text-amber-400"
+    >
+      <TriangleAlert className="mt-0.5 size-4 shrink-0" aria-hidden />
+      <div className="flex flex-col gap-0.5">
+        <span className="font-medium">Resume changed since this analysis</span>
+        {autoAnalyse ? (
+          <span className="flex items-center gap-1.5">
+            <RefreshCw className="size-3 animate-spin" aria-hidden />
+            Updating after your edits
+          </span>
+        ) : (
+          <span>Re-analyse to refresh the score and findings.</span>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function SummarySection({
   resume,
   autoAnalyse,
+  onOpenField,
 }: {
   resume?: IGetResumeResponse;
   autoAnalyse: boolean;
+  onOpenField: (target: ResolvedFinding) => void;
 }) {
   if (!resume) {
     return <Spinner />;
@@ -332,7 +336,16 @@ function SummarySection({
         return null;
       }
 
-      return <AnalysisReport report={resume.analysisReport} />;
+      return (
+        <div className="flex flex-col gap-6">
+          {isReportStale(resume) && <StaleBanner autoAnalyse={autoAnalyse} />}
+          <AnalysisReport
+            report={resume.analysisReport}
+            resumeJson={resume.json}
+            onOpenField={onOpenField}
+          />
+        </div>
+      );
 
     default:
       return (
@@ -357,6 +370,8 @@ export function ResumeDetailPage() {
   const { id } = useParams<{ id: string }>();
 
   const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState<string>('analysis');
+  const [jumpTo, setJumpTo] = useState<ResumeJumpTarget>();
   const autoAnalyse = useUserContext()?.autoAnalyseResume ?? false;
 
   const {
@@ -366,7 +381,10 @@ export function ResumeDetailPage() {
     mutate,
   } = useSWR<IGetResumeResponse, undefined>(`/resumes/${id}`, {
     fetcher: () => api.get(`/resumes/${id}`).json<IGetResumeResponse>(),
-    refreshInterval: (latest) => (isAnalysisInProgress(latest) ? ANALYSIS_POLL_INTERVAL_MS : 0),
+    refreshInterval: (latest) =>
+      isAnalysisInProgress(latest) || (autoAnalyse && latest && isReportStale(latest))
+        ? ANALYSIS_POLL_INTERVAL_MS
+        : 0,
   });
 
   const crumbs = useBreadcrumbs([
@@ -427,7 +445,14 @@ export function ResumeDetailPage() {
 
       {!error && !isLoading && (
         <div className="flex flex-col grow max-w-2xl lg:px-0 px-6 w-full">
-          <Tabs className="gap-8 grow">
+          <Tabs
+            className="gap-8 grow"
+            value={activeTab}
+            onValueChange={(value) => {
+              setJumpTo(undefined);
+              setActiveTab(String(value));
+            }}
+          >
             <div className="flex justify-between">
               <TabsList>
                 <TabsTrigger value="analysis">
@@ -458,13 +483,21 @@ export function ResumeDetailPage() {
                   }}
                 />
               )}
-              <SummarySection resume={detail} autoAnalyse={autoAnalyse} />
+              <SummarySection
+                resume={detail}
+                autoAnalyse={autoAnalyse}
+                onOpenField={({ tab, anchorId, line }) => {
+                  setJumpTo({ tab, anchorId, line });
+                  setActiveTab('edit');
+                }}
+              />
             </TabsContent>
             <TabsContent value="edit" className="flex flex-col">
               <ResumeForm
                 type="edit"
                 data={detail as unknown as ICreateResumeDto}
                 id={id!}
+                jumpTo={jumpTo}
                 mutate={() => {
                   void mutate();
                 }}

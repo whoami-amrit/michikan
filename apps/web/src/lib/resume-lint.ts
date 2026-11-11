@@ -116,3 +116,20 @@ export const resumeLintContext = createContext<ResumeLintFindings>(EMPTY);
 
 export const useFieldLintFindings = (fieldName: string): readonly ResolvedFinding[] =>
   useContext(resumeLintContext).get(resumeFieldId(fieldName)) ?? [];
+
+export interface ResumeJumpTarget {
+  tab: ResumeTab;
+  anchorId: string;
+  line?: number;
+}
+
+export function selectTextareaLine(textarea: HTMLTextAreaElement, line: number): void {
+  const lines = textarea.value.split('\n');
+  const text = lines[line - 1];
+  if (text === undefined) return;
+
+  const start = lines
+    .slice(0, line - 1)
+    .reduce((offset, current) => offset + current.length + 1, 0);
+  textarea.setSelectionRange(start, start + text.replace(/\r$/, '').length);
+}

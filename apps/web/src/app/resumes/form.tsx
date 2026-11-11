@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Resume } from 'db';
 import { AlertCircle, PlusIcon, XIcon } from 'lucide-react';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Controller,
   FormProvider,
@@ -32,7 +32,13 @@ import { Spinner } from '@/components/ui/spinner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/components/ui/toast';
-import { resumeFieldId, resumeLintContext, useResumeLint } from '@/lib/resume-lint';
+import {
+  resumeFieldId,
+  type ResumeJumpTarget,
+  resumeLintContext,
+  selectTextareaLine,
+  useResumeLint,
+} from '@/lib/resume-lint';
 import { api, convertNullsToUndefined, getErrorToastContent } from '@/lib/utils';
 
 type ResumeFormProps =
@@ -41,12 +47,14 @@ type ResumeFormProps =
       id: string;
       data: ICreateResumeDto;
       mutate: () => void;
+      jumpTo?: ResumeJumpTarget;
     }
   | {
       type: 'new';
       id?: never;
       data?: never;
       mutate?: never;
+      jumpTo?: never;
     };
 
 const useFormContext = () => useRHFFormContext<ICreateResumeDtoInput, unknown, ICreateResumeDto>();
@@ -688,8 +696,42 @@ const getDefaultNewFormValues = (): ICreateResumeDtoInput => {
   }
 };
 
-export function ResumeForm({ type, data, id, mutate }: ResumeFormProps) {
+export function ResumeForm({ type, data, id, mutate, jumpTo }: ResumeFormProps) {
   const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState<string>(jumpTo?.tab ?? TabKeys.PersonalInfo);
+  const [handledJump, setHandledJump] = useState(jumpTo);
+
+  if (jumpTo && jumpTo !== handledJump) {
+    setHandledJump(jumpTo);
+    setActiveTab(jumpTo.tab);
+  }
+
+  useEffect(() => {
+    if (!jumpTo) return;
+
+    let frame = 0;
+    let attempts = 0;
+
+    const moveToField = () => {
+      const element = document.getElementById(jumpTo.anchorId);
+
+      if (!element) {
+        if (attempts++ < 10) frame = requestAnimationFrame(moveToField);
+        return;
+      }
+
+      element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      element.focus({ preventScroll: true });
+
+      if (jumpTo.line !== undefined && element instanceof HTMLTextAreaElement) {
+        selectTextareaLine(element, jumpTo.line);
+      }
+    };
+
+    frame = requestAnimationFrame(moveToField);
+    return () => cancelAnimationFrame(frame);
+  }, [jumpTo]);
+
   const methods = useForm<ICreateResumeDtoInput, unknown, ICreateResumeDto>({
     defaultValues:
       type === 'new'
@@ -777,7 +819,11 @@ export function ResumeForm({ type, data, id, mutate }: ResumeFormProps) {
               <FieldError errors={[errors.description]} />
             </Field>
           </FieldGroup>
-          <Tabs className="gap-8 grow" defaultValue={TabKeys.PersonalInfo}>
+          <Tabs
+            className="gap-8 grow"
+            value={activeTab}
+            onValueChange={(value) => setActiveTab(String(value))}
+          >
             <div className="overflow-auto w-full">
               <TabsList variant={'line'}>
                 {tabs.map(([tabKey, tabLabel]) => (
