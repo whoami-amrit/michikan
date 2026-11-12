@@ -103,14 +103,20 @@ export class AnalyzerService extends WorkerHost {
     }
 
     try {
-      await this.prismaService.resume.update({
-        where: { id: resumeId },
+      const generating = await this.prismaService.resume.updateMany({
+        where: { id: resumeId, analysisAiRunId: aiRunId },
         data: {
           analysisStatus: ResumeAnalysisStatus.GENERATING,
           analysisError: null,
           analysisReport: Prisma.DbNull,
         },
       });
+
+      if (generating.count === 0) {
+        throw new UnrecoverableError(
+          `AiRun ${aiRunId} is not the current run of resume ${resumeId}`,
+        );
+      }
 
       const resumeJson = resume.json as unknown as IResumeJson;
       const { payload, idMap } = flattenResume(resumeJson, new Date());
@@ -135,14 +141,20 @@ export class AnalyzerService extends WorkerHost {
       };
 
       await this.prismaService.$transaction(async (tx) => {
-        await tx.resume.update({
-          where: { id: resumeId },
+        const done = await tx.resume.updateMany({
+          where: { id: resumeId, analysisAiRunId: aiRunId },
           data: {
             analysisStatus: ResumeAnalysisStatus.DONE,
             analysisError: null,
             analysisReport: snapshot,
           },
         });
+
+        if (done.count === 0) {
+          throw new UnrecoverableError(
+            `AiRun ${aiRunId} is no longer the current run of resume ${resumeId}`,
+          );
+        }
 
         await this.aiQuotaService.settleSucceeded(aiRunId, usage, tx);
       });
@@ -175,28 +187,30 @@ export class AnalyzerService extends WorkerHost {
       return;
     }
 
-    if (typeof job.data.aiRunId === 'number') {
-      const generationId = findAiError(error)?.generationId;
+    const { aiRunId, resumeId } = job.data;
 
-      try {
-        await this.aiQuotaService.settleFailed(job.data.aiRunId, generationId);
-      } catch (settleError) {
-        this.logger.error(`Failed to settle AiRun ${job.data.aiRunId}: ${String(settleError)}`);
-      }
+    if (typeof aiRunId !== 'number') {
+      return;
+    }
+
+    const generationId = findAiError(error)?.generationId;
+
+    try {
+      await this.aiQuotaService.settleFailed(aiRunId, generationId);
+    } catch (settleError) {
+      this.logger.error(`Failed to settle AiRun ${aiRunId}: ${String(settleError)}`);
     }
 
     try {
       await this.prismaService.resume.updateMany({
-        where: { id: job.data.resumeId },
+        where: { id: resumeId, analysisAiRunId: aiRunId },
         data: {
           analysisStatus: ResumeAnalysisStatus.FAILED,
           analysisError: toAnalysisError(error),
         },
       });
     } catch (updateError) {
-      this.logger.error(
-        `Failed to mark resume ${job.data.resumeId} as FAILED: ${String(updateError)}`,
-      );
+      this.logger.error(`Failed to mark resume ${resumeId} as FAILED: ${String(updateError)}`);
     }
   }
 }
