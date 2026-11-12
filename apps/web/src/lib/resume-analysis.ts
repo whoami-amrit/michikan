@@ -16,7 +16,7 @@ export interface IFindingGroup {
 }
 
 const SECTION_ORDER = ['PI', 'SUM', 'SK', 'E', 'P', 'ED'] as const;
-const SECTION_ID = /^(PI|SUM|SK|ED|E|P)(\d+)?(?:\.(\d+))?$/;
+const SECTION_ID_REGEX = /^(PI|SUM|SK|ED|E|P)(\d+)?(?:\.(\d+))?$/;
 
 interface ISectionRank {
   section: number;
@@ -25,7 +25,7 @@ interface ISectionRank {
 }
 
 function sectionRank(sectionId: string): ISectionRank {
-  const match = SECTION_ID.exec(sectionId);
+  const match = SECTION_ID_REGEX.exec(sectionId);
   if (!match) {
     return { section: SECTION_ORDER.length, entry: 0, bullet: 0 };
   }
@@ -44,7 +44,7 @@ const compareRank = (a: ISectionRank, b: ISectionRank) =>
 const named = (name: string | undefined, index: number) => (name?.trim() ? name : `#${index + 1}`);
 
 function groupTitle(groupId: string, json: ResumeJsonType | undefined): string {
-  const match = SECTION_ID.exec(groupId);
+  const match = SECTION_ID_REGEX.exec(groupId);
   const kind = match?.[1];
   const index = Number(match?.[2]) - 1;
 
@@ -71,7 +71,7 @@ export function groupFindings(
   resumeJson: unknown,
 ): IFindingGroup[] {
   const json = resumeJson as ResumeJsonType | undefined;
-  const groups = new Map<string, IFindingGroup>();
+  const findingGroupByIdMap = new Map<string, IFindingGroup>();
 
   const ordered = snapshot.findings
     .map((finding, position) => ({ finding, position, rank: sectionRank(finding.section_id) }))
@@ -79,15 +79,15 @@ export function groupFindings(
 
   for (const { finding } of ordered) {
     const groupId = finding.section_id.split('.')[0] ?? finding.section_id;
-    let group = groups.get(groupId);
+    let group = findingGroupByIdMap.get(groupId);
 
     if (!group) {
       group = { sectionId: groupId, title: groupTitle(groupId, json), findings: [] };
-      groups.set(groupId, group);
+      findingGroupByIdMap.set(groupId, group);
     }
 
     group.findings.push({ finding, resolved: resolveFinding(finding, snapshot.idMap, json) });
   }
 
-  return [...groups.values()];
+  return [...findingGroupByIdMap.values()];
 }

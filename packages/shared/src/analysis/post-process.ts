@@ -18,11 +18,11 @@ export function postProcessLlmFindings(
   raw: ILlmFeedback,
   idMap: Readonly<Record<SectionIdType, string>>,
 ): IFinding[] {
-  const appearance = new Map(Object.keys(idMap).map((id, index) => [id, index]));
+  const sectionOrderMap = new Map(Object.keys(idMap).map((id, index) => [id, index]));
 
-  const best = new Map<string, ILlmFeedback['feedback'][number]>();
+  const bestFeedbackByKeyMap = new Map<string, ILlmFeedback['feedback'][number]>();
   for (const item of raw.feedback) {
-    if (item.section_id === 'PI' || !appearance.has(item.section_id)) {
+    if (item.section_id === 'PI' || !sectionOrderMap.has(item.section_id)) {
       continue;
     }
 
@@ -30,17 +30,17 @@ export function postProcessLlmFindings(
       item.section_id === 'SK' && SK_MULTI_CODES.has(item.issue)
         ? `SK:${item.issue}`
         : item.section_id;
-    const current = best.get(key);
+    const current = bestFeedbackByKeyMap.get(key);
     if (!current || PRIORITY[item.issue] < PRIORITY[current.issue]) {
-      best.set(key, item);
+      bestFeedbackByKeyMap.set(key, item);
     }
   }
 
-  return [...best.values()]
+  return [...bestFeedbackByKeyMap.values()]
     .sort(
       (a, b) =>
         PRIORITY[a.issue] - PRIORITY[b.issue] ||
-        appearance.get(a.section_id)! - appearance.get(b.section_id)!,
+        sectionOrderMap.get(a.section_id)! - sectionOrderMap.get(b.section_id)!,
     )
     .slice(0, MAX_LLM_FINDINGS)
     .map((item) => ({

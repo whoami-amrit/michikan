@@ -4,7 +4,7 @@ export interface IYoeEntry {
   endDate?: string | undefined;
 }
 
-const INTERN_TITLE = /\bintern(ship)?\b/i;
+const INTERN_TITLE_REGEX = /\bintern(ship)?\b/i;
 const MS_PER_MONTH = (365.25 / 12) * 24 * 60 * 60 * 1000;
 
 interface IDateRange {
@@ -17,7 +17,7 @@ export function computeYoe(experience: readonly IYoeEntry[] | undefined, now: Da
   const ranges: IDateRange[] = [];
 
   for (const entry of experience ?? []) {
-    if (INTERN_TITLE.test(entry.title)) {
+    if (INTERN_TITLE_REGEX.test(entry.title)) {
       continue;
     }
 

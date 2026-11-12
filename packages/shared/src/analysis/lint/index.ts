@@ -26,7 +26,7 @@ const B_WORDS = lowerSet([...B_ADJECTIVES, ...B_ADVERBS]);
 const SOFT_SKILL_SET = lowerSet(SOFT_SKILLS);
 const BASIC_SKILL_SET = lowerSet(BASIC_SKILLS);
 
-const PRONOUN = /^(?:i|me|my|we|us|our|their)(?:['’](?:m|ve|ll|d|re|s))?$/i;
+const PRONOUN_REGEX = /^(?:i|me|my|we|us|our|their)(?:['’](?:m|ve|ll|d|re|s))?$/i;
 
 const ABBREVIATIONS = new Set([
   'etc.',
@@ -46,7 +46,7 @@ const ABBREVIATIONS = new Set([
   'st.',
   'no.',
 ]);
-const DOTTED_ABBREVIATION = /^(?:[a-z]\.){2,}$/i;
+const DOTTED_ABBREVIATION_REGEX = /^(?:[a-z]\.){2,}$/i;
 
 const NUMBER_WORDS = lowerSet([
   'one',
@@ -105,19 +105,22 @@ const ONE_NEXT_SKIP = lowerSet([
   'had',
 ]);
 
-const SLASH_WORDS = /^[A-Za-z]{2,}(?:\/[A-Za-z]{2,})+$/;
-const ALL_CAPS = /^[A-Z]+$/;
+const SLASH_WORDS_REGEX = /^[A-Za-z]{2,}(?:\/[A-Za-z]{2,})+$/;
+const ALL_CAPS_REGEX = /^[A-Z]+$/;
 
 const BANNED_VERB_STEMS = BANNED_VERBS.map((verb) => verb.slice(0, -1).toLowerCase());
-const BANNED_VERB = new RegExp(`\\b(?:${BANNED_VERB_STEMS.join('|')})(?:e|es|ed|ing)\\b`, 'gi');
+const BANNED_VERB_REGEX = new RegExp(
+  `\\b(?:${BANNED_VERB_STEMS.join('|')})(?:e|es|ed|ing)\\b`,
+  'gi',
+);
 
-const LEADING_MARKER = /^[\s\-–—•*·]+/;
-const WORD_START = /^[a-z0-9]/i;
-const EDGE_PUNCTUATION = /^[("'`[{“‘<]+|[)"'`\]}”’>.,;:!?]+$/g;
-const LETTER = /\p{L}/u;
-const DIGIT = /\d/;
+const LEADING_MARKER_REGEX = /^[\s\-–—•*·]+/;
+const WORD_START_REGEX = /^[a-z0-9]/i;
+const EDGE_PUNCTUATION_REGEX = /^[("'`[{“‘<]+|[)"'`\]}”’>.,;:!?]+$/g;
+const LETTER_REGEX = /\p{L}/u;
+const DIGIT_REGEX = /\d/;
 
-const LEGACY_EMAIL_DOMAIN = /^(?:aol\.com|hotmail\.com|yahoo\.[a-z.]+)$/;
+const LEGACY_EMAIL_DOMAIN_REGEX = /^(?:aol\.com|hotmail\.com|yahoo\.[a-z.]+)$/;
 
 const SKILL_SLASH_ALLOWLIST = lowerSet(['CI/CD', 'TCP/IP', 'I/O']);
 
@@ -128,10 +131,10 @@ const OVERWROUGHT_VERB_PHRASES = verbMatcher(OVERWROUGHT_VERBS);
 const PROFICIENCY_MATCHERS = PROFICIENCY_PHRASES.map(
   (phrase) => new RegExp(`\\b${phrase.replace(/ /g, '\\s+')}\\b`, 'i'),
 );
-const PROJECT_WORD = /\bproject\b/i;
+const PROJECT_WORD_REGEX = /\bproject\b/i;
 
 function stripEdges(chunk: string): string {
-  return chunk.replace(EDGE_PUNCTUATION, '');
+  return chunk.replace(EDGE_PUNCTUATION_REGEX, '');
 }
 
 function chunksOf(line: string): string[] {
@@ -165,7 +168,7 @@ class LineFindings {
 }
 
 function pronouns(line: string): string[] {
-  return chunksOf(line).filter((chunk) => chunk !== 'US' && PRONOUN.test(chunk));
+  return chunksOf(line).filter((chunk) => chunk !== 'US' && PRONOUN_REGEX.test(chunk));
 }
 
 function hasTrailingPeriod(line: string): boolean {
@@ -174,7 +177,7 @@ function hasTrailingPeriod(line: string): boolean {
   }
 
   const last = line.slice(line.lastIndexOf(' ') + 1);
-  return !(ABBREVIATIONS.has(last.toLowerCase()) || DOTTED_ABBREVIATION.test(last));
+  return !(ABBREVIATIONS.has(last.toLowerCase()) || DOTTED_ABBREVIATION_REGEX.test(last));
 }
 
 function symbols(line: string): string[] {
@@ -202,23 +205,23 @@ function symbols(line: string): string[] {
 }
 
 function isSlashedWords(chunk: string): boolean {
-  if (!SLASH_WORDS.test(chunk)) {
+  if (!SLASH_WORDS_REGEX.test(chunk)) {
     return false;
   }
-  return !chunk.split('/').every((part) => ALL_CAPS.test(part));
+  return !chunk.split('/').every((part) => ALL_CAPS_REGEX.test(part));
 }
 
 function isStrayApostrophe(line: string, index: number): boolean {
   const prev = line[index - 1] ?? '';
   const next = line[index + 1] ?? '';
 
-  if (LETTER.test(prev) && LETTER.test(next)) {
+  if (LETTER_REGEX.test(prev) && LETTER_REGEX.test(next)) {
     return false;
   }
-  if ((prev === 's' || prev === 'S') && !LETTER.test(next)) {
+  if ((prev === 's' || prev === 'S') && !LETTER_REGEX.test(next)) {
     return false;
   }
-  if (DIGIT.test(next)) {
+  if (DIGIT_REGEX.test(next)) {
     return false;
   }
   return true;
@@ -241,7 +244,7 @@ function spelledNumbers(line: string): string[] {
     const prev = chunks[i - 1]?.toLowerCase();
     const next = chunks[i + 1]?.toLowerCase();
 
-    if (MAGNITUDES.has(lower) && prev !== undefined && DIGIT.test(prev.slice(-1))) {
+    if (MAGNITUDES.has(lower) && prev !== undefined && DIGIT_REGEX.test(prev.slice(-1))) {
       return;
     }
 
@@ -261,14 +264,14 @@ function spelledNumbers(line: string): string[] {
 }
 
 function openingPhrase(line: string, phrases: readonly string[]): string | undefined {
-  const start = line.replace(LEADING_MARKER, '');
+  const start = line.replace(LEADING_MARKER_REGEX, '');
   const lower = start.toLowerCase();
 
   for (const phrase of phrases) {
     if (!lower.startsWith(phrase)) {
       continue;
     }
-    if (WORD_START.test(lower.slice(phrase.length, phrase.length + 1))) {
+    if (WORD_START_REGEX.test(lower.slice(phrase.length, phrase.length + 1))) {
       continue;
     }
     return start.slice(0, phrase.length);
@@ -305,7 +308,7 @@ function lintBullet(sectionId: SectionIdType, line: string, out: IFinding[]): vo
     found.add('OVERWROUGHT_VERB', overwrought, `Replace "${overwrought}" with a plain action verb`);
   }
 
-  for (const [verb] of line.matchAll(BANNED_VERB)) {
+  for (const [verb] of line.matchAll(BANNED_VERB_REGEX)) {
     found.add('BANNED_VERB', verb.slice(0, 5), `Drop "${verb}"; lead with what you built`);
   }
 
@@ -336,7 +339,7 @@ function lintSummary(summary: string, out: IFinding[]): void {
 
 function lintEmail(email: string, out: IFinding[]): void {
   const domain = email.slice(email.lastIndexOf('@') + 1).toLowerCase();
-  if (email.includes('@') && LEGACY_EMAIL_DOMAIN.test(domain)) {
+  if (email.includes('@') && LEGACY_EMAIL_DOMAIN_REGEX.test(domain)) {
     out.push({
       source: 'linter',
       section_id: 'PI',
@@ -431,7 +434,7 @@ export function lintResume(json: ILintableResumeJson): IFinding[] {
 
   (json.projects ?? []).forEach((entry, i) => {
     const title = entry.title?.trim();
-    if (title && PROJECT_WORD.test(title)) {
+    if (title && PROJECT_WORD_REGEX.test(title)) {
       out.push({
         source: 'linter',
         section_id: `P${i + 1}`,

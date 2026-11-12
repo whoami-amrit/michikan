@@ -29,7 +29,7 @@ export interface IResolvedFinding {
 
 export const resumeFieldId = (fieldName: string) => `resume-field-${fieldName.replace(/\./g, '-')}`;
 
-const HIGHLIGHTS_PATH = /^(experience|projects)\[(\d+)\]\.highlights$/;
+const HIGHLIGHTS_PATH_REGEX = /^(experience|projects)\[(\d+)\]\.highlights$/;
 
 export function resolveFinding(
   finding: IFinding,
@@ -58,7 +58,7 @@ export function resolveFinding(
     tab: base.split(/[[.]/)[0] as ResumeTabType,
   };
 
-  const highlights = HIGHLIGHTS_PATH.exec(base);
+  const highlights = HIGHLIGHTS_PATH_REGEX.exec(base);
   if (highlights && lineIndex !== undefined) {
     const [, section, index] = highlights;
     const text = json?.[section as 'experience' | 'projects']?.[Number(index)]?.highlights;
@@ -85,7 +85,7 @@ function textareaLine(text: string | undefined, keptIndex: number): number {
 
 export type ResumeLintFindingsType = ReadonlyMap<string, readonly IResolvedFinding[]>;
 
-const EMPTY: ResumeLintFindingsType = new Map();
+const emptyFindingsMap: ResumeLintFindingsType = new Map();
 
 export function useResumeLint(
   control: Control<ICreateResumeDtoInput, unknown, ICreateResumeDto>,
@@ -95,11 +95,11 @@ export function useResumeLint(
 
   return useMemo(() => {
     if (!debounced) {
-      return EMPTY;
+      return emptyFindingsMap;
     }
 
     const idMap = buildIdMap(debounced);
-    const byAnchor = new Map<string, IResolvedFinding[]>();
+    const findingsByAnchorIdMap = new Map<string, IResolvedFinding[]>();
 
     for (const finding of lintResume(debounced)) {
       const resolved = resolveFinding(finding, idMap, debounced);
@@ -107,19 +107,19 @@ export function useResumeLint(
         continue;
       }
 
-      const list = byAnchor.get(resolved.anchorId);
+      const list = findingsByAnchorIdMap.get(resolved.anchorId);
       if (list) {
         list.push(resolved);
       } else {
-        byAnchor.set(resolved.anchorId, [resolved]);
+        findingsByAnchorIdMap.set(resolved.anchorId, [resolved]);
       }
     }
 
-    return byAnchor;
+    return findingsByAnchorIdMap;
   }, [debounced]);
 }
 
-export const resumeLintContext = createContext<ResumeLintFindingsType>(EMPTY);
+export const resumeLintContext = createContext<ResumeLintFindingsType>(emptyFindingsMap);
 
 export const useFieldLintFindings = (fieldName: string): readonly IResolvedFinding[] =>
   useContext(resumeLintContext).get(resumeFieldId(fieldName)) ?? [];
