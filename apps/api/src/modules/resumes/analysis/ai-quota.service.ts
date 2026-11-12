@@ -1,6 +1,6 @@
 import { getEffectivePlan } from '@common/utils/plan';
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { type AiRun, AiRunKind, AiRunStatus, Plan, Prisma, ResumeAnalysisStatus } from 'db';
+import { type AiRun, AiRunKind, AiRunStatus, Plan, Prisma } from 'db';
 import { IAiUsageResponse } from 'shared';
 
 import type { AiUsage } from '../../../infra/ai/ai.service';
@@ -43,63 +43,30 @@ export class AiQuotaService {
 
   constructor(private readonly prisma: PrismaService) {}
 
-  reserve(userId: number, resumeId: number): Promise<{ aiRun: AiRun; reused: boolean }> {
+  withUserLock<T>(userId: number, work: (tx: Prisma.TransactionClient) => Promise<T>): Promise<T> {
     return this.prisma.$transaction(async (tx) => {
       await serialiseReservationsOfUser(tx, userId);
-
-      const now = new Date();
-      const staleBefore = new Date(now.getTime() - RESERVATION_TTL_MS);
-
-      const user = await tx.user.findUniqueOrThrow({
-        where: { id: userId },
-        select: { plan: true, planExpiresAt: true },
-      });
-      const resume = await tx.resume.findUnique({
-        where: { id: resumeId, userId },
-        select: { id: true },
-      });
-
-      if (!resume) {
-        throw new NotFoundException('Resume not found');
-      }
-
-      await tx.aiRun.updateMany({
-        where: { resumeId, status: AiRunStatus.RESERVED, createdAt: { lt: staleBefore } },
-        data: { status: AiRunStatus.FAILED, settledAt: now },
-      });
-
-      const existing = await tx.aiRun.findFirst({
-        where: { resumeId, userId, status: AiRunStatus.RESERVED },
-        orderBy: { id: 'desc' },
-      });
-
-      if (!existing) {
-        const plan = getEffectivePlan(user, now);
-        const { limit } = quotaFor(plan, now);
-        const used = await this.countUsed(tx, userId, plan, now);
-
-        if (used >= limit) {
-          throw new QuotaExceededError();
-        }
-      }
-
-      const aiRun =
-        existing ??
-        (await tx.aiRun.create({
-          data: { userId, resumeId, kind: AiRunKind.RESUME_ANALYSIS },
-        }));
-
-      await tx.resume.update({
-        where: { id: resumeId },
-        data: {
-          analysisStatus: ResumeAnalysisStatus.QUEUED,
-          analysisError: null,
-          analysisAiRunId: aiRun.id,
-        },
-      });
-
-      return { aiRun, reused: !!existing };
+      return work(tx);
     });
+  }
+
+  async reserve(userId: number, kind: AiRunKind, tx: Prisma.TransactionClient): Promise<AiRun> {
+    await serialiseReservationsOfUser(tx, userId);
+
+    const now = new Date();
+    const user = await tx.user.findUniqueOrThrow({
+      where: { id: userId },
+      select: { plan: true, planExpiresAt: true },
+    });
+    const plan = getEffectivePlan(user, now);
+    const { limit } = quotaFor(plan, now);
+    const used = await this.countUsed(tx, userId, plan, now);
+
+    if (used >= limit) {
+      throw new QuotaExceededError();
+    }
+
+    return tx.aiRun.create({ data: { userId, kind } });
   }
 
   async settleSucceeded(aiRunId: number, usage: AiUsage, db: Db = this.prisma): Promise<void> {
@@ -121,8 +88,8 @@ export class AiQuotaService {
     }
   }
 
-  async settleFailed(aiRunId: number, generationId?: string): Promise<void> {
-    await this.prisma.aiRun.updateMany({
+  async settleFailed(aiRunId: number, generationId?: string, db: Db = this.prisma): Promise<void> {
+    await db.aiRun.updateMany({
       where: { id: aiRunId, status: AiRunStatus.RESERVED },
       data: {
         status: AiRunStatus.FAILED,

@@ -92,7 +92,6 @@ model Resume {
   analysisStatus  ResumeAnalysisStatus @default(IDLE)
   analysisError   ResumeAnalysisError?
   analysisAiRunId Int?
-  aiRuns          AiRun[]
 
   @@index([userId])
 }
@@ -125,8 +124,6 @@ model AiRun {
   id               Int         @id @default(autoincrement())
   user             User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId           Int
-  resume           Resume?     @relation(fields: [resumeId], references: [id], onDelete: SetNull)
-  resumeId         Int?
   kind             AiRunKind
   status           AiRunStatus @default(RESERVED)
   generationId     String?
@@ -138,7 +135,6 @@ model AiRun {
   settledAt        DateTime?
 
   @@index([userId, createdAt])
-  @@index([resumeId, status])
 }
 
 model VerifyOtp {

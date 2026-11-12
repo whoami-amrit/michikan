@@ -10,7 +10,7 @@ import appConfig, { type IAppConfig } from '@config/app.config';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { JobsOptions, Queue } from 'bullmq';
-import { Resume, ResumeAnalysisError, ResumeAnalysisStatus } from 'db';
+import { AiRunKind, AiRunStatus, Resume, ResumeAnalysisError, ResumeAnalysisStatus } from 'db';
 import hash from 'object-hash';
 import {
   ICreateRenderWorkerResponse,
@@ -26,8 +26,8 @@ import {
 import { PrismaService } from '../../infra/database/prisma.service';
 import { S3Service } from '../../infra/storage/s3.service';
 import { QuotaExceededError } from './analysis/ai-quota.errors';
-import { AiQuotaService } from './analysis/ai-quota.service';
-import { IAnalyzerJobData } from './analysis/types';
+import { AiQuotaService, RESERVATION_TTL_MS } from './analysis/ai-quota.service';
+import { IAnalysisReservation, IAnalyzerJobData } from './analysis/types';
 import { IRenderPdfWorker } from './types';
 
 const AUTO_ANALYSE_DEBOUNCE_MS = 60_000;
@@ -130,10 +130,10 @@ export class ResumeService {
     resumeId: number,
     jobOptions?: JobsOptions,
   ): Promise<void> {
-    let reservation: Awaited<ReturnType<AiQuotaService['reserve']>>;
+    let reservation: IAnalysisReservation;
 
     try {
-      reservation = await this.aiQuotaService.reserve(userId, resumeId);
+      reservation = await this.reserveAnalysisRun(userId, resumeId);
     } catch (error) {
       if (error instanceof QuotaExceededError) {
         await this.prisma.resume.update({
@@ -152,8 +152,56 @@ export class ResumeService {
     await this.enqueueAnalysis(resumeId, reservation, jobOptions);
   }
 
+  private reserveAnalysisRun(userId: number, resumeId: number): Promise<IAnalysisReservation> {
+    return this.aiQuotaService.withUserLock(userId, async (tx) => {
+      const resume = await tx.resume.findUnique({
+        where: { id: resumeId, userId },
+        select: { analysisAiRunId: true },
+      });
+
+      if (!resume) {
+        throw new NotFoundException('Resume not found');
+      }
+
+      const currentRun =
+        resume.analysisAiRunId === null
+          ? null
+          : await tx.aiRun.findUnique({ where: { id: resume.analysisAiRunId } });
+
+      const isReusable =
+        currentRun?.status === AiRunStatus.RESERVED &&
+        Date.now() - currentRun.createdAt.getTime() < RESERVATION_TTL_MS;
+
+      if (currentRun && isReusable) {
+        await tx.resume.update({
+          where: { id: resumeId },
+          data: { analysisStatus: ResumeAnalysisStatus.QUEUED, analysisError: null },
+        });
+
+        return { aiRun: currentRun, reused: true };
+      }
+
+      if (currentRun?.status === AiRunStatus.RESERVED) {
+        await this.aiQuotaService.settleFailed(currentRun.id, undefined, tx);
+      }
+
+      const aiRun = await this.aiQuotaService.reserve(userId, AiRunKind.RESUME_ANALYSIS, tx);
+
+      await tx.resume.update({
+        where: { id: resumeId },
+        data: {
+          analysisStatus: ResumeAnalysisStatus.QUEUED,
+          analysisError: null,
+          analysisAiRunId: aiRun.id,
+        },
+      });
+
+      return { aiRun, reused: false };
+    });
+  }
+
   async requestAnalysis(userId: number, resumeId: number): Promise<IQueueAnalysisResponse> {
-    const reservation = await this.aiQuotaService.reserve(userId, resumeId);
+    const reservation = await this.reserveAnalysisRun(userId, resumeId);
 
     if (!reservation.reused) {
       await this.enqueueAnalysis(resumeId, reservation);
@@ -164,7 +212,7 @@ export class ResumeService {
 
   private async enqueueAnalysis(
     resumeId: number,
-    reservation: Awaited<ReturnType<AiQuotaService['reserve']>>,
+    reservation: IAnalysisReservation,
     jobOptions?: JobsOptions,
   ): Promise<void> {
     try {
