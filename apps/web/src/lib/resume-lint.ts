@@ -85,7 +85,7 @@ function textareaLine(text: string | undefined, keptIndex: number): number {
 
 export type ResumeLintFindingsType = ReadonlyMap<string, readonly IResolvedFinding[]>;
 
-const emptyFindingsMap: ResumeLintFindingsType = new Map();
+const noFindingsByAnchorIdMap: ResumeLintFindingsType = new Map();
 
 export function useResumeLint(
   control: Control<ICreateResumeDtoInput, unknown, ICreateResumeDto>,
@@ -95,7 +95,7 @@ export function useResumeLint(
 
   return useMemo(() => {
     if (!debounced) {
-      return emptyFindingsMap;
+      return noFindingsByAnchorIdMap;
     }
 
     const idMap = buildIdMap(debounced);
@@ -119,7 +119,7 @@ export function useResumeLint(
   }, [debounced]);
 }
 
-export const resumeLintContext = createContext<ResumeLintFindingsType>(emptyFindingsMap);
+export const resumeLintContext = createContext<ResumeLintFindingsType>(noFindingsByAnchorIdMap);
 
 export const useFieldLintFindings = (fieldName: string): readonly IResolvedFinding[] =>
   useContext(resumeLintContext).get(resumeFieldId(fieldName)) ?? [];

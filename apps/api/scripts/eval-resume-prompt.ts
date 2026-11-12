@@ -38,7 +38,7 @@ const GOLDEN_PAIRS: [string, string][] = [
   ['SK', 'TECH_CASING'],
 ];
 
-const JUDGEMENT_WORDS =
+const JUDGEMENT_WORDS_REGEX =
   /\b(senior|junior|seniority|competen(?:t|cy)|capable|talent(?:ed)?|potential|qualified|unqualified|ability|aptitude|(?:good|great|poor|bad) fit|job fit|strong candidate|weak candidate|experienced|inexperienced)\b/i;
 
 const loadJson = (file: string): unknown =>
@@ -318,7 +318,7 @@ async function runBiasChecks(ai: AiService, goldenOutcome: OutcomeType): Promise
 
   const judging = runs.flatMap((run) =>
     run.raw.feedback
-      .filter((item) => JUDGEMENT_WORDS.test(item.fix))
+      .filter((item) => JUDGEMENT_WORDS_REGEX.test(item.fix))
       .map((item) => `${run.label} ${item.section_id}: "${item.fix}"`),
   );
   problems.push(...judging.map((j) => `fix judges the candidate: ${j}`));
