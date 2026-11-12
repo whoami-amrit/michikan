@@ -19,7 +19,6 @@ import { Tiktoken } from 'js-tiktoken/lite';
 import o200kBase from 'js-tiktoken/ranks/o200k_base';
 import {
   type Finding,
-  flattenResume,
   type IResumeJson,
   type LlmFeedback,
   llmFeedbackSchema,
@@ -31,6 +30,7 @@ import {
 import { z } from 'zod';
 
 import { AiService, type AiUsage } from '../src/infra/ai/ai.service';
+import { buildResumePromptInput } from '../src/modules/resumes/analysis/build-resume-prompt-input';
 import { RESUME_ANALYSIS_SYSTEM_PROMPT } from '../src/modules/resumes/analysis/resume-analysis.prompt';
 
 // ---------------------------------------------------------------------------------------------
@@ -94,7 +94,7 @@ let totalCalls = 0;
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 async function analyse(ai: AiService, label: string, json: IResumeJson): Promise<Outcome> {
-  const { payload, idMap } = flattenResume(json, NOW);
+  const { payload, idMap } = buildResumePromptInput(json, NOW);
   totalCalls++;
 
   try {

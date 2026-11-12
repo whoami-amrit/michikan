@@ -1,17 +1,13 @@
-import type { IResumeJson } from '../types/resume-json';
-import { splitHighlights } from './highlights';
-import { buildIdMap } from './id-map';
-import type { JsonPath, SectionId } from './types';
-import { computeYoe } from './yoe';
+import { buildIdMap, computeYoe, IResumeJson, JsonPath, SectionId, splitHighlights } from 'shared';
 
-export interface FlattenedResume {
+export interface ResumePromptInput {
   payload: string;
   idMap: Record<SectionId, JsonPath>;
 }
 
 const EN_DASH = '–';
 
-export function formatMonth(date: string): string {
+function formatMonth(date: string): string {
   const ms = Date.parse(date);
   if (Number.isNaN(ms)) {
     return date.trim();
@@ -21,7 +17,7 @@ export function formatMonth(date: string): string {
   return `${String(d.getUTCFullYear()).padStart(4, '0')}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`;
 }
 
-export function flattenResume(json: IResumeJson, now: Date): FlattenedResume {
+export function buildResumePromptInput(json: IResumeJson, now: Date): ResumePromptInput {
   const lines: string[] = [];
   const idMap = buildIdMap(json);
 

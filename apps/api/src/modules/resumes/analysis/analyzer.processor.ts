@@ -5,7 +5,6 @@ import { Job, UnrecoverableError } from 'bullmq';
 import { AiRunStatus, Prisma, ResumeAnalysisError, ResumeAnalysisStatus } from 'db';
 import {
   computeScore,
-  flattenResume,
   IResumeJson,
   lintResume,
   llmFeedbackSchema,
@@ -19,6 +18,7 @@ import { AiFatalError, AiRetryableError } from '../../../infra/ai/ai.errors';
 import { AiService } from '../../../infra/ai/ai.service';
 import { AiQuotaService } from '../../../infra/ai/ai-quota.service';
 import { PrismaService } from '../../../infra/database/prisma.service';
+import { buildResumePromptInput } from './build-resume-prompt-input';
 import { RESUME_ANALYSIS_SYSTEM_PROMPT } from './resume-analysis.prompt';
 import { IAnalyzerJobData } from './types';
 
@@ -119,7 +119,7 @@ export class AnalyzerService extends WorkerHost {
       }
 
       const resumeJson = resume.json as unknown as IResumeJson;
-      const { payload, idMap } = flattenResume(resumeJson, new Date());
+      const { payload, idMap } = buildResumePromptInput(resumeJson, new Date());
 
       const { data, usage } = await this.aiService.generateJson({
         system: RESUME_ANALYSIS_SYSTEM_PROMPT,

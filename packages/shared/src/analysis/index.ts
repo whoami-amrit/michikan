@@ -1,4 +1,3 @@
-export { type FlattenedResume, flattenResume, formatMonth } from './flatten';
 export { splitHighlights } from './highlights';
 export { buildIdMap, type IdMapSource } from './id-map';
 export { ISSUE_LABELS } from './labels';
