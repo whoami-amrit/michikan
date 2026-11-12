@@ -91,7 +91,11 @@ export class AiQuotaService {
 
       await tx.resume.update({
         where: { id: resumeId },
-        data: { analysisStatus: ResumeAnalysisStatus.QUEUED, analysisError: null },
+        data: {
+          analysisStatus: ResumeAnalysisStatus.QUEUED,
+          analysisError: null,
+          analysisAiRunId: aiRun.id,
+        },
       });
 
       return { aiRun, reused: !!existing };

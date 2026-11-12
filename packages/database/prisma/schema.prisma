@@ -88,10 +88,11 @@ model Resume {
   resumeRenderWorkers ResumeRenderWorker[]
   jobs                Job[]
 
-  analysisReport Json?
-  analysisStatus ResumeAnalysisStatus @default(IDLE)
-  analysisError  ResumeAnalysisError?
-  aiRuns         AiRun[]
+  analysisReport  Json?
+  analysisStatus  ResumeAnalysisStatus @default(IDLE)
+  analysisError   ResumeAnalysisError?
+  analysisAiRunId Int?
+  aiRuns          AiRun[]
 
   @@index([userId])
 }
