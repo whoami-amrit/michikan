@@ -8,7 +8,7 @@ import {
 } from 'shared';
 import { stringify } from 'yaml';
 
-export interface ResumePromptInput {
+export interface IResumePromptInput {
   payload: string;
   idMap: Record<SectionIdType, JsonPathType>;
 }
@@ -25,9 +25,9 @@ function formatMonth(date: string): string {
   return `${String(d.getUTCFullYear()).padStart(4, '0')}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`;
 }
 
-type PromptBullets = Record<string, string>;
-type PromptSection = Record<string, string | PromptBullets>;
-type PromptRoot = Record<string, string | number | PromptSection>;
+type PromptBulletsType = Record<string, string>;
+type PromptSectionType = Record<string, string | PromptBulletsType>;
+type PromptRootType = Record<string, string | number | PromptSectionType>;
 
 const YAML_OPTIONS = { lineWidth: 0 };
 
@@ -37,7 +37,7 @@ function withoutEmpty(entries: Record<string, string | undefined>): Record<strin
   );
 }
 
-function bulletsById(sectionId: string, highlights: string): PromptBullets {
+function bulletsById(sectionId: string, highlights: string): PromptBulletsType {
   return Object.fromEntries(
     splitHighlights(highlights).map((bullet, i) => [`${sectionId}.${i + 1}`, bullet]),
   );
@@ -59,9 +59,9 @@ function groupSkills(skills: IResumeJson['skills']): Record<string, string> {
   );
 }
 
-export function buildResumePromptInput(json: IResumeJson, now: Date): ResumePromptInput {
+export function buildResumePromptInput(json: IResumeJson, now: Date): IResumePromptInput {
   const idMap = buildIdMap(json);
-  const root: PromptRoot = {
+  const root: PromptRootType = {
     YOE: Number(computeYoe(json.experience, now).toFixed(1)),
   };
 

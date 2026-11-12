@@ -1,12 +1,12 @@
-export type AiErrorReason = 'client' | 'credits' | 'content_filter' | 'provider' | 'output';
+export type AiErrorReasonType = 'client' | 'credits' | 'content_filter' | 'provider' | 'output';
 
-export type AiFatalReason = Extract<AiErrorReason, 'client' | 'credits' | 'content_filter'>;
-export type AiRetryableReason = Extract<AiErrorReason, 'provider' | 'output'>;
+export type AiFatalReasonType = Extract<AiErrorReasonType, 'client' | 'credits' | 'content_filter'>;
+export type AiRetryableReasonType = Extract<AiErrorReasonType, 'provider' | 'output'>;
 
 export class AiFatalError extends Error {
   constructor(
     message: string,
-    readonly reason: AiFatalReason,
+    readonly reason: AiFatalReasonType,
     readonly generationId?: string,
   ) {
     super(message);
@@ -17,7 +17,7 @@ export class AiFatalError extends Error {
 export class AiRetryableError extends Error {
   constructor(
     message: string,
-    readonly reason: AiRetryableReason,
+    readonly reason: AiRetryableReasonType,
     readonly generationId?: string,
   ) {
     super(message);

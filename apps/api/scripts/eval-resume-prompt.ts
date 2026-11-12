@@ -29,7 +29,7 @@ import {
 } from 'shared';
 import { z } from 'zod';
 
-import { AiService, type AiUsage } from '../src/infra/ai/ai.service';
+import { AiService, type IAiUsage } from '../src/infra/ai/ai.service';
 import { buildResumePromptInput } from '../src/modules/resumes/analysis/build-resume-prompt-input';
 import { RESUME_ANALYSIS_SYSTEM_PROMPT } from '../src/modules/resumes/analysis/resume-analysis.prompt';
 
@@ -76,24 +76,24 @@ const biasSchema = z.object({
 // calling the model
 // ---------------------------------------------------------------------------------------------
 
-interface Run {
+interface IRun {
   label: string;
   payload: string;
   raw: ILlmFeedback;
   findings: IFinding[];
-  usage: AiUsage;
+  usage: IAiUsage;
 }
 
-type Outcome = { run: Run } | { error: string };
+type OutcomeType = { run: IRun } | { error: string };
 
-const runs: Run[] = [];
+const runs: IRun[] = [];
 let totalCost = 0;
 let costUnknown = false;
 let totalCalls = 0;
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-async function analyse(ai: AiService, label: string, json: IResumeJson): Promise<Outcome> {
+async function analyse(ai: AiService, label: string, json: IResumeJson): Promise<OutcomeType> {
   const { payload, idMap } = buildResumePromptInput(json, NOW);
   totalCalls++;
 
@@ -112,7 +112,7 @@ async function analyse(ai: AiService, label: string, json: IResumeJson): Promise
       totalCost += usage.cost;
     }
 
-    const run: Run = {
+    const run: IRun = {
       label,
       payload,
       raw: data,
@@ -132,32 +132,32 @@ async function analyse(ai: AiService, label: string, json: IResumeJson): Promise
 // checks
 // ---------------------------------------------------------------------------------------------
 
-interface CheckResult {
+interface ICheckResult {
   id: number;
   name: string;
   status: 'PASS' | 'FAIL' | 'SKIP';
   details: string[];
 }
 
-const pass = (id: number, name: string, details: string[] = []): CheckResult => ({
+const pass = (id: number, name: string, details: string[] = []): ICheckResult => ({
   id,
   name,
   status: 'PASS',
   details,
 });
-const fail = (id: number, name: string, details: string[]): CheckResult => ({
+const fail = (id: number, name: string, details: string[]): ICheckResult => ({
   id,
   name,
   status: 'FAIL',
   details,
 });
-const skip = (id: number, name: string, reason: string): CheckResult => ({
+const skip = (id: number, name: string, reason: string): ICheckResult => ({
   id,
   name,
   status: 'SKIP',
   details: [reason],
 });
-const verdict = (id: number, name: string, ok: boolean, details: string[]): CheckResult =>
+const verdict = (id: number, name: string, ok: boolean, details: string[]): ICheckResult =>
   ok ? pass(id, name, details) : fail(id, name, details);
 
 const pairKey = (f: Pick<IFinding, 'section_id' | 'issue'>) => `${f.section_id}:${f.issue}`;
@@ -191,7 +191,7 @@ const NAME_8 = 'Ignored rules (pronouns, periods, "Utilized") are not flagged';
 const NAME_9 = 'Prompt injection is still audited normally';
 const NAME_10 = 'Selection limits (20 result-less bullets give exactly 10 findings)';
 
-function checkTokenBudget(): CheckResult {
+function checkTokenBudget(): ICheckResult {
   const encoder = new Tiktoken(o200kBase);
   const responseFormat = JSON.stringify({
     type: 'json_schema',
@@ -210,7 +210,7 @@ function checkTokenBudget(): CheckResult {
   ]);
 }
 
-async function runCacheProbe(ai: AiService, golden: IResumeJson): Promise<CheckResult> {
+async function runCacheProbe(ai: AiService, golden: IResumeJson): Promise<ICheckResult> {
   const seen: number[] = [];
 
   for (let attempt = 2; attempt <= CACHE_MAX_ATTEMPTS; attempt++) {
@@ -232,7 +232,7 @@ async function runCacheProbe(ai: AiService, golden: IResumeJson): Promise<CheckR
   ]);
 }
 
-function checkGolden(outcome: Outcome): CheckResult {
+function checkGolden(outcome: OutcomeType): ICheckResult {
   if ('error' in outcome) {
     return fail(3, NAME_3, [outcome.error]);
   }
@@ -248,7 +248,7 @@ function checkGolden(outcome: Outcome): CheckResult {
   ]);
 }
 
-function checkClean(outcome: Outcome): CheckResult {
+function checkClean(outcome: OutcomeType): ICheckResult {
   if ('error' in outcome) {
     return fail(4, NAME_4, [outcome.error]);
   }
@@ -259,7 +259,7 @@ function checkClean(outcome: Outcome): CheckResult {
   ]);
 }
 
-function checkInventedNumbers(sampleCount: number): CheckResult {
+function checkInventedNumbers(sampleCount: number): ICheckResult {
   const problems: string[] = [];
   let fixes = 0;
 
@@ -283,7 +283,7 @@ function checkInventedNumbers(sampleCount: number): CheckResult {
   ]);
 }
 
-function checkFixLength(): CheckResult {
+function checkFixLength(): ICheckResult {
   const problems: string[] = [];
   let fixes = 0;
 
@@ -300,7 +300,7 @@ function checkFixLength(): CheckResult {
   return verdict(6, NAME_6, problems.length === 0, [`${fixes} fixes checked`, ...problems]);
 }
 
-async function runBiasChecks(ai: AiService, goldenOutcome: Outcome): Promise<CheckResult> {
+async function runBiasChecks(ai: AiService, goldenOutcome: OutcomeType): Promise<ICheckResult> {
   const bias = biasSchema.parse(loadJson('bias.json'));
   const problems: string[] = [];
   const notes: string[] = [];
@@ -356,7 +356,7 @@ async function runBiasChecks(ai: AiService, goldenOutcome: Outcome): Promise<Che
   return verdict(7, NAME_7, problems.length === 0, [...notes, ...problems]);
 }
 
-async function runIgnoredRules(ai: AiService): Promise<CheckResult> {
+async function runIgnoredRules(ai: AiService): Promise<ICheckResult> {
   const outcome = await analyse(ai, 'ignored rules', loadResume('ignored-rules.json'));
   if ('error' in outcome) {
     return fail(8, NAME_8, [outcome.error]);
@@ -367,7 +367,7 @@ async function runIgnoredRules(ai: AiService): Promise<CheckResult> {
   ]);
 }
 
-async function runInjection(ai: AiService, goldenOutcome: Outcome): Promise<CheckResult> {
+async function runInjection(ai: AiService, goldenOutcome: OutcomeType): Promise<ICheckResult> {
   const outcome = await analyse(ai, 'prompt injection', loadResume('injection.json'));
   if ('error' in outcome) {
     return fail(9, NAME_9, [outcome.error]);
@@ -385,7 +385,7 @@ async function runInjection(ai: AiService, goldenOutcome: Outcome): Promise<Chec
   ]);
 }
 
-async function runSelectionLimits(ai: AiService): Promise<CheckResult> {
+async function runSelectionLimits(ai: AiService): Promise<ICheckResult> {
   const outcome = await analyse(ai, '20 bullets', loadResume('twenty-bullets.json'));
   if ('error' in outcome) {
     return fail(10, NAME_10, [outcome.error]);
@@ -406,7 +406,7 @@ async function runSelectionLimits(ai: AiService): Promise<CheckResult> {
 // main
 // ---------------------------------------------------------------------------------------------
 
-function printReport(results: CheckResult[]) {
+function printReport(results: ICheckResult[]) {
   console.log('\n=== resume prompt eval ===');
   for (const r of results.sort((a, b) => a.id - b.id)) {
     console.log(`\n[${r.status}] check ${r.id}: ${r.name}`);
@@ -433,7 +433,7 @@ function printReport(results: CheckResult[]) {
 }
 
 async function main() {
-  const results: CheckResult[] = [checkTokenBudget()];
+  const results: ICheckResult[] = [checkTokenBudget()];
 
   const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) {

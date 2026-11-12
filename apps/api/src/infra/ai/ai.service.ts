@@ -4,16 +4,16 @@ import { z } from 'zod';
 
 import { AiFatalError, AiRetryableError } from './ai.errors';
 import type {
-  OpenRouterErrorBody,
-  OpenRouterRequest,
-  OpenRouterResponse,
+  IOpenRouterErrorBody,
+  IOpenRouterRequest,
+  IOpenRouterResponse,
 } from './openrouter.types';
 
 export const AI_MODEL = 'openai/gpt-4o-mini';
 export const AI_TIMEOUT_MS = 30_000;
 export const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
 
-export interface AiUsage {
+export interface IAiUsage {
   generationId: string;
   promptTokens: number;
   cachedTokens: number;
@@ -22,7 +22,7 @@ export interface AiUsage {
   latencyMs: number;
 }
 
-export interface GenerateJsonArgs<T> {
+export interface IGenerateJsonArgs<T> {
   system: string;
   user: string;
   schemaName: string;
@@ -38,8 +38,8 @@ export class AiService {
 
   constructor(@Inject(aiConfig.KEY) private readonly config: IAIConfig) {}
 
-  async generateJson<T>(args: GenerateJsonArgs<T>): Promise<{ data: T; usage: AiUsage }> {
-    const body: OpenRouterRequest = {
+  async generateJson<T>(args: IGenerateJsonArgs<T>): Promise<{ data: T; usage: IAiUsage }> {
+    const body: IOpenRouterRequest = {
       model: AI_MODEL,
       messages: [
         { role: 'system', content: args.system },
@@ -88,15 +88,15 @@ export class AiService {
     return this.handleSuccess(parsedBody, args.zodSchema, Date.now() - startedAt);
   }
 
-  private async readBody(response: Response): Promise<OpenRouterResponse | null> {
+  private async readBody(response: Response): Promise<IOpenRouterResponse | null> {
     try {
-      return (await response.json()) as OpenRouterResponse;
+      return (await response.json()) as IOpenRouterResponse;
     } catch {
       return null;
     }
   }
 
-  private classifyHttpError(status: number, body: OpenRouterResponse | null) {
+  private classifyHttpError(status: number, body: IOpenRouterResponse | null) {
     const generationId = body?.id;
     this.logError(status, body?.error, generationId);
     const message = `OpenRouter responded with HTTP ${status}`;
@@ -114,10 +114,10 @@ export class AiService {
   }
 
   private handleSuccess<T>(
-    body: OpenRouterResponse | null,
+    body: IOpenRouterResponse | null,
     zodSchema: z.ZodType<T>,
     latencyMs: number,
-  ): { data: T; usage: AiUsage } {
+  ): { data: T; usage: IAiUsage } {
     const generationId = body?.id;
     const choice = body?.choices?.[0];
 
@@ -167,7 +167,7 @@ export class AiService {
       );
     }
 
-    const usage: AiUsage = {
+    const usage: IAiUsage = {
       generationId: generationId ?? '',
       promptTokens: body.usage?.prompt_tokens ?? 0,
       cachedTokens: body.usage?.prompt_tokens_details?.cached_tokens ?? 0,
@@ -185,7 +185,7 @@ export class AiService {
     return { data: result.data, usage };
   }
 
-  private logError(status: number, error: OpenRouterErrorBody | undefined, generationId?: string) {
+  private logError(status: number, error: IOpenRouterErrorBody | undefined, generationId?: string) {
     this.logger.error(
       `OpenRouter error status=${status} code=${error?.code ?? 'n/a'} ` +
         `message=${error?.message ?? 'n/a'} generationId=${generationId ?? 'n/a'}`,

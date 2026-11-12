@@ -4,14 +4,14 @@ import { type AiRun, AiRunKind, AiRunStatus, Plan, Prisma } from 'db';
 import { IAiUsageResponse } from 'shared';
 
 import { PrismaService } from '../database/prisma.service';
-import type { AiUsage } from './ai.service';
+import type { IAiUsage } from './ai.service';
 import { QuotaExceededError } from './ai-quota.errors';
 
 export const FREE_RUN_LIMIT = 10;
 export const PRO_DAILY_RUN_LIMIT = 100;
 export const RESERVATION_TTL_MS = 15 * 60 * 1000;
 
-type Db = PrismaService | Prisma.TransactionClient;
+type DbType = PrismaService | Prisma.TransactionClient;
 
 const serialiseReservationsOfUser = (tx: Prisma.TransactionClient, userId: number) =>
   tx.$queryRaw`SELECT "id" FROM "User" WHERE "id" = ${userId} FOR UPDATE`;
@@ -69,7 +69,7 @@ export class AiQuotaService {
     return tx.aiRun.create({ data: { userId, kind } });
   }
 
-  async settleSucceeded(aiRunId: number, usage: AiUsage, db: Db = this.prisma): Promise<void> {
+  async settleSucceeded(aiRunId: number, usage: IAiUsage, db: DbType = this.prisma): Promise<void> {
     const { count } = await db.aiRun.updateMany({
       where: { id: aiRunId, status: { in: [AiRunStatus.RESERVED, AiRunStatus.FAILED] } },
       data: {
@@ -88,7 +88,11 @@ export class AiQuotaService {
     }
   }
 
-  async settleFailed(aiRunId: number, generationId?: string, db: Db = this.prisma): Promise<void> {
+  async settleFailed(
+    aiRunId: number,
+    generationId?: string,
+    db: DbType = this.prisma,
+  ): Promise<void> {
     await db.aiRun.updateMany({
       where: { id: aiRunId, status: AiRunStatus.RESERVED },
       data: {
@@ -122,7 +126,7 @@ export class AiQuotaService {
     };
   }
 
-  private countUsed(db: Db, userId: number, plan: Plan, now: Date): Promise<number> {
+  private countUsed(db: DbType, userId: number, plan: Plan, now: Date): Promise<number> {
     const { windowStart } = quotaFor(plan, now);
     const staleBefore = new Date(now.getTime() - RESERVATION_TTL_MS);
 
