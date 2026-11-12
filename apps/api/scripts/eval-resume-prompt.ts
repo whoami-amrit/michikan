@@ -1,17 +1,3 @@
-/**
- * Eval for the resume analysis prompt: runs child spec §7 checks 1-10 against the real
- * OpenRouter API and prints pass/fail per check plus the total cost.
- *
- *   pnpm --filter shared build           # once, and after changing packages/shared
- *   pnpm --filter api eval:resume-prompt
- *
- * It calls the production `AiService`, so the request (provider pinning, strict schema,
- * `temperature: 0`) is exactly what the worker sends. It costs real OpenRouter credits (a few
- * cents per run) and is not part of CI. Needs OPENROUTER_API_KEY in the root `.env`; without
- * it only the offline check 1 runs and the script exits non-zero.
- *
- * Re-run it after every edit to the prompt or the response schema.
- */
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
@@ -33,11 +19,6 @@ import { AiService, type IAiUsage } from '../src/infra/ai/ai.service';
 import { buildResumePromptInput } from '../src/modules/resumes/analysis/build-resume-prompt-input';
 import { RESUME_ANALYSIS_SYSTEM_PROMPT } from '../src/modules/resumes/analysis/resume-analysis.prompt';
 
-// ---------------------------------------------------------------------------------------------
-// setup
-// ---------------------------------------------------------------------------------------------
-
-/** Fixed clock: the §3.3 example only yields `YOE: 4.4` on this date. */
 const NOW = new Date('2026-11-11T00:00:00Z');
 const FIXTURES = join(__dirname, 'fixtures');
 
@@ -45,7 +26,6 @@ const PREFIX_MIN_TOKENS = 1024;
 const PREFIX_MAX_TOKENS = 1400;
 const MAX_DETAIL_LINES = 15;
 const CACHE_RETRY_DELAY_MS = 3000;
-/** The second call may land on a cold replica, so a few more tries are allowed. */
 const CACHE_MAX_ATTEMPTS = 4;
 
 const GOLDEN_PAIRS: [string, string][] = [
@@ -58,7 +38,6 @@ const GOLDEN_PAIRS: [string, string][] = [
   ['SK', 'TECH_CASING'],
 ];
 
-/** Wording that would mean a fix judges the candidate instead of the text (check 7). */
 const JUDGEMENT_WORDS =
   /\b(senior|junior|seniority|competen(?:t|cy)|capable|talent(?:ed)?|potential|qualified|unqualified|ability|aptitude|(?:good|great|poor|bad) fit|job fit|strong candidate|weak candidate|experienced|inexperienced)\b/i;
 
@@ -71,10 +50,6 @@ const biasSchema = z.object({
   piiVariants: z.array(z.object({ name: z.string(), resume: ResumeJsonSchema })),
   nameSwaps: z.array(z.object({ name: z.string(), a: ResumeJsonSchema, b: ResumeJsonSchema })),
 });
-
-// ---------------------------------------------------------------------------------------------
-// calling the model
-// ---------------------------------------------------------------------------------------------
 
 interface IRun {
   label: string;
@@ -128,10 +103,6 @@ async function analyse(ai: AiService, label: string, json: IResumeJson): Promise
   }
 }
 
-// ---------------------------------------------------------------------------------------------
-// checks
-// ---------------------------------------------------------------------------------------------
-
 interface ICheckResult {
   id: number;
   name: string;
@@ -164,7 +135,6 @@ const pairKey = (f: Pick<IFinding, 'section_id' | 'issue'>) => `${f.section_id}:
 const describe = (findings: Pick<IFinding, 'section_id' | 'issue'>[]) =>
   findings.length === 0 ? '(none)' : findings.map(pairKey).join(', ');
 
-/** Findings without PII, and without any section that carries a PII finding on either side. */
 function withoutPii(a: IFinding[], b: IFinding[]): [string[], string[]] {
   const piiSections = new Set(
     [...a, ...b].filter((f) => f.issue === 'PII').map((f) => f.section_id),
@@ -401,10 +371,6 @@ async function runSelectionLimits(ai: AiService): Promise<ICheckResult> {
     `findings: ${describe(raw.feedback)}`,
   ]);
 }
-
-// ---------------------------------------------------------------------------------------------
-// main
-// ---------------------------------------------------------------------------------------------
 
 function printReport(results: ICheckResult[]) {
   console.log('\n=== resume prompt eval ===');
