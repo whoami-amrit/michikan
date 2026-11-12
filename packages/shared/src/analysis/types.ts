@@ -1,6 +1,6 @@
-export type SectionId = string;
+export type SectionIdType = string;
 
-export type JsonPath = string;
+export type JsonPathType = string;
 
 export const LLM_ISSUE_CODES = [
   'PII',
@@ -15,7 +15,7 @@ export const LLM_ISSUE_CODES = [
   'TECH_CASING',
 ] as const;
 
-export type LlmIssueCode = (typeof LLM_ISSUE_CODES)[number];
+export type LlmIssueCodeType = (typeof LLM_ISSUE_CODES)[number];
 
 export const LINT_ISSUE_CODES = [
   'PRONOUN',
@@ -36,17 +36,12 @@ export const LINT_ISSUE_CODES = [
   'PROJECT_IN_TITLE',
 ] as const;
 
-export type LintIssueCode = (typeof LINT_ISSUE_CODES)[number];
+export type LintIssueCodeType = (typeof LINT_ISSUE_CODES)[number];
 
 export const ISSUE_CODES = [...LLM_ISSUE_CODES, ...LINT_ISSUE_CODES] as const;
 
-export type FindingSource = 'linter' | 'llm';
+export type FindingSourceType = 'linter' | 'llm';
 
-export type FindingIssueCode = LlmIssueCode | LintIssueCode;
+export type FindingIssueCodeType = LlmIssueCodeType | LintIssueCodeType;
 
-export interface Finding {
-  source: FindingSource;
-  section_id: SectionId;
-  issue: FindingIssueCode;
-  fix: string;
-}
+export type MaybeType<T> = T | null | undefined;

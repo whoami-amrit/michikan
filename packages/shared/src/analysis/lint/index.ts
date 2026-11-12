@@ -1,6 +1,7 @@
 import { splitHighlights } from '../highlights';
-import type { IdMapSource } from '../id-map';
-import type { Finding, LintIssueCode, SectionId } from '../types';
+import type { ILooseResumeJson } from '../id-map';
+import type { IFinding } from '../snapshot';
+import type { LintIssueCodeType, MaybeType, SectionIdType } from '../types';
 import {
   B_ADJECTIVES,
   B_ADVERBS,
@@ -12,13 +13,11 @@ import {
   WEAK_VERBS,
 } from './wordlists';
 
-type Maybe<T> = T | null | undefined;
-
 export const MAX_BULLET_CHARS = 200;
 
-export interface LintableResume extends IdMapSource {
-  personalInfo?: Maybe<{ email?: Maybe<string> }>;
-  projects?: Maybe<readonly { title?: Maybe<string>; highlights?: Maybe<string> }[]>;
+export interface ILintableResumeJson extends ILooseResumeJson {
+  personalInfo?: MaybeType<{ email?: MaybeType<string> }>;
+  projects?: MaybeType<readonly { title?: MaybeType<string>; highlights?: MaybeType<string> }[]>;
 }
 
 const lowerSet = (words: readonly string[]) => new Set(words.map((word) => word.toLowerCase()));
@@ -151,11 +150,11 @@ class LineFindings {
   private readonly seen = new Set<string>();
 
   constructor(
-    private readonly sectionId: SectionId,
-    private readonly out: Finding[],
+    private readonly sectionId: SectionIdType,
+    private readonly out: IFinding[],
   ) {}
 
-  add(issue: LintIssueCode, key: string, fix: string): void {
+  add(issue: LintIssueCodeType, key: string, fix: string): void {
     const id = `${issue}:${key.toLowerCase()}`;
     if (this.seen.has(id)) {
       return;
@@ -277,7 +276,7 @@ function openingPhrase(line: string, phrases: readonly string[]): string | undef
   return undefined;
 }
 
-function lintBullet(sectionId: SectionId, line: string, out: Finding[]): void {
+function lintBullet(sectionId: SectionIdType, line: string, out: IFinding[]): void {
   const found = new LineFindings(sectionId, out);
 
   for (const word of pronouns(line)) {
@@ -325,7 +324,7 @@ function lintBWords(line: string, found: LineFindings): void {
   }
 }
 
-function lintSummary(summary: string, out: Finding[]): void {
+function lintSummary(summary: string, out: IFinding[]): void {
   const found = new LineFindings('SUM', out);
 
   for (const word of pronouns(summary)) {
@@ -335,7 +334,7 @@ function lintSummary(summary: string, out: Finding[]): void {
   lintBWords(summary, found);
 }
 
-function lintEmail(email: string, out: Finding[]): void {
+function lintEmail(email: string, out: IFinding[]): void {
   const domain = email.slice(email.lastIndexOf('@') + 1).toLowerCase();
   if (email.includes('@') && LEGACY_EMAIL_DOMAIN.test(domain)) {
     out.push({
@@ -347,9 +346,9 @@ function lintEmail(email: string, out: Finding[]): void {
   }
 }
 
-type SkillGroups = NonNullable<LintableResume['skills']>;
+type SkillGroupsType = NonNullable<ILintableResumeJson['skills']>;
 
-function lintSkills(groups: SkillGroups, out: Finding[]): void {
+function lintSkills(groups: SkillGroupsType, out: IFinding[]): void {
   const entries = groups
     .map((group) => ({
       category: group.category?.trim() ?? '',
@@ -406,8 +405,8 @@ function lintSkills(groups: SkillGroups, out: Finding[]): void {
   }
 }
 
-export function lintResume(json: LintableResume): Finding[] {
-  const out: Finding[] = [];
+export function lintResume(json: ILintableResumeJson): IFinding[] {
+  const out: IFinding[] = [];
 
   const email = json.personalInfo?.email?.trim();
   if (email) {

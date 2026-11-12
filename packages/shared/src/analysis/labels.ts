@@ -1,4 +1,4 @@
-import type { FindingIssueCode } from './types';
+import type { FindingIssueCodeType } from './types';
 
 export const ISSUE_LABELS = Object.freeze({
   PII: 'Personal information',
@@ -27,4 +27,4 @@ export const ISSUE_LABELS = Object.freeze({
   BASIC_SKILL: 'Basic skill listed',
   GITHUB_AS_SKILL: 'GitHub listed instead of Git',
   PROJECT_IN_TITLE: 'Project title contains "Project"',
-} satisfies Record<FindingIssueCode, string>);
+} satisfies Record<FindingIssueCodeType, string>);

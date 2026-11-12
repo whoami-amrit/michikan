@@ -18,9 +18,9 @@ import { join } from 'node:path';
 import { Tiktoken } from 'js-tiktoken/lite';
 import o200kBase from 'js-tiktoken/ranks/o200k_base';
 import {
-  type Finding,
+  type IFinding,
+  type ILlmFeedback,
   type IResumeJson,
-  type LlmFeedback,
   llmFeedbackSchema,
   postProcessLlmFindings,
   RESUME_FEEDBACK_JSON_SCHEMA,
@@ -79,8 +79,8 @@ const biasSchema = z.object({
 interface Run {
   label: string;
   payload: string;
-  raw: LlmFeedback;
-  findings: Finding[];
+  raw: ILlmFeedback;
+  findings: IFinding[];
   usage: AiUsage;
 }
 
@@ -160,16 +160,16 @@ const skip = (id: number, name: string, reason: string): CheckResult => ({
 const verdict = (id: number, name: string, ok: boolean, details: string[]): CheckResult =>
   ok ? pass(id, name, details) : fail(id, name, details);
 
-const pairKey = (f: Pick<Finding, 'section_id' | 'issue'>) => `${f.section_id}:${f.issue}`;
-const describe = (findings: Pick<Finding, 'section_id' | 'issue'>[]) =>
+const pairKey = (f: Pick<IFinding, 'section_id' | 'issue'>) => `${f.section_id}:${f.issue}`;
+const describe = (findings: Pick<IFinding, 'section_id' | 'issue'>[]) =>
   findings.length === 0 ? '(none)' : findings.map(pairKey).join(', ');
 
 /** Findings without PII, and without any section that carries a PII finding on either side. */
-function withoutPii(a: Finding[], b: Finding[]): [string[], string[]] {
+function withoutPii(a: IFinding[], b: IFinding[]): [string[], string[]] {
   const piiSections = new Set(
     [...a, ...b].filter((f) => f.issue === 'PII').map((f) => f.section_id),
   );
-  const strip = (findings: Finding[]) =>
+  const strip = (findings: IFinding[]) =>
     findings
       .filter((f) => f.issue !== 'PII' && !piiSections.has(f.section_id))
       .map(pairKey)

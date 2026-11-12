@@ -1,8 +1,8 @@
 import { Resume } from 'db';
 
-import type { ResumeAnalysisSnapshot } from '../../analysis';
+import type { IResumeAnalysisSnapshot } from '../../analysis';
 
 export interface IGetResumeResponse extends Omit<Resume, 'analysisReport'> {
-  analysisReport: ResumeAnalysisSnapshot | null;
+  analysisReport: IResumeAnalysisSnapshot | null;
   isAnalysisStale: boolean;
 }

@@ -19,4 +19,4 @@ delete feedbackJsonSchema.$schema;
 
 export const RESUME_FEEDBACK_JSON_SCHEMA = Object.freeze(feedbackJsonSchema);
 
-export type LlmFeedback = z.infer<typeof llmFeedbackSchema>;
+export type ILlmFeedback = z.infer<typeof llmFeedbackSchema>;

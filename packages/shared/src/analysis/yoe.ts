@@ -1,4 +1,4 @@
-export interface YoeEntry {
+export interface IYoeEntry {
   title: string;
   startDate: string;
   endDate?: string | undefined;
@@ -7,14 +7,14 @@ export interface YoeEntry {
 const INTERN_TITLE = /\bintern(ship)?\b/i;
 const MS_PER_MONTH = (365.25 / 12) * 24 * 60 * 60 * 1000;
 
-interface DateRange {
+interface IDateRange {
   start: number;
   end: number;
 }
 
-export function computeYoe(experience: readonly YoeEntry[] | undefined, now: Date): number {
+export function computeYoe(experience: readonly IYoeEntry[] | undefined, now: Date): number {
   const nowMs = now.getTime();
-  const ranges: DateRange[] = [];
+  const ranges: IDateRange[] = [];
 
   for (const entry of experience ?? []) {
     if (INTERN_TITLE.test(entry.title)) {
@@ -33,7 +33,7 @@ export function computeYoe(experience: readonly YoeEntry[] | undefined, now: Dat
   ranges.sort((a, b) => a.start - b.start);
 
   let totalMs = 0;
-  let currentRange: DateRange | undefined;
+  let currentRange: IDateRange | undefined;
   for (const range of ranges) {
     if (currentRange && range.start <= currentRange.end) {
       currentRange.end = Math.max(currentRange.end, range.end);

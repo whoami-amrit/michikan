@@ -1,4 +1,5 @@
-import type { Finding, FindingIssueCode } from './types';
+import type { IFinding } from './snapshot';
+import type { FindingIssueCodeType } from './types';
 
 const HIGH_SEVERITY_PENALTY = 10;
 const MEDIUM_SEVERITY_PENALTY = 5;
@@ -31,11 +32,11 @@ export const SCORE_WEIGHTS = Object.freeze({
   GITHUB_AS_SKILL: LOW_SEVERITY_PENALTY,
   LEGACY_EMAIL: LOW_SEVERITY_PENALTY,
   PROJECT_IN_TITLE: LOW_SEVERITY_PENALTY,
-} satisfies Record<FindingIssueCode, number>);
+} satisfies Record<FindingIssueCodeType, number>);
 
 export const MAX_SCORE = 100;
 
-export function computeScore(findings: readonly Pick<Finding, 'issue'>[]): number {
+export function computeScore(findings: readonly Pick<IFinding, 'issue'>[]): number {
   const penalty = findings.reduce((total, { issue }) => total + SCORE_WEIGHTS[issue], 0);
   return Math.max(0, MAX_SCORE - penalty);
 }

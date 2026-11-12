@@ -1,18 +1,16 @@
 import { splitHighlights } from './highlights';
-import type { JsonPath, SectionId } from './types';
+import type { JsonPathType, MaybeType, SectionIdType } from './types';
 
-type Maybe<T> = T | null | undefined;
-
-export interface IdMapSource {
+export interface ILooseResumeJson {
   summary?: unknown;
-  skills?: Maybe<readonly { category?: Maybe<string>; skills?: Maybe<string> }[]>;
-  experience?: Maybe<readonly { highlights?: Maybe<string> }[]>;
-  projects?: Maybe<readonly { highlights?: Maybe<string> }[]>;
-  education?: Maybe<readonly unknown[]>;
+  skills?: MaybeType<readonly { category?: MaybeType<string>; skills?: MaybeType<string> }[]>;
+  experience?: MaybeType<readonly { highlights?: MaybeType<string> }[]>;
+  projects?: MaybeType<readonly { highlights?: MaybeType<string> }[]>;
+  education?: MaybeType<readonly unknown[]>;
 }
 
-export function buildIdMap(json: IdMapSource): Record<SectionId, JsonPath> {
-  const idMap: Record<SectionId, JsonPath> = { PI: 'personalInfo' };
+export function buildIdMap(json: ILooseResumeJson): Record<SectionIdType, JsonPathType> {
+  const idMap: Record<SectionIdType, JsonPathType> = { PI: 'personalInfo' };
 
   if (typeof json.summary === 'string' && json.summary.trim()) {
     idMap.SUM = 'summary';

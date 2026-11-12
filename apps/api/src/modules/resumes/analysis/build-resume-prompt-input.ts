@@ -1,9 +1,16 @@
-import { buildIdMap, computeYoe, IResumeJson, JsonPath, SectionId, splitHighlights } from 'shared';
+import {
+  buildIdMap,
+  computeYoe,
+  IResumeJson,
+  JsonPathType,
+  SectionIdType,
+  splitHighlights,
+} from 'shared';
 import { stringify } from 'yaml';
 
 export interface ResumePromptInput {
   payload: string;
-  idMap: Record<SectionId, JsonPath>;
+  idMap: Record<SectionIdType, JsonPathType>;
 }
 
 const EN_DASH = '–';

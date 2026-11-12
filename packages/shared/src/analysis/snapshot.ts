@@ -17,4 +17,6 @@ export const resumeAnalysisSnapshotSchema = z.object({
   findings: z.array(findingSchema),
 });
 
-export type ResumeAnalysisSnapshot = z.infer<typeof resumeAnalysisSnapshotSchema>;
+export type IFinding = z.infer<typeof findingSchema>;
+
+export type IResumeAnalysisSnapshot = z.infer<typeof resumeAnalysisSnapshotSchema>;

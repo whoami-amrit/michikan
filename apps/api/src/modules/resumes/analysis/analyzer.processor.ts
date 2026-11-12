@@ -5,13 +5,13 @@ import { Job, UnrecoverableError } from 'bullmq';
 import { AiRunStatus, Prisma, ResumeAnalysisError, ResumeAnalysisStatus } from 'db';
 import {
   computeScore,
+  IResumeAnalysisSnapshot,
   IResumeJson,
   lintResume,
   llmFeedbackSchema,
   postProcessLlmFindings,
   RESUME_FEEDBACK_JSON_SCHEMA,
   RESUME_FEEDBACK_SCHEMA_NAME,
-  ResumeAnalysisSnapshot,
 } from 'shared';
 
 import { AiFatalError, AiRetryableError } from '../../../infra/ai/ai.errors';
@@ -131,7 +131,7 @@ export class AnalyzerService extends WorkerHost {
 
       const findings = [...postProcessLlmFindings(data, idMap), ...lintResume(resumeJson)];
 
-      const snapshot: ResumeAnalysisSnapshot = {
+      const snapshot: IResumeAnalysisSnapshot = {
         score: computeScore(findings),
         resumeJsonUpdatedAt: resume.jsonUpdatedAt.toISOString(),
         analysedAt: new Date().toISOString(),

@@ -2,14 +2,14 @@ import { createContext, useContext, useMemo } from 'react';
 import { type Control, useWatch } from 'react-hook-form';
 import {
   buildIdMap,
-  type Finding,
   type ICreateResumeDto,
   type ICreateResumeDtoInput,
+  type IFinding,
   type IResumeJson,
   ISSUE_LABELS,
-  type JsonPath,
+  type JsonPathType,
   lintResume,
-  type SectionId,
+  type SectionIdType,
 } from 'shared';
 
 import { useDebouncedValue } from '@/hooks/use-debounced-value';
@@ -19,7 +19,7 @@ export const LINT_DEBOUNCE_MS = 300;
 export type ResumeTab = keyof IResumeJson;
 
 export interface ResolvedFinding {
-  finding: Finding;
+  finding: IFinding;
   label: string;
   fieldName: string;
   anchorId: string;
@@ -32,8 +32,8 @@ export const resumeFieldId = (fieldName: string) => `resume-field-${fieldName.re
 const HIGHLIGHTS_PATH = /^(experience|projects)\[(\d+)\]\.highlights$/;
 
 export function resolveFinding(
-  finding: Finding,
-  idMap: Readonly<Record<SectionId, JsonPath>>,
+  finding: IFinding,
+  idMap: Readonly<Record<SectionIdType, JsonPathType>>,
   json: ICreateResumeDtoInput['json'] | undefined,
 ): ResolvedFinding | undefined {
   const path = idMap[finding.section_id];
