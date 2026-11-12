@@ -42,7 +42,7 @@ export function flattenResume(json: IResumeJson, now: Date): FlattenedResume {
 
   (json.experience ?? []).forEach((entry, i) => {
     const id = `E${i + 1}`;
-    const end = entry.isCurrentRole || !entry.endDate ? 'present' : formatMonth(entry.endDate);
+    const end = entry.endDate ? formatMonth(entry.endDate) : 'present';
 
     lines.push(
       `${id}: ${entry.title.trim()} @ ${entry.company.trim()}, ${formatMonth(entry.startDate)}${EN_DASH}${end}`,
