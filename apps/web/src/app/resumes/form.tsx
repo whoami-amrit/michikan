@@ -33,8 +33,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/components/ui/toast';
 import {
+  type IResumeJumpTarget,
   resumeFieldId,
-  type ResumeJumpTarget,
   resumeLintContext,
   selectTextareaLine,
   useResumeLint,
@@ -47,7 +47,7 @@ type ResumeFormProps =
       id: string;
       data: ICreateResumeDto;
       mutate: () => void;
-      jumpTo?: ResumeJumpTarget;
+      jumpTo?: IResumeJumpTarget;
     }
   | {
       type: 'new';

@@ -1,13 +1,11 @@
 import { ArrowUpRight } from 'lucide-react';
-import { type IGetResumeResponse, ISSUE_LABELS } from 'shared';
+import { type IFinding, type IResumeAnalysisSnapshot, ISSUE_LABELS } from 'shared';
 
 import { Badge } from '@/components/ui/badge';
 import { groupFindings } from '@/lib/resume-analysis';
-import { type ResolvedFinding } from '@/lib/resume-lint';
+import { type IResolvedFinding } from '@/lib/resume-lint';
 
-type Snapshot = NonNullable<IGetResumeResponse['analysisReport']>;
-
-function FindingBody({ resolved, source, fix }: FindingProps) {
+function FindingBody({ resolved, source, fix }: IFindingProps) {
   return (
     <>
       <div className="flex items-center gap-2">
@@ -22,9 +20,9 @@ function FindingBody({ resolved, source, fix }: FindingProps) {
   );
 }
 
-interface FindingProps {
-  resolved: Pick<ResolvedFinding, 'label' | 'line'>;
-  source: Snapshot['findings'][number]['source'];
+interface IFindingProps {
+  resolved: Pick<IResolvedFinding, 'label' | 'line'>;
+  source: IFinding['source'];
   fix: string;
 }
 
@@ -33,9 +31,9 @@ export function AnalysisReport({
   resumeJson,
   onOpenField,
 }: {
-  report: Snapshot;
+  report: IResumeAnalysisSnapshot;
   resumeJson: unknown;
-  onOpenField: (target: ResolvedFinding) => void;
+  onOpenField: (target: IResolvedFinding) => void;
 }) {
   const groups = groupFindings(report, resumeJson);
 

@@ -1,33 +1,30 @@
-import { type ICreateResumeDtoInput, type IGetResumeResponse } from 'shared';
+import { type ICreateResumeDtoInput, type IFinding, type IResumeAnalysisSnapshot } from 'shared';
 
-import { type ResolvedFinding, resolveFinding } from '@/lib/resume-lint';
+import { type IResolvedFinding, resolveFinding } from '@/lib/resume-lint';
 
-type Snapshot = NonNullable<IGetResumeResponse['analysisReport']>;
-type ReportFinding = Snapshot['findings'][number];
+type ResumeJsonType = ICreateResumeDtoInput['json'];
 
-type ResumeJson = ICreateResumeDtoInput['json'];
-
-export interface GroupedFinding {
-  finding: ReportFinding;
-  resolved?: ResolvedFinding;
+export interface IGroupedFinding {
+  finding: IFinding;
+  resolved?: IResolvedFinding;
 }
 
-export interface FindingGroup {
+export interface IFindingGroup {
   sectionId: string;
   title: string;
-  findings: GroupedFinding[];
+  findings: IGroupedFinding[];
 }
 
 const SECTION_ORDER = ['PI', 'SUM', 'SK', 'E', 'P', 'ED'] as const;
 const SECTION_ID = /^(PI|SUM|SK|ED|E|P)(\d+)?(?:\.(\d+))?$/;
 
-interface SectionRank {
+interface ISectionRank {
   section: number;
   entry: number;
   bullet: number;
 }
 
-function sectionRank(sectionId: string): SectionRank {
+function sectionRank(sectionId: string): ISectionRank {
   const match = SECTION_ID.exec(sectionId);
   if (!match) {
     return { section: SECTION_ORDER.length, entry: 0, bullet: 0 };
@@ -41,12 +38,12 @@ function sectionRank(sectionId: string): SectionRank {
   };
 }
 
-const compareRank = (a: SectionRank, b: SectionRank) =>
+const compareRank = (a: ISectionRank, b: ISectionRank) =>
   a.section - b.section || a.entry - b.entry || a.bullet - b.bullet;
 
 const named = (name: string | undefined, index: number) => (name?.trim() ? name : `#${index + 1}`);
 
-function groupTitle(groupId: string, json: ResumeJson | undefined): string {
+function groupTitle(groupId: string, json: ResumeJsonType | undefined): string {
   const match = SECTION_ID.exec(groupId);
   const kind = match?.[1];
   const index = Number(match?.[2]) - 1;
@@ -69,9 +66,12 @@ function groupTitle(groupId: string, json: ResumeJson | undefined): string {
   }
 }
 
-export function groupFindings(snapshot: Snapshot, resumeJson: unknown): FindingGroup[] {
-  const json = resumeJson as ResumeJson | undefined;
-  const groups = new Map<string, FindingGroup>();
+export function groupFindings(
+  snapshot: IResumeAnalysisSnapshot,
+  resumeJson: unknown,
+): IFindingGroup[] {
+  const json = resumeJson as ResumeJsonType | undefined;
+  const groups = new Map<string, IFindingGroup>();
 
   const ordered = snapshot.findings
     .map((finding, position) => ({ finding, position, rank: sectionRank(finding.section_id) }))

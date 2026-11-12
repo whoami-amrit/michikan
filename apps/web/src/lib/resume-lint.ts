@@ -16,14 +16,14 @@ import { useDebouncedValue } from '@/hooks/use-debounced-value';
 
 export const LINT_DEBOUNCE_MS = 300;
 
-export type ResumeTab = keyof IResumeJson;
+export type ResumeTabType = keyof IResumeJson;
 
-export interface ResolvedFinding {
+export interface IResolvedFinding {
   finding: IFinding;
   label: string;
   fieldName: string;
   anchorId: string;
-  tab: ResumeTab;
+  tab: ResumeTabType;
   line?: number;
 }
 
@@ -35,7 +35,7 @@ export function resolveFinding(
   finding: IFinding,
   idMap: Readonly<Record<SectionIdType, JsonPathType>>,
   json: ICreateResumeDtoInput['json'] | undefined,
-): ResolvedFinding | undefined {
+): IResolvedFinding | undefined {
   const path = idMap[finding.section_id];
   if (!path) {
     return undefined;
@@ -50,12 +50,12 @@ export function resolveFinding(
     fieldName += '.title';
   }
 
-  const resolved: ResolvedFinding = {
+  const resolved: IResolvedFinding = {
     finding,
     label: ISSUE_LABELS[finding.issue],
     fieldName,
     anchorId: resumeFieldId(fieldName),
-    tab: base.split(/[[.]/)[0] as ResumeTab,
+    tab: base.split(/[[.]/)[0] as ResumeTabType,
   };
 
   const highlights = HIGHLIGHTS_PATH.exec(base);
@@ -83,13 +83,13 @@ function textareaLine(text: string | undefined, keptIndex: number): number {
   return keptIndex + 1;
 }
 
-export type ResumeLintFindings = ReadonlyMap<string, readonly ResolvedFinding[]>;
+export type ResumeLintFindingsType = ReadonlyMap<string, readonly IResolvedFinding[]>;
 
-const EMPTY: ResumeLintFindings = new Map();
+const EMPTY: ResumeLintFindingsType = new Map();
 
 export function useResumeLint(
   control: Control<ICreateResumeDtoInput, unknown, ICreateResumeDto>,
-): ResumeLintFindings {
+): ResumeLintFindingsType {
   const json = useWatch({ control, name: 'json' });
   const debounced = useDebouncedValue(json, LINT_DEBOUNCE_MS);
 
@@ -99,7 +99,7 @@ export function useResumeLint(
     }
 
     const idMap = buildIdMap(debounced);
-    const byAnchor = new Map<string, ResolvedFinding[]>();
+    const byAnchor = new Map<string, IResolvedFinding[]>();
 
     for (const finding of lintResume(debounced)) {
       const resolved = resolveFinding(finding, idMap, debounced);
@@ -119,13 +119,13 @@ export function useResumeLint(
   }, [debounced]);
 }
 
-export const resumeLintContext = createContext<ResumeLintFindings>(EMPTY);
+export const resumeLintContext = createContext<ResumeLintFindingsType>(EMPTY);
 
-export const useFieldLintFindings = (fieldName: string): readonly ResolvedFinding[] =>
+export const useFieldLintFindings = (fieldName: string): readonly IResolvedFinding[] =>
   useContext(resumeLintContext).get(resumeFieldId(fieldName)) ?? [];
 
-export interface ResumeJumpTarget {
-  tab: ResumeTab;
+export interface IResumeJumpTarget {
+  tab: ResumeTabType;
   anchorId: string;
   line?: number;
 }

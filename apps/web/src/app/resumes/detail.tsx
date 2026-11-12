@@ -39,7 +39,7 @@ import { toast } from '@/components/ui/toast';
 import { useBreadcrumbs } from '@/hooks/use-breadcrumbs';
 import { HttpStatus } from '@/lib/constants';
 import { useUserContext } from '@/lib/contexts/user/hook';
-import { type ResolvedFinding, type ResumeJumpTarget } from '@/lib/resume-lint';
+import { type IResolvedFinding, type IResumeJumpTarget } from '@/lib/resume-lint';
 import { api, getErrorToastContent } from '@/lib/utils';
 
 import { AnalysisReport } from './analysis-report';
@@ -274,7 +274,7 @@ function SummarySection({
 }: {
   resume?: IGetResumeResponse;
   autoAnalyse: boolean;
-  onOpenField: (target: ResolvedFinding) => void;
+  onOpenField: (target: IResolvedFinding) => void;
 }) {
   if (!resume) {
     return <Spinner />;
@@ -364,7 +364,7 @@ export function ResumeDetailPage() {
 
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<string>('analysis');
-  const [jumpTo, setJumpTo] = useState<ResumeJumpTarget>();
+  const [jumpTo, setJumpTo] = useState<IResumeJumpTarget>();
   const autoAnalyse = useUserContext()?.autoAnalyseResume ?? false;
 
   const {
