@@ -6,7 +6,7 @@ import {
 import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
 
-import { AiQuotaModule } from './analysis/ai-quota.module';
+import { AiQuotaModule } from '../../infra/ai/ai-quota.module';
 import { ResumeController } from './resumes.controller';
 import { ResumeService } from './resumes.service';
 

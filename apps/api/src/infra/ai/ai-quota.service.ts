@@ -3,8 +3,8 @@ import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { type AiRun, AiRunKind, AiRunStatus, Plan, Prisma } from 'db';
 import { IAiUsageResponse } from 'shared';
 
-import type { AiUsage } from '../../../infra/ai/ai.service';
-import { PrismaService } from '../../../infra/database/prisma.service';
+import { PrismaService } from '../database/prisma.service';
+import type { AiUsage } from './ai.service';
 import { QuotaExceededError } from './ai-quota.errors';
 
 export const FREE_RUN_LIMIT = 10;

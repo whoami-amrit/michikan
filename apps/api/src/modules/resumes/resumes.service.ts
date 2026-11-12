@@ -23,10 +23,10 @@ import {
   resumeAnalysisSnapshotSchema,
 } from 'shared';
 
+import { QuotaExceededError } from '../../infra/ai/ai-quota.errors';
+import { AiQuotaService, RESERVATION_TTL_MS } from '../../infra/ai/ai-quota.service';
 import { PrismaService } from '../../infra/database/prisma.service';
 import { S3Service } from '../../infra/storage/s3.service';
-import { QuotaExceededError } from './analysis/ai-quota.errors';
-import { AiQuotaService, RESERVATION_TTL_MS } from './analysis/ai-quota.service';
 import { IAnalysisReservation, IAnalyzerJobData } from './analysis/types';
 import { IRenderPdfWorker } from './types';
 

@@ -12,7 +12,7 @@ import { ZodValidationException } from 'nestjs-zod';
 import { IProblemDetails } from 'shared';
 import { ZodError } from 'zod';
 
-import { QuotaExceededError } from '../../modules/resumes/analysis/ai-quota.errors';
+import { QuotaExceededError } from '../../infra/ai/ai-quota.errors';
 
 @Catch()
 export class HttpExceptionFilter implements ExceptionFilter {
