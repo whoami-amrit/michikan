@@ -21,22 +21,28 @@ export interface FindingGroup {
 const SECTION_ORDER = ['PI', 'SUM', 'SK', 'E', 'P', 'ED'] as const;
 const SECTION_ID = /^(PI|SUM|SK|ED|E|P)(\d+)?(?:\.(\d+))?$/;
 
-function sectionRank(sectionId: string): [number, number, number] {
+interface SectionRank {
+  section: number;
+  entry: number;
+  bullet: number;
+}
+
+function sectionRank(sectionId: string): SectionRank {
   const match = SECTION_ID.exec(sectionId);
   if (!match) {
-    return [SECTION_ORDER.length, 0, 0];
+    return { section: SECTION_ORDER.length, entry: 0, bullet: 0 };
   }
 
   const [, kind, entry, bullet] = match;
-  return [
-    SECTION_ORDER.indexOf(kind as (typeof SECTION_ORDER)[number]),
-    Number(entry ?? 0),
-    Number(bullet ?? 0),
-  ];
+  return {
+    section: SECTION_ORDER.indexOf(kind as (typeof SECTION_ORDER)[number]),
+    entry: Number(entry ?? 0),
+    bullet: Number(bullet ?? 0),
+  };
 }
 
-const compareRank = (a: [number, number, number], b: [number, number, number]) =>
-  a[0] - b[0] || a[1] - b[1] || a[2] - b[2];
+const compareRank = (a: SectionRank, b: SectionRank) =>
+  a.section - b.section || a.entry - b.entry || a.bullet - b.bullet;
 
 const named = (name: string | undefined, index: number) => (name?.trim() ? name : `#${index + 1}`);
 
