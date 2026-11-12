@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, useContext, useMemo } from 'react';
 import { type Control, useWatch } from 'react-hook-form';
 import {
   buildIdMap,
@@ -11,6 +11,8 @@ import {
   lintResume,
   type SectionId,
 } from 'shared';
+
+import { useDebouncedValue } from '@/hooks/use-debounced-value';
 
 export const LINT_DEBOUNCE_MS = 300;
 
@@ -79,17 +81,6 @@ function textareaLine(text: string | undefined, keptIndex: number): number {
     }
   }
   return keptIndex + 1;
-}
-
-function useDebouncedValue<T>(value: T, delayMs: number): T {
-  const [debounced, setDebounced] = useState(value);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setDebounced(value), delayMs);
-    return () => clearTimeout(timer);
-  }, [value, delayMs]);
-
-  return debounced;
 }
 
 export type ResumeLintFindings = ReadonlyMap<string, readonly ResolvedFinding[]>;
