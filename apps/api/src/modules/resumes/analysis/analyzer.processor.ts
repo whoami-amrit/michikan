@@ -22,25 +22,22 @@ import { AiQuotaService } from './ai-quota.service';
 import { RESUME_ANALYSIS_SYSTEM_PROMPT } from './resume-analysis.prompt';
 import { IAnalyzerJobData } from './types';
 
-class AnalysisUnrecoverableError extends UnrecoverableError {
-  constructor(
-    message: string,
-    readonly analysisError: ResumeAnalysisError,
-  ) {
-    super(message);
-    this.name = 'AnalysisUnrecoverableError';
+const findAiError = (error: unknown): AiFatalError | AiRetryableError | undefined => {
+  if (error instanceof AiFatalError || error instanceof AiRetryableError) {
+    return error;
   }
-}
+
+  if (error instanceof Error && error.cause) {
+    return findAiError(error.cause);
+  }
+
+  return undefined;
+};
 
 const toAnalysisError = (error: unknown): ResumeAnalysisError => {
-  if (error instanceof AnalysisUnrecoverableError) {
-    return error.analysisError;
-  }
+  const aiError = findAiError(error);
 
-  if (
-    (error instanceof AiFatalError || error instanceof AiRetryableError) &&
-    (error.reason === 'provider' || error.reason === 'credits')
-  ) {
+  if (aiError && (aiError.reason === 'provider' || aiError.reason === 'credits')) {
     return ResumeAnalysisError.PROVIDER_UNAVAILABLE;
   }
 
@@ -79,19 +76,13 @@ export class AnalyzerService extends WorkerHost {
     aiRunId,
   }: IAnalyzerJobData & { type: typeof RESUME_ANALYZER_JOB_NAME }) {
     if (typeof aiRunId !== 'number') {
-      throw new AnalysisUnrecoverableError(
-        `Job for resume ${resumeId} has no aiRunId`,
-        ResumeAnalysisError.INTERNAL,
-      );
+      throw new UnrecoverableError(`Job for resume ${resumeId} has no aiRunId`);
     }
 
     const aiRun = await this.prismaService.aiRun.findUnique({ where: { id: aiRunId } });
 
     if (!aiRun) {
-      throw new AnalysisUnrecoverableError(
-        `No AiRun ${aiRunId} for resume ${resumeId}`,
-        ResumeAnalysisError.INTERNAL,
-      );
+      throw new UnrecoverableError(`No AiRun ${aiRunId} for resume ${resumeId}`);
     }
 
     if (aiRun.status === AiRunStatus.SUCCEEDED) {
@@ -100,10 +91,7 @@ export class AnalyzerService extends WorkerHost {
     }
 
     if (aiRun.status !== AiRunStatus.RESERVED) {
-      throw new AnalysisUnrecoverableError(
-        `AiRun ${aiRunId} is ${aiRun.status}, not RESERVED`,
-        ResumeAnalysisError.INTERNAL,
-      );
+      throw new UnrecoverableError(`AiRun ${aiRunId} is ${aiRun.status}, not RESERVED`);
     }
 
     const resume = await this.prismaService.resume.findUnique({ where: { id: resumeId } });
@@ -111,7 +99,7 @@ export class AnalyzerService extends WorkerHost {
     if (!resume) {
       const errorString = `No resume for this job id ${resumeId}`;
       this.logger.error(errorString);
-      throw new AnalysisUnrecoverableError(errorString, ResumeAnalysisError.INTERNAL);
+      throw new UnrecoverableError(errorString);
     }
 
     try {
@@ -165,7 +153,9 @@ export class AnalyzerService extends WorkerHost {
       );
 
       if (error instanceof AiFatalError) {
-        throw new AnalysisUnrecoverableError(error.message, toAnalysisError(error));
+        const unrecoverableError = new UnrecoverableError(error.message);
+        unrecoverableError.cause = error;
+        throw unrecoverableError;
       }
 
       throw error;
@@ -186,10 +176,7 @@ export class AnalyzerService extends WorkerHost {
     }
 
     if (typeof job.data.aiRunId === 'number') {
-      const generationId =
-        error instanceof AiFatalError || error instanceof AiRetryableError
-          ? error.generationId
-          : undefined;
+      const generationId = findAiError(error)?.generationId;
 
       try {
         await this.aiQuotaService.settleFailed(job.data.aiRunId, generationId);
