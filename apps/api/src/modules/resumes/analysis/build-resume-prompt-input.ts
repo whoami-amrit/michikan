@@ -1,4 +1,5 @@
 import { buildIdMap, computeYoe, IResumeJson, JsonPath, SectionId, splitHighlights } from 'shared';
+import { stringify } from 'yaml';
 
 export interface ResumePromptInput {
   payload: string;
@@ -17,57 +18,91 @@ function formatMonth(date: string): string {
   return `${String(d.getUTCFullYear()).padStart(4, '0')}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`;
 }
 
-export function buildResumePromptInput(json: IResumeJson, now: Date): ResumePromptInput {
-  const lines: string[] = [];
-  const idMap = buildIdMap(json);
+type PromptBullets = Record<string, string>;
+type PromptSection = Record<string, string | PromptBullets>;
+type PromptRoot = Record<string, string | number | PromptSection>;
 
-  lines.push(`YOE: ${computeYoe(json.experience, now).toFixed(1)}`);
+const YAML_OPTIONS = { lineWidth: 0 };
+
+function withoutEmpty(entries: Record<string, string | undefined>): Record<string, string> {
+  return Object.fromEntries(
+    Object.entries(entries).filter((entry): entry is [string, string] => Boolean(entry[1])),
+  );
+}
+
+function bulletsById(sectionId: string, highlights: string): PromptBullets {
+  return Object.fromEntries(
+    splitHighlights(highlights).map((bullet, i) => [`${sectionId}.${i + 1}`, bullet]),
+  );
+}
+
+function groupSkills(skills: IResumeJson['skills']): Record<string, string> {
+  const groups: Record<string, string[]> = {};
+
+  for (const entry of skills ?? []) {
+    const category = entry.category.trim() || 'Other';
+    const items = entry.skills.trim();
+    if (items) {
+      groups[category] = [...(groups[category] ?? []), items];
+    }
+  }
+
+  return Object.fromEntries(
+    Object.entries(groups).map(([category, items]) => [category, items.join(', ')]),
+  );
+}
+
+export function buildResumePromptInput(json: IResumeJson, now: Date): ResumePromptInput {
+  const idMap = buildIdMap(json);
+  const root: PromptRoot = {
+    YOE: Number(computeYoe(json.experience, now).toFixed(1)),
+  };
 
   const summary = json.summary?.trim().replace(/\s*\r?\n\s*/g, ' ');
   if (summary) {
-    lines.push(`SUM: ${summary}`);
+    root.SUM = summary;
   }
 
-  const skillGroups = (json.skills ?? [])
-    .map((entry) => ({ category: entry.category.trim(), skills: entry.skills.trim() }))
-    .filter((entry) => entry.category || entry.skills)
-    .map((entry) => `${entry.category}: ${entry.skills}`);
-  if (skillGroups.length > 0) {
-    lines.push(`SK: ${skillGroups.join(' | ')}`);
+  const skillGroups = groupSkills(json.skills);
+  if (Object.keys(skillGroups).length > 0) {
+    root.SK = skillGroups;
   }
 
   (json.experience ?? []).forEach((entry, i) => {
     const id = `E${i + 1}`;
     const end = entry.endDate ? formatMonth(entry.endDate) : 'present';
+    const bullets = bulletsById(id, entry.highlights);
 
-    lines.push(
-      `${id}: ${entry.title.trim()} @ ${entry.company.trim()}, ${formatMonth(entry.startDate)}${EN_DASH}${end}`,
-    );
-
-    splitHighlights(entry.highlights).forEach((bullet, m) => {
-      lines.push(`${id}.${m + 1}: ${bullet}`);
-    });
+    root[id] = {
+      ...withoutEmpty({
+        title: entry.title.trim(),
+        company: entry.company.trim(),
+        dates: `${formatMonth(entry.startDate)} ${EN_DASH} ${end}`,
+      }),
+      ...(Object.keys(bullets).length > 0 && { bullets }),
+    };
   });
 
   (json.projects ?? []).forEach((entry, i) => {
     const id = `P${i + 1}`;
-    const technologies = entry.technologies?.trim();
+    const bullets = bulletsById(id, entry.highlights);
 
-    lines.push(`${id}: ${entry.title.trim()}${technologies ? ` [${technologies}]` : ''}`);
-
-    splitHighlights(entry.highlights).forEach((bullet, m) => {
-      lines.push(`${id}.${m + 1}: ${bullet}`);
-    });
+    root[id] = {
+      ...withoutEmpty({
+        title: entry.title.trim(),
+        technologies: entry.technologies?.trim(),
+      }),
+      ...(Object.keys(bullets).length > 0 && { bullets }),
+    };
   });
 
   (json.education ?? []).forEach((entry, i) => {
-    const id = `ED${i + 1}`;
-    const field = entry.field?.trim();
-
-    lines.push(
-      `${id}: ${[entry.degree.trim(), field, formatMonth(entry.graduationDate)].filter(Boolean).join(', ')}`,
-    );
+    root[`ED${i + 1}`] = withoutEmpty({
+      degree: entry.degree.trim(),
+      field: entry.field?.trim(),
+      graduated: formatMonth(entry.graduationDate),
+    });
   });
 
-  return { payload: lines.join('\n'), idMap };
+  return { payload: stringify(root, YAML_OPTIONS), idMap };
 }
