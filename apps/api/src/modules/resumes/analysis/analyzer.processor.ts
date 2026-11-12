@@ -132,7 +132,6 @@ export class AnalyzerService extends WorkerHost {
       const findings = [...postProcessLlmFindings(data, idMap), ...lintResume(resumeJson)];
 
       const snapshot: ResumeAnalysisSnapshot = {
-        version: 1,
         score: computeScore(findings),
         resumeJsonUpdatedAt: resume.jsonUpdatedAt.toISOString(),
         analysedAt: new Date().toISOString(),
