@@ -16,6 +16,7 @@ export default defineConfig([
     '**/build/**',
     '**/dist/**',
     '**/generated/**',
+    '**/.astro/**',
   ]),
 
   {
@@ -83,4 +84,11 @@ export default defineConfig([
 
   // 6. Prettier — must be last
   prettierConfig,
+
+  {
+    files: ['**/*.{js,jsx,ts,tsx}'],
+    rules: {
+      curly: ['error', 'all'],
+    },
+  },
 ]);

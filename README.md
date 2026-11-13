@@ -16,11 +16,11 @@ Michikan treats resume content as **structured data (JSON)** rather than raw for
                              │
                       ┌──────┴───────┐
                       │    BullMQ    │  → Async queues: LaTeX render tasks,
-                      │   (Valkey)   │    Gemini LLM analysis pipelines
+                      │   (Valkey)   │    LLM analysis pipelines
                       └──────┬───────┘
                              │
                     ┌────────┴────────┐
-                    │   Gemini API    │
+                    │ OpenRouter API  │
                     │  LaTeX Compiler │
                     └─────────────────┘
 
@@ -29,8 +29,8 @@ Michikan treats resume content as **structured data (JSON)** rather than raw for
 ### Core Execution Flow
 
 1. **Schema Integrity:** Resume data is governed by a unified Zod schema (`@michikan/resume-schema`).
-2. **Asynchronous Execution:** Heavy workload actions (LaTeX PDF compilation and Gemini prompt evaluation) are offloaded to **BullMQ** workers backed by **Valkey** to keep HTTP response times low and predictable.
-3. **Structured AI Mutations:** The Gemini analyzer operates against the JSON payload directly, mapping missing keywords or bullet revisions directly to specific field paths without corrupting formatting guarantees.
+2. **Asynchronous Execution:** Heavy workload actions (LaTeX PDF compilation and LLM prompt evaluation) are offloaded to **BullMQ** workers backed by **Valkey** to keep HTTP response times low and predictable.
+3. **Structured AI Mutations:** The AI analyzer operates against the JSON payload directly, mapping missing keywords or bullet revisions directly to specific field paths without corrupting formatting guarantees.
 
 ---
 
@@ -43,7 +43,7 @@ Michikan treats resume content as **structured data (JSON)** rather than raw for
 | **Database**        | PostgreSQL via Prisma ORM                        |
 | **Message Queue**   | BullMQ backed by Valkey                          |
 | **Validation**      | Zod                                              |
-| **AI Integration**  | Gemini API                                       |
+| **AI Integration**  | OpenRouter (GPT-4o-mini)                         |
 | **Document Engine** | LaTeX (Single-column ATS standard)               |
 | **Package Manager** | `pnpm` (Turborepo / Monorepo layout)             |
 
@@ -74,7 +74,7 @@ michikan/
 - **pnpm** ($\ge 9$)
 - **Docker** & **Docker Compose**
 - **LaTeX Distribution** (e.g., `texlive-full` or `pdflatex` CLI accessible in environment path)
-- **Gemini API Key**
+- **OpenRouter API Key**
 
 ---
 
@@ -96,7 +96,7 @@ Configure your `.env` file:
 ```env
 DATABASE_URL="postgresql://user:password@localhost:5432/michikan"
 VALKEY_URL="redis://localhost:6379"
-GEMINI_API_KEY="your-gemini-api-key"
+OPENROUTER_API_KEY="your-openrouter-api-key"
 JWT_SECRET="your-jwt-secret"
 
 ```

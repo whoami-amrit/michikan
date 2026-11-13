@@ -48,7 +48,9 @@ const latestPosts = (await getCollection("blog", ({ data }) => !data.draft))
         </p>
       </div>
       <div class="flex flex-wrap gap-3">
-        <a href="https://app.michikan.dev/signup"><Button size="lg">Get Started</Button></a>
+        <a href="https://app.michikan.dev/signup"
+          ><Button size="lg">Get Started</Button></a
+        >
         <a href="/blog">
           <Button variant="outline" size="lg">Read the blog</Button>
         </a>
@@ -135,9 +137,7 @@ const latestPosts = (await getCollection("blog", ({ data }) => !data.draft))
               </CardContent>
               <CardFooter>
                 <a href={`/blog/${post.id}/`}>
-                  <Button variant="secondary">
-                    Read post
-                  </Button>
+                  <Button variant="secondary">Read post</Button>
                 </a>
               </CardFooter>
             </Card>

@@ -1,4 +1,5 @@
 import { EMAIL_QUEUE_NAME, OTP_EMAIL_JOB_NAME } from '@common/constants';
+import { getEffectivePlan } from '@common/utils/plan';
 import appConfig from '@config/app.config';
 import { InjectQueue } from '@nestjs/bullmq';
 import {
@@ -321,9 +322,14 @@ export class AuthService {
   }
 
   private async getTokens(userId: User['id'], sessionId: string, verified: boolean) {
+    const user = await this.prisma.user.findUniqueOrThrow({
+      where: { id: userId },
+      select: { plan: true, planExpiresAt: true },
+    });
+
     const accessToken = await this.getSignedToken({
       sub: userId,
-      plan: 'free',
+      plan: getEffectivePlan(user),
       verified,
       type: 'access',
     });

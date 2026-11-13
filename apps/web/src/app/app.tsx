@@ -17,8 +17,6 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 import { MainContextProvider } from '@/lib/contexts/main/provider';
 import { UserContextProvider } from '@/lib/contexts/user/provider';
 
-import ReportPage from './analysis/detail.tsx';
-import AnalysisPage from './analysis/list.tsx';
 import { AuthFormPage, VerifyEmailPage } from './auth';
 import { JobDetailPage } from './jobs/detail';
 import JobsPage from './jobs/list';
@@ -27,6 +25,7 @@ import Layout from './layout';
 import { ResumeDetailPage } from './resumes/detail';
 import ResumesPage from './resumes/list';
 import { NewResumePage } from './resumes/new';
+import UserPage from './user';
 
 function App() {
   const { mutate } = useSWRConfig();
@@ -85,10 +84,7 @@ function App() {
                     <Route path="new" element={<NewJobPage />} />
                     <Route path=":id" element={<JobDetailPage />} />
                   </Route>
-                  <Route path="analysis">
-                    <Route index element={<AnalysisPage />} />
-                    <Route path=":id" element={<ReportPage />} />
-                  </Route>
+                  <Route path="user" element={<UserPage />} />
                   <Route path="resumes">
                     <Route index element={<ResumesPage />} />
                     <Route path="new" element={<NewResumePage />} />

@@ -1,0 +1,36 @@
+{
+  "personalInfo": {
+    "name": "Priya Nair",
+    "email": "priya-ops@gmail.com",
+    "github": "https://github.com/priya-ops"
+  },
+  "skills": [
+    {
+      "category": "Languages",
+      "skills": "Go"
+    },
+    {
+      "category": "Infrastructure",
+      "skills": "Redis, Kubernetes, Terraform, Ansible"
+    }
+  ],
+  "experience": [
+    {
+      "title": "Platform Engineer",
+      "company": "Northwind Systems",
+      "startDate": "2020-02-15",
+      "endDate": "2024-06-15",
+      "isCurrentRole": false,
+      "highlights": "I utilized Redis to cut checkout latency from 900 ms to 250 ms.\nWe leveraged Kubernetes to deploy 40 services with zero downtime.\nUtilized Terraform & Ansible to provision 120 servers in under 10 minutes.\nEnhanced my team's alerting, reducing false pages by 60%.\nSpent one year building a Go service that processes 5 million events per day."
+    }
+  ],
+  "projects": [],
+  "education": [
+    {
+      "institution": "State University",
+      "degree": "Bachelor of Science",
+      "field": "Computer Engineering",
+      "graduationDate": "2020-05-15"
+    }
+  ]
+}

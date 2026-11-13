@@ -8,7 +8,7 @@
   "scripts": {
     "build": "tsc -b",
     "dev": "tsc -b --watch",
-    "check:types": "tsc --noEmit",
+    "check:types": "tsc -p tsconfig.esm.json --noEmit",
     "check:cycles": "madge --circular --extensions ts src --exclude \".*/generated/.*\""
   },
   "keywords": [],
