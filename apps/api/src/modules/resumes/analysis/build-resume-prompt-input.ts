@@ -50,7 +50,8 @@ function groupSkills(skills: IResumeJson['skills']): Record<string, string> {
     const category = entry.category.trim() || 'Other';
     const items = entry.skills.trim();
     if (items) {
-      groups[category] = [...(groups[category] ?? []), items];
+      groups[category] ??= [];
+      groups[category].push(items);
     }
   }
 

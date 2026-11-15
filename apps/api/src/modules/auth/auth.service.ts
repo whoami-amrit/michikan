@@ -22,8 +22,9 @@ import { Provider } from 'db';
 import type { Request, Response } from 'express';
 import { ILoginDto, ISignupDto } from 'shared';
 
+import { PrismaService } from '@/infra/database/prisma.service';
+
 import { IJwtAccessPayload } from '../../common/types/jwt-payload.interface';
-import { PrismaService } from '../../infra/database/prisma.service';
 import {
   ACCESS_TOKEN_COOKIE_NAME,
   BCRYPT_SALT_ROUNDS,

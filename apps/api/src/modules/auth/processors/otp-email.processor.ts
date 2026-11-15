@@ -3,7 +3,8 @@ import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Injectable, Logger } from '@nestjs/common';
 import { Job, UnrecoverableError } from 'bullmq';
 
-import { SesService } from '../../../infra/email/ses.service';
+import { SesService } from '@/infra/email/ses.service';
+
 import { IOtpEmailJobData } from '../types';
 
 @Injectable()

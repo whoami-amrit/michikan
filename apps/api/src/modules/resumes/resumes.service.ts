@@ -6,6 +6,7 @@ import {
   RENDER_QUEUE_NAME,
   RESUME_ANALYZER_JOB_NAME,
 } from '@common/constants';
+import { QuotaExceededError } from '@common/errors/quota-exceeded.error';
 import appConfig, { type IAppConfig } from '@config/app.config';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
@@ -23,10 +24,10 @@ import {
   resumeAnalysisSnapshotSchema,
 } from 'shared';
 
-import { QuotaExceededError } from '../../infra/ai/ai-quota.errors';
-import { AiQuotaService, RESERVATION_TTL_MS } from '../../infra/ai/ai-quota.service';
-import { PrismaService } from '../../infra/database/prisma.service';
-import { S3Service } from '../../infra/storage/s3.service';
+import { AiQuotaService, RESERVATION_TTL_MS } from '@/infra/ai/ai-quota.service';
+import { PrismaService } from '@/infra/database/prisma.service';
+import { S3Service } from '@/infra/storage/s3.service';
+
 import { IAnalysisReservation, IAnalyzerJobData } from './analysis/types';
 import { IRenderPdfWorker } from './types';
 

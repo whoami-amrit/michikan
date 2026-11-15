@@ -5,7 +5,8 @@ import { Body, Controller, Get, HttpCode, HttpStatus, Patch } from '@nestjs/comm
 import { createZodDto } from 'nestjs-zod';
 import { IAiUsageResponse, IUserResponse, UpdateUserSchema } from 'shared';
 
-import { AiQuotaService } from '../../infra/ai/ai-quota.service';
+import { AiQuotaService } from '@/infra/ai/ai-quota.service';
+
 import { UsersService } from './users.service';
 
 class UpdateUserDto extends createZodDto(UpdateUserSchema) {}

@@ -1,7 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 
-import { PrismaService } from './infra/database/prisma.service';
-import { BullMqService } from './infra/queue/bullmq.service';
+import { PrismaService } from '@/infra/database/prisma.service';
+import { BullMqService } from '@/infra/queue/bullmq.service';
+
 import { IHealthCheckResponse, IServiceHealthCheckResult } from './types';
 
 @Injectable()

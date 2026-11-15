@@ -4,7 +4,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from 'db';
 import { IUserResponse } from 'shared';
 
-import { PrismaService } from '../../infra/database/prisma.service';
+import { PrismaService } from '@/infra/database/prisma.service';
 
 @Injectable()
 export class UsersService {

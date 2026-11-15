@@ -1,11 +1,12 @@
+import { QuotaExceededError } from '@common/errors/quota-exceeded.error';
 import { getEffectivePlan } from '@common/utils/plan';
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { type AiRun, AiRunKind, AiRunStatus, Plan, Prisma } from 'db';
 import { IAiUsageResponse } from 'shared';
 
-import { PrismaService } from '../database/prisma.service';
+import { PrismaService } from '@/infra/database/prisma.service';
+
 import type { IAiUsage } from './ai.service';
-import { QuotaExceededError } from './ai-quota.errors';
 
 export const FREE_RUN_LIMIT = 10;
 export const PRO_DAILY_RUN_LIMIT = 100;

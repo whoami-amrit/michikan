@@ -15,7 +15,8 @@ import {
 } from 'shared';
 import { z } from 'zod';
 
-import { AiService, type IAiUsage } from '../src/infra/ai/ai.service';
+import { AiService, type IAiUsage } from '@/infra/ai/ai.service';
+
 import { buildResumePromptInput } from '../src/modules/resumes/analysis/build-resume-prompt-input';
 import { RESUME_ANALYSIS_SYSTEM_PROMPT } from '../src/modules/resumes/analysis/resume-analysis.prompt';
 

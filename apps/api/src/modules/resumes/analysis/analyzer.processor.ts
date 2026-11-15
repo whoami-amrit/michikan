@@ -14,10 +14,11 @@ import {
   RESUME_FEEDBACK_SCHEMA_NAME,
 } from 'shared';
 
-import { AiFatalError, AiRetryableError } from '../../../infra/ai/ai.errors';
-import { AiService } from '../../../infra/ai/ai.service';
-import { AiQuotaService } from '../../../infra/ai/ai-quota.service';
-import { PrismaService } from '../../../infra/database/prisma.service';
+import { AiFatalError, AiRetryableError } from '@/infra/ai/ai.errors';
+import { AiService } from '@/infra/ai/ai.service';
+import { AiQuotaService } from '@/infra/ai/ai-quota.service';
+import { PrismaService } from '@/infra/database/prisma.service';
+
 import { buildResumePromptInput } from './build-resume-prompt-input';
 import { RESUME_ANALYSIS_SYSTEM_PROMPT } from './resume-analysis.prompt';
 import { IAnalyzerJobData } from './types';

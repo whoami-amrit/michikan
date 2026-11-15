@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Job, JobStatus, User } from 'db';
 import { ICreateJobDto, IUpdateJobDto } from 'shared';
 
-import { PrismaService } from '../../infra/database/prisma.service';
+import { PrismaService } from '@/infra/database/prisma.service';
 
 @Injectable()
 export class JobsService {

@@ -45,12 +45,33 @@ import { api, getErrorToastContent } from '@/lib/utils';
 import { AnalysisReport } from './analysis-report';
 import { ResumeForm } from './form';
 
+const ANALYSIS_POLL_INTERVAL_MS = 3000;
+const AI_USAGE_KEY = '/users/me/ai-usage';
+const FREE_RUN_LIMIT_FALLBACK = 10;
+
 const download = (url: string) => {
   const link = document.createElement('a');
   link.href = url;
   link.setAttribute('download', `resume-${new Date().toISOString()}.pdf`);
   document.body.appendChild(link);
   link.click();
+};
+
+const isAnalysisInProgress = (resume?: IGetResumeResponse) =>
+  resume?.analysisStatus === ResumeAnalysisStatus.QUEUED ||
+  resume?.analysisStatus === ResumeAnalysisStatus.GENERATING;
+
+const getQuotaMessage = (resetsAt: string | null, limit = FREE_RUN_LIMIT_FALLBACK) =>
+  resetsAt
+    ? `Limit reached. Resets at ${new Date(resetsAt).toLocaleString()}.`
+    : `You've used your ${limit} free runs.`;
+
+const getUsageLabel = (usage: IAiUsageResponse) => {
+  const left = Math.max(usage.limit - usage.used, 0);
+
+  return usage.window === 'lifetime'
+    ? `${left} of ${usage.limit} free runs left`
+    : `${left} / ${usage.limit} left today`;
 };
 
 function DownloadButton({ id }: { id: string }) {
@@ -136,39 +157,16 @@ function DownloadButton({ id }: { id: string }) {
   );
 }
 
-const ANALYSIS_POLL_INTERVAL_MS = 3000;
-
-const isAnalysisInProgress = (resume?: IGetResumeResponse) =>
-  resume?.analysisStatus === ResumeAnalysisStatus.QUEUED ||
-  resume?.analysisStatus === ResumeAnalysisStatus.GENERATING;
-
-const AI_USAGE_KEY = '/users/me/ai-usage';
-
-const FREE_RUN_LIMIT_FALLBACK = 10;
-
-const getQuotaMessage = (resetsAt: string | null, limit = FREE_RUN_LIMIT_FALLBACK) =>
-  resetsAt
-    ? `Limit reached. Resets at ${new Date(resetsAt).toLocaleString()}.`
-    : `You've used your ${limit} free runs.`;
-
-const getUsageLabel = (usage: IAiUsageResponse) => {
-  const left = Math.max(usage.limit - usage.used, 0);
-
-  return usage.window === 'lifetime'
-    ? `${left} of ${usage.limit} free runs left`
-    : `${left} / ${usage.limit} left today`;
-};
-
 function QuotaExceededMessage() {
   const { data: usage } = useSWR<IAiUsageResponse>(AI_USAGE_KEY, {
     fetcher: () => api.get(AI_USAGE_KEY).json<IAiUsageResponse>(),
   });
 
   if (!usage) {
-    return 'You have reached your analysis limit.';
+    return <span>You have reached your analysis limit.</span>;
   }
 
-  return getQuotaMessage(usage.resetsAt, usage.limit);
+  return <span>{getQuotaMessage(usage.resetsAt, usage.limit)}</span>;
 }
 
 function AnalyseControls({
@@ -200,10 +198,11 @@ function AnalyseControls({
   }, [inProgress, mutateUsage]);
 
   const isFailed = resume.analysisStatus === ResumeAnalysisStatus.FAILED;
+  const isIdle = resume.analysisStatus === ResumeAnalysisStatus.IDLE;
   const isStale = resume.isAnalysisStale;
   const isRetry =
     isFailed && (autoAnalyse || resume.analysisError !== ResumeAnalysisError.QUOTA_EXCEEDED);
-  const showButton = !autoAnalyse || isFailed;
+  const showButton = !autoAnalyse || isFailed || isIdle;
 
   const analyse = async () => {
     setIsSubmitting(true);
@@ -348,11 +347,7 @@ function SummarySection({
               <BrainCircuit />
             </EmptyMedia>
             <EmptyTitle>No analysis yet</EmptyTitle>
-            <EmptyDescription>
-              {autoAnalyse
-                ? 'Analysis will run after your next edit.'
-                : 'This resume has not been analysed yet.'}
-            </EmptyDescription>
+            <EmptyDescription>This resume has not been analysed yet.</EmptyDescription>
           </EmptyHeader>
         </Empty>
       );

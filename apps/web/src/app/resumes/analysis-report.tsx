@@ -5,6 +5,12 @@ import { Badge } from '@/components/ui/badge';
 import { groupFindings } from '@/lib/resume-analysis';
 import { type IResolvedFinding } from '@/lib/resume-lint';
 
+interface IFindingProps {
+  resolved: Pick<IResolvedFinding, 'label' | 'line'>;
+  source: IFinding['source'];
+  fix: string;
+}
+
 function FindingBody({ resolved, source, fix }: IFindingProps) {
   return (
     <>
@@ -18,12 +24,6 @@ function FindingBody({ resolved, source, fix }: IFindingProps) {
       <span className="text-sm text-muted-foreground">{fix}</span>
     </>
   );
-}
-
-interface IFindingProps {
-  resolved: Pick<IResolvedFinding, 'label' | 'line'>;
-  source: IFinding['source'];
-  fix: string;
 }
 
 export function AnalysisReport({

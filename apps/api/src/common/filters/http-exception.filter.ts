@@ -1,3 +1,4 @@
+import { QuotaExceededError } from '@common/errors/quota-exceeded.error';
 import {
   ArgumentsHost,
   Catch,
@@ -11,8 +12,6 @@ import { Request, Response } from 'express';
 import { ZodValidationException } from 'nestjs-zod';
 import { IProblemDetails } from 'shared';
 import { ZodError } from 'zod';
-
-import { QuotaExceededError } from '../../infra/ai/ai-quota.errors';
 
 @Catch()
 export class HttpExceptionFilter implements ExceptionFilter {

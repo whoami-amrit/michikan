@@ -1,6 +1,6 @@
 import { CircleAlert, RotateCwIcon } from 'lucide-react';
 import { ErrorBoundary, getErrorMessage } from 'react-error-boundary';
-import { BrowserRouter, Route, Routes } from 'react-router';
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router';
 import { useSWRConfig } from 'swr';
 
 import { Button } from '@/components/ui/button';
@@ -90,6 +90,7 @@ function App() {
                     <Route path="new" element={<NewResumePage />} />
                     <Route path=":id" element={<ResumeDetailPage />} />
                   </Route>
+                  <Route path="*" element={<Navigate to="/resumes" replace />} />
                 </Route>
               </Routes>
             </BrowserRouter>

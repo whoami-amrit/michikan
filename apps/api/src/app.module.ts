@@ -6,15 +6,16 @@ import { APP_FILTER, APP_GUARD, APP_PIPE } from '@nestjs/core';
 import { JwtModule } from '@nestjs/jwt';
 import { ZodValidationPipe } from 'nestjs-zod';
 
+import { DatabaseModule } from '@/infra/database/database.module';
+import { EmailModule } from '@/infra/email/email.module';
+import { LoggerModule } from '@/infra/logger/logger.module';
+import { QueueModule } from '@/infra/queue/queue.module';
+import { StorageModule } from '@/infra/storage/storage.module';
+
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import appConfig from './config/app.config';
 import { AppConfigModule } from './config/config.module';
-import { DatabaseModule } from './infra/database/database.module';
-import { EmailModule } from './infra/email/email.module';
-import { LoggerModule } from './infra/logger/logger.module';
-import { QueueModule } from './infra/queue/queue.module';
-import { StorageModule } from './infra/storage/storage.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { JobsModule } from './modules/jobs/jobs.module';
 import { ResumeModule } from './modules/resumes/resumes.module';
