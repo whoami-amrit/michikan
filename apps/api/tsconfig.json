@@ -10,7 +10,8 @@
     "paths": {
       "@config/*": ["src/config/*"],
       "@common/types/*": ["src/common/types/*"],
-      "@common/*": ["src/common/*"]
+      "@common/*": ["src/common/*"],
+      "@/infra/*": ["src/infra/*"]
     }
   }
 }

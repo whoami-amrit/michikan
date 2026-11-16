@@ -1,13 +1,15 @@
 import { zodResolver } from '@hookform/resolvers/zod';
+import { Loading03Icon } from '@hugeicons/core-free-icons';
 import ky from 'ky';
-import { LoaderCircleIcon } from 'lucide-react';
 import { FieldErrors, FormProvider, SubmitHandler, useForm, useFormContext } from 'react-hook-form';
 import { NavLink, useNavigate } from 'react-router';
 import { ISignupDto, SignupSchema } from 'shared';
 
 import { Button } from '@/components/ui/button';
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
+import { Icon } from '@/components/ui/icon';
 import { Input } from '@/components/ui/input';
+import { PasswordInput } from '@/components/ui/password-input';
 import { toast } from '@/components/ui/toast';
 import { API_PREFIX, getErrorToastContent, resetCurrentUser } from '@/lib/utils';
 
@@ -34,7 +36,7 @@ function PersonalInfo({ errors }: { errors: FieldErrors<ISignupDto> }) {
       </Field>
       <Field>
         <FieldLabel htmlFor="password">Password</FieldLabel>
-        <Input {...register('password')} type="password" />
+        <PasswordInput {...register('password')} />
         {errors.password ? (
           <FieldError errors={[errors.password]} />
         ) : (
@@ -91,7 +93,7 @@ export function SignupForm() {
 
           <Field>
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting && <LoaderCircleIcon className="size-4 animate-spin" />}
+              {isSubmitting && <Icon icon={Loading03Icon} className="size-4 animate-spin" />}
               Create Account
             </Button>
             <FieldDescription className="px-6 text-center">

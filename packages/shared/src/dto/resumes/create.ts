@@ -1,11 +1,10 @@
 import { z } from 'zod';
 
-import { resourceDescriptionSchema, resourceNameSchema, ResumeJsonSchema } from '../../common.zod';
+import { resourceNameSchema, ResumeJsonSchema } from '../../common.zod';
 
 const schema = z.object({
   json: ResumeJsonSchema,
   name: resourceNameSchema,
-  description: resourceDescriptionSchema,
 });
 
 export type ICreateResumeDto = z.infer<typeof schema>;

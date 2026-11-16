@@ -1,3 +1,4 @@
+import { QuotaExceededError } from '@common/errors/quota-exceeded.error';
 import {
   ArgumentsHost,
   Catch,
@@ -21,7 +22,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
 
-    const { status, title, detail } = this.resolveException(exception);
+    const { status, title, detail, ...extra } = this.resolveException(exception);
 
     this.logger.debug(
       `[${request.method}] ${request.url} → ${status}: ${title}`,
@@ -32,6 +33,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
       status,
       title: title,
       detail,
+      ...extra,
       instance: request.url,
       timestamp: new Date().toISOString(),
     });
@@ -45,6 +47,13 @@ export class HttpExceptionFilter implements ExceptionFilter {
         status: HttpStatus.BAD_REQUEST,
         title: 'Invalid data provided',
         detail: zodError.issues?.map((err) => `${err.path.join('.')} - ${err.message}`),
+      };
+    }
+
+    if (exception instanceof QuotaExceededError) {
+      return {
+        status: HttpStatus.PAYMENT_REQUIRED,
+        title: 'Analysis limit reached',
       };
     }
 

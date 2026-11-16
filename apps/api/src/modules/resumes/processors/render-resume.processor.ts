@@ -10,8 +10,9 @@ import * as fs from 'fs/promises';
 import path from 'path';
 import { IResumeJson, ResumeJsonSchema } from 'shared';
 
-import { PrismaService } from '../../../infra/database/prisma.service';
-import { S3Service } from '../../../infra/storage/s3.service';
+import { PrismaService } from '@/infra/database/prisma.service';
+import { S3Service } from '@/infra/storage/s3.service';
+
 import { IRenderPdfWorker } from '../types';
 import { getResumeTex } from './template';
 

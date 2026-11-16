@@ -1,5 +1,5 @@
+import { Add01Icon, FolderAddIcon } from '@hugeicons/core-free-icons';
 import { Job } from 'db';
-import { FolderPlusIcon, PlusIcon } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import useSWR from 'swr';
 
@@ -14,6 +14,7 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from '@/components/ui/empty';
+import { Icon } from '@/components/ui/icon';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   Table,
@@ -29,7 +30,7 @@ import { api } from '@/lib/utils';
 function NewJobButton({ onClick }: { onClick: () => void }) {
   return (
     <Button onClick={onClick}>
-      <PlusIcon />
+      <Icon icon={Add01Icon} />
       New Job
     </Button>
   );
@@ -69,7 +70,7 @@ export default function JobsPage() {
             <Empty>
               <EmptyHeader>
                 <EmptyMedia variant="icon">
-                  <FolderPlusIcon />
+                  <Icon icon={FolderAddIcon} />
                 </EmptyMedia>
                 <EmptyTitle>No Jobs Tracked Yet</EmptyTitle>
                 <EmptyDescription>

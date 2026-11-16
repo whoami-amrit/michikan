@@ -1,13 +1,15 @@
 import { Module } from '@nestjs/common';
 
+import { AiModule } from '@/infra/ai/ai.module';
+import { DatabaseModule } from '@/infra/database/database.module';
+import { EmailModule } from '@/infra/email/email.module';
+import { LoggerModule } from '@/infra/logger/logger.module';
+import { QueueModule } from '@/infra/queue/queue.module';
+import { StorageModule } from '@/infra/storage/storage.module';
+
 import { AppConfigModule } from './config/config.module';
-import { DatabaseModule } from './infra/database/database.module';
-import { EmailModule } from './infra/email/email.module';
-import { LoggerModule } from './infra/logger/logger.module';
-import { QueueModule } from './infra/queue/queue.module';
-import { StorageModule } from './infra/storage/storage.module';
-import { AnalyzerModule } from './modules/analysis/processors/analyzer.module';
 import { OtpEmailProcessor } from './modules/auth/processors/otp-email.processor';
+import { AnalyzerModule } from './modules/resumes/analysis/analyzer.module';
 import { RenderResumeProcessor } from './modules/resumes/processors/render-resume.processor';
 
 @Module({
@@ -18,6 +20,7 @@ import { RenderResumeProcessor } from './modules/resumes/processors/render-resum
     DatabaseModule,
     StorageModule,
     EmailModule,
+    AiModule,
     AnalyzerModule,
   ],
   providers: [RenderResumeProcessor, OtpEmailProcessor],

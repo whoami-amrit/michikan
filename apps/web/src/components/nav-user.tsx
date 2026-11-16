@@ -1,4 +1,10 @@
-import { ChevronsUpDownIcon, LogOutIcon, MoonIcon, SunIcon } from 'lucide-react';
+import {
+  Logout01Icon,
+  Moon02Icon,
+  Sun02Icon,
+  UnfoldMoreIcon,
+  UserIcon,
+} from '@hugeicons/core-free-icons';
 import { useNavigate } from 'react-router';
 
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -14,6 +20,7 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Icon } from '@/components/ui/icon';
 import {
   SidebarMenu,
   SidebarMenuButton,
@@ -51,7 +58,7 @@ export function NavUser() {
               <span className="truncate font-medium">{user.name}</span>
               <span className="truncate text-xs">{user.email}</span>
             </div>
-            <ChevronsUpDownIcon className="ml-auto size-4" />
+            <Icon icon={UnfoldMoreIcon} className="ml-auto size-4" />
           </DropdownMenuTrigger>
           <DropdownMenuContent
             className="min-w-56 rounded-lg"
@@ -59,9 +66,17 @@ export function NavUser() {
             align="end"
             sideOffset={4}
           >
+            <DropdownMenuItem
+              onClick={() => {
+                void navigate('/user');
+              }}
+            >
+              <Icon icon={UserIcon} />
+              Account
+            </DropdownMenuItem>
             <DropdownMenuSub>
               <DropdownMenuSubTrigger>
-                {theme === 'light' ? <SunIcon /> : <MoonIcon />}
+                {theme === 'light' ? <Icon icon={Sun02Icon} /> : <Icon icon={Moon02Icon} />}
                 Theme
               </DropdownMenuSubTrigger>
               <DropdownMenuSubContent>
@@ -75,11 +90,11 @@ export function NavUser() {
                   }}
                 >
                   <DropdownMenuRadioItem value="light">
-                    <SunIcon />
+                    <Icon icon={Sun02Icon} />
                     Light
                   </DropdownMenuRadioItem>
                   <DropdownMenuRadioItem value="dark">
-                    <MoonIcon />
+                    <Icon icon={Moon02Icon} />
                     Dark
                   </DropdownMenuRadioItem>
                 </DropdownMenuRadioGroup>
@@ -97,7 +112,7 @@ export function NavUser() {
                   .catch((err) => console.log(err));
               }}
             >
-              <LogOutIcon />
+              <Icon icon={Logout01Icon} />
               Log out
             </DropdownMenuItem>
           </DropdownMenuContent>

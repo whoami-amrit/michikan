@@ -1,4 +1,4 @@
-import { FilePlusCornerIcon, PlusIcon } from 'lucide-react';
+import { Add01Icon, FilePlusCornerIcon } from '@hugeicons/core-free-icons';
 import { useNavigate } from 'react-router';
 import { IGetResumesResponse } from 'shared';
 import useSWR from 'swr';
@@ -13,6 +13,7 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from '@/components/ui/empty';
+import { Icon } from '@/components/ui/icon';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   Table,
@@ -29,7 +30,7 @@ import { api } from '@/lib/utils';
 function NewResumeButton({ onClick }: { onClick: () => void }) {
   return (
     <Button onClick={onClick}>
-      <PlusIcon />
+      <Icon icon={Add01Icon} />
       New Resume
     </Button>
   );
@@ -73,7 +74,7 @@ export default function ResumesPage() {
             <Empty>
               <EmptyHeader>
                 <EmptyMedia variant="icon">
-                  <FilePlusCornerIcon />
+                  <Icon icon={FilePlusCornerIcon} />
                 </EmptyMedia>
                 <EmptyTitle>No Resumes Yet</EmptyTitle>
                 <EmptyDescription>

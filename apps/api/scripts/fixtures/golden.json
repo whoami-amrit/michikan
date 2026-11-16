@@ -1,0 +1,49 @@
+{
+  "personalInfo": {
+    "name": "Jordan Rivera",
+    "email": "jordan.rivera@gmail.com",
+    "github": "https://github.com/jrivera-dev",
+    "phone": "+1 415 555 0134"
+  },
+  "summary": "Backend engineer focused on payments infrastructure and data pipelines",
+  "skills": [
+    { "category": "Languages", "skills": "Python, Go, Java" },
+    { "category": "Cloud", "skills": "aws, Docker" },
+    { "category": "Databases", "skills": "PostgreSQL, Redis" }
+  ],
+  "experience": [
+    {
+      "title": "Software Engineer",
+      "company": "Acme Payments",
+      "location": "San Francisco, CA",
+      "startDate": "2022-06-15",
+      "isCurrentRole": true,
+      "highlights": "Built settlement reconciliation service in Go and Kafka processing 2M transactions per day\nSignificantly improved API performance by adding Redis caching\nWrote unit tests for the payments service"
+    },
+    {
+      "title": "Software Engineering Intern",
+      "company": "Globex",
+      "location": "Austin, TX",
+      "startDate": "2021-05-15",
+      "endDate": "2021-08-15",
+      "isCurrentRole": false,
+      "highlights": "Part of a team that migrated batch jobs to AWS Lambda"
+    }
+  ],
+  "projects": [
+    {
+      "title": "Ledger",
+      "url": "https://github.com/jrivera-dev/ledger",
+      "technologies": "Go, PostgreSQL",
+      "highlights": "Built double-entry ledger API with idempotent writes and zero data loss under load tests"
+    }
+  ],
+  "education": [
+    {
+      "institution": "University of Texas at Austin",
+      "degree": "Bachelor of Science",
+      "field": "Computer Science",
+      "graduationDate": "2022-05-15"
+    }
+  ]
+}

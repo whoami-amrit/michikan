@@ -1,6 +1,6 @@
-import { CircleAlert, RotateCwIcon } from 'lucide-react';
+import { AlertCircleIcon, RotateCwIcon } from '@hugeicons/core-free-icons';
 import { ErrorBoundary, getErrorMessage } from 'react-error-boundary';
-import { BrowserRouter, Route, Routes } from 'react-router';
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router';
 import { useSWRConfig } from 'swr';
 
 import { Button } from '@/components/ui/button';
@@ -12,13 +12,12 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from '@/components/ui/empty';
+import { Icon } from '@/components/ui/icon';
 import { Toaster } from '@/components/ui/toast';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { MainContextProvider } from '@/lib/contexts/main/provider';
 import { UserContextProvider } from '@/lib/contexts/user/provider';
 
-import ReportPage from './analysis/detail.tsx';
-import AnalysisPage from './analysis/list.tsx';
 import { AuthFormPage, VerifyEmailPage } from './auth';
 import { JobDetailPage } from './jobs/detail';
 import JobsPage from './jobs/list';
@@ -27,6 +26,7 @@ import Layout from './layout';
 import { ResumeDetailPage } from './resumes/detail';
 import ResumesPage from './resumes/list';
 import { NewResumePage } from './resumes/new';
+import UserPage from './user';
 
 function App() {
   const { mutate } = useSWRConfig();
@@ -39,7 +39,7 @@ function App() {
           <Empty className="h-screen">
             <EmptyHeader>
               <EmptyMedia variant="icon">
-                <CircleAlert />
+                <Icon icon={AlertCircleIcon} />
               </EmptyMedia>
               <EmptyTitle>Something went wrong :/</EmptyTitle>
               <EmptyDescription>
@@ -57,7 +57,7 @@ function App() {
                 variant="outline"
                 size="sm"
               >
-                <RotateCwIcon />
+                <Icon icon={RotateCwIcon} />
                 Retry
               </Button>
             </EmptyContent>
@@ -85,15 +85,13 @@ function App() {
                     <Route path="new" element={<NewJobPage />} />
                     <Route path=":id" element={<JobDetailPage />} />
                   </Route>
-                  <Route path="analysis">
-                    <Route index element={<AnalysisPage />} />
-                    <Route path=":id" element={<ReportPage />} />
-                  </Route>
+                  <Route path="user" element={<UserPage />} />
                   <Route path="resumes">
                     <Route index element={<ResumesPage />} />
                     <Route path="new" element={<NewResumePage />} />
                     <Route path=":id" element={<ResumeDetailPage />} />
                   </Route>
+                  <Route path="*" element={<Navigate to="/resumes" replace />} />
                 </Route>
               </Routes>
             </BrowserRouter>

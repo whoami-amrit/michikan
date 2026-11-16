@@ -13,7 +13,12 @@ import {
   Post,
 } from '@nestjs/common';
 import { createZodDto } from 'nestjs-zod';
-import { CreateResumeSchema, IGetResumesResponse, UpdateResumeSchema } from 'shared';
+import {
+  CreateResumeSchema,
+  IGetResumesResponse,
+  IQueueAnalysisResponse,
+  UpdateResumeSchema,
+} from 'shared';
 
 import { ResumeService } from './resumes.service';
 
@@ -31,6 +36,15 @@ export class ResumeController {
     @CurrentUser() user: IJwtAccessPayload,
   ) {
     return await this.resumeService.renderPdf(jobId, user.sub);
+  }
+
+  @Post(':id/analysis')
+  @HttpCode(HttpStatus.ACCEPTED)
+  requestAnalysis(
+    @Param('id', ParseIntPipe) resumeId: number,
+    @CurrentUser() user: IJwtAccessPayload,
+  ): Promise<IQueueAnalysisResponse> {
+    return this.resumeService.requestAnalysis(user.sub, resumeId);
   }
 
   @Get('worker/:id')

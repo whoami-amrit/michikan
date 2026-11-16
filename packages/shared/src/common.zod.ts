@@ -13,10 +13,6 @@ export const resourceNameSchema = z
   .min(1, 'Resume name is required')
   .max(50, 'Resume name must be less than 50 characters');
 
-export const resourceDescriptionSchema = zodSafeString.pipe(
-  z.string().max(200, 'Description must be less than 200 characters').optional(),
-);
-
 export const nameSchema = z
   .string()
   .trim()
@@ -167,27 +163,4 @@ const ResumeJsonSchema = z.object({
   ),
 });
 
-const RequirementMatchSchema = z.object({
-  requirement: z.string(),
-  status: z.enum(['MET', 'PARTIAL', 'MISSING']),
-  evidence: z.string(), // direct quote from resume, or "none"
-});
-
-const JdRequirementsSchema = z.object({
-  required: z.array(z.string()),
-  preferred: z.array(z.string()),
-});
-
-const AnalysisReportSchema = z.object({
-  shouldApply: z.enum(['definitely', 'worth a try', 'no']),
-  jobTitle: z.string().max(250),
-  companyName: z.string().max(250),
-  matchScore: z.number().int().min(0).max(100),
-  jdRequirements: JdRequirementsSchema,
-  requirementMatches: z.array(RequirementMatchSchema),
-  strengths: z.array(z.string()).max(3),
-  gaps: z.array(z.string()).max(3),
-  summary: z.string(),
-});
-
-export { AnalysisReportSchema, ResumeJsonSchema };
+export { ResumeJsonSchema };

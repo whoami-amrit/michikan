@@ -1,0 +1,875 @@
+[
+  {
+    "personalInfo": {
+      "name": "Alex Moreno",
+      "email": "alexmoreno@gmail.com",
+      "github": "https://github.com/alexmoreno"
+    },
+    "skills": [
+      {
+        "category": "Languages",
+        "skills": "JavaScript, HTML, CSS"
+      },
+      {
+        "category": "Frameworks",
+        "skills": "React"
+      }
+    ],
+    "experience": [
+      {
+        "title": "Frontend Developer",
+        "company": "Pixelcraft Studio",
+        "startDate": "2023-06-15",
+        "isCurrentRole": true,
+        "highlights": "Responsible for building landing pages for client campaigns\nPart of a team that migrated the component library to React\nWorked on CSS fixes for older browsers"
+      }
+    ],
+    "projects": [
+      {
+        "title": "Weather App",
+        "technologies": "React, OpenWeather API",
+        "highlights": "Created a weather dashboard that shows forecasts by city"
+      }
+    ],
+    "education": [
+      {
+        "institution": "State University",
+        "degree": "Bachelor of Science",
+        "field": "Computer Science",
+        "graduationDate": "2023-05-15"
+      }
+    ]
+  },
+  {
+    "personalInfo": {
+      "name": "Hannah Weiss",
+      "email": "hannahweiss@gmail.com",
+      "github": "https://github.com/hannahweiss"
+    },
+    "skills": [
+      {
+        "category": "Languages",
+        "skills": "python, sql, javascript"
+      },
+      {
+        "category": "Cloud",
+        "skills": "aws, gcp"
+      },
+      {
+        "category": "Tools",
+        "skills": "git, docker"
+      }
+    ],
+    "experience": [
+      {
+        "title": "Data Engineer",
+        "company": "Lumen Analytics",
+        "startDate": "2020-09-15",
+        "endDate": "2024-01-15",
+        "isCurrentRole": false,
+        "highlights": "Built Airflow pipelines that load 3 TB of clickstream data daily into BigQuery\nReduced warehouse spend by 35% by partitioning the largest tables\nMaintained ETL jobs for the finance team"
+      }
+    ],
+    "projects": [],
+    "education": [
+      {
+        "institution": "State University",
+        "degree": "Bachelor of Science",
+        "field": "Statistics",
+        "graduationDate": "2020-05-15"
+      }
+    ]
+  },
+  {
+    "personalInfo": {
+      "name": "Diego Alvarez",
+      "email": "diegoalvarez@gmail.com",
+      "github": "https://github.com/diegoalvarez"
+    },
+    "summary": "Staff engineer with 12 years building distributed storage systems",
+    "skills": [
+      {
+        "category": "Languages",
+        "skills": "C++, Rust, Python"
+      },
+      {
+        "category": "Systems",
+        "skills": "Linux, RocksDB, gRPC"
+      }
+    ],
+    "experience": [
+      {
+        "title": "Staff Software Engineer",
+        "company": "Cobalt Cloud",
+        "startDate": "2017-02-15",
+        "isCurrentRole": true,
+        "highlights": "Designed replicated key-value store in Rust serving 2M requests per second across 5 regions\nLed migration from C++ to Rust with zero data loss and no customer downtime\nCut tail latency by 60% through RocksDB compaction tuning"
+      },
+      {
+        "title": "Senior Software Engineer",
+        "company": "Bytewise",
+        "startDate": "2013-06-15",
+        "endDate": "2017-01-15",
+        "isCurrentRole": false,
+        "highlights": "Built gRPC gateway in C++ handling 400,000 concurrent connections\nIntroduced Linux kernel tuning that eliminated packet drops under peak load"
+      }
+    ],
+    "projects": [],
+    "education": [
+      {
+        "institution": "State University",
+        "degree": "Bachelor of Science",
+        "field": "Computer Engineering",
+        "graduationDate": "2013-05-15"
+      }
+    ]
+  },
+  {
+    "personalInfo": {
+      "name": "Fatima Rahman",
+      "email": "fatimarahman@gmail.com",
+      "github": "https://github.com/fatimarahman"
+    },
+    "skills": [
+      {
+        "category": "Languages",
+        "skills": "Python, Java"
+      },
+      {
+        "category": "Libraries",
+        "skills": "NumPy, Pandas"
+      }
+    ],
+    "experience": [
+      {
+        "title": "President",
+        "company": "University Coding Club",
+        "startDate": "2022-09-15",
+        "endDate": "2024-05-15",
+        "isCurrentRole": false,
+        "highlights": "Organized weekly workshops for 80 members\nManaged a team of 6 officers and a budget of $2,000"
+      },
+      {
+        "title": "Software Engineering Intern",
+        "company": "DataBridge",
+        "startDate": "2023-06-15",
+        "endDate": "2023-08-15",
+        "isCurrentRole": false,
+        "highlights": "Built Pandas scripts that cut weekly report preparation from 6 hours to 1 hour"
+      }
+    ],
+    "projects": [],
+    "education": [
+      {
+        "institution": "State University",
+        "degree": "Bachelor of Science",
+        "field": "Computer Science",
+        "graduationDate": "2024-05-15"
+      }
+    ]
+  },
+  {
+    "personalInfo": {
+      "name": "Kenji Watanabe",
+      "email": "kenjiwatanabe@gmail.com",
+      "github": "https://github.com/kenjiwatanabe"
+    },
+    "skills": [
+      {
+        "category": "Tools",
+        "skills": "SolidWorks, MATLAB, Simulink, Altium"
+      },
+      {
+        "category": "Languages",
+        "skills": "C, Python"
+      }
+    ],
+    "experience": [
+      {
+        "title": "Embedded Engineer",
+        "company": "Torque Dynamics",
+        "startDate": "2019-08-15",
+        "endDate": "2024-04-15",
+        "isCurrentRole": false,
+        "highlights": "Modeled brackets in SolidWorks and ran stress studies\nUsed MATLAB and Simulink to tune motor controllers\nWrote C firmware for a motor driver board that shipped in 15,000 units\nCreated Altium schematics for the v2 power board"
+      }
+    ],
+    "projects": [],
+    "education": [
+      {
+        "institution": "State University",
+        "degree": "Bachelor of Science",
+        "field": "Electrical Engineering",
+        "graduationDate": "2019-05-15"
+      }
+    ]
+  },
+  {
+    "personalInfo": {
+      "name": "Olivia Brandt",
+      "email": "oliviabrandt@gmail.com",
+      "github": "https://github.com/oliviabrandt"
+    },
+    "summary": "Former high school math teacher moving into backend engineering",
+    "skills": [
+      {
+        "category": "Languages",
+        "skills": "Python, SQL"
+      },
+      {
+        "category": "Frameworks",
+        "skills": "Flask"
+      }
+    ],
+    "experience": [
+      {
+        "title": "Backend Engineer",
+        "company": "Tallyfy",
+        "startDate": "2022-10-15",
+        "isCurrentRole": true,
+        "highlights": "Built Flask API for invoice export that removed 10 hours of weekly manual work\nWrote SQL migrations that moved 2 million rows with no downtime"
+      },
+      {
+        "title": "Mathematics Teacher",
+        "company": "Lincoln High School",
+        "startDate": "2015-08-15",
+        "endDate": "2022-06-15",
+        "isCurrentRole": false,
+        "highlights": "Taught 150 students per year across five sections"
+      }
+    ],
+    "projects": [],
+    "education": [
+      {
+        "institution": "State University",
+        "degree": "Master of Education",
+        "field": "Mathematics",
+        "graduationDate": "2015-05-15"
+      }
+    ]
+  },
+  {
+    "personalInfo": {
+      "name": "Rahul Desai",
+      "email": "rahuldesai@gmail.com",
+      "github": "https://github.com/rahuldesai"
+    },
+    "skills": [
+      {
+        "category": "Languages",
+        "skills": "Java, Kotlin"
+      },
+      {
+        "category": "Mobile",
+        "skills": "Android"
+      }
+    ],
+    "experience": [
+      {
+        "title": "Android Developer",
+        "company": "Swiftly Mobile",
+        "startDate": "2021-01-15",
+        "isCurrentRole": true,
+        "highlights": "Greatly improved app startup time\nSignificantly reduced crash rate by fixing memory leaks\nBoosted performance of the feed screen\nShipped Kotlin rewrite of the checkout flow used by 1.2M monthly users"
+      }
+    ],
+    "projects": [],
+    "education": [
+      {
+        "institution": "State University",
+        "degree": "Bachelor of Science",
+        "field": "Computer Science",
+        "graduationDate": "2020-12-15"
+      }
+    ]
+  },
+  {
+    "personalInfo": {
+      "name": "Chloe Martin",
+      "email": "chloemartin@gmail.com",
+      "github": "https://github.com/chloemartin"
+    },
+    "skills": [
+      {
+        "category": "Languages",
+        "skills": "TypeScript"
+      }
+    ],
+    "experience": [
+      {
+        "title": "Full Stack Engineer",
+        "company": "Orbit Health",
+        "startDate": "2021-05-15",
+        "isCurrentRole": true,
+        "highlights": "Built GraphQL API with Node.js and Redis that served 30,000 patients daily\nAdded Cypress tests that caught 40 regressions before release\nDeployed services on Kubernetes using Terraform, cutting provisioning time from 2 days to 20 minutes"
+      }
+    ],
+    "projects": [],
+    "education": [
+      {
+        "institution": "State University",
+        "degree": "Bachelor of Science",
+        "field": "Software Engineering",
+        "graduationDate": "2021-05-15"
+      }
+    ]
+  },
+  {
+    "personalInfo": {
+      "name": "Tomasz Nowak",
+      "email": "tomasznowak@gmail.com",
+      "github": "https://github.com/tomasznowak"
+    },
+    "skills": [
+      {
+        "category": "Languages",
+        "skills": "Java, Scala, Ruby, Perl, Haskell"
+      },
+      {
+        "category": "Data",
+        "skills": "Spark, Hadoop, Hive"
+      }
+    ],
+    "experience": [
+      {
+        "title": "Backend Developer",
+        "company": "Northgate Telecom",
+        "startDate": "2018-03-15",
+        "endDate": "2024-02-15",
+        "isCurrentRole": false,
+        "highlights": "Built Java billing service that reconciles 800,000 invoices per month\nReduced nightly batch window from 5 hours to 90 minutes by parallelizing jobs"
+      }
+    ],
+    "projects": [],
+    "education": [
+      {
+        "institution": "State University",
+        "degree": "Bachelor of Science",
+        "field": "Computer Science",
+        "graduationDate": "2018-02-15"
+      }
+    ]
+  },
+  {
+    "personalInfo": {
+      "name": "Zoe Kim",
+      "email": "zoekim@gmail.com",
+      "github": "https://github.com/zoekim"
+    },
+    "skills": [
+      {
+        "category": "Languages",
+        "skills": "Python"
+      },
+      {
+        "category": "ML",
+        "skills": "PyTorch, scikit-learn"
+      },
+      {
+        "category": "Tools",
+        "skills": "Weights & Biases"
+      }
+    ],
+    "experience": [
+      {
+        "title": "Machine Learning Engineer",
+        "company": "Vertex Vision",
+        "startDate": "2022-02-15",
+        "isCurrentRole": true,
+        "highlights": "Trained PyTorch defect-detection model that reached 96% precision on 40,000 labeled images\nBuilt scikit-learn baseline that flagged 12% of shipments for manual review\nPart of a team that evaluated model drift each quarter"
+      }
+    ],
+    "projects": [
+      {
+        "title": "Plant Classifier",
+        "technologies": "PyTorch, FastAPI",
+        "highlights": "Deployed classifier API that identifies 38 plant species from photos"
+      }
+    ],
+    "education": [
+      {
+        "institution": "State University",
+        "degree": "Master of Science",
+        "field": "Machine Learning",
+        "graduationDate": "2022-01-15"
+      }
+    ]
+  },
+  {
+    "personalInfo": {
+      "name": "Marcus Bell",
+      "email": "marcusbell@gmail.com",
+      "github": "https://github.com/marcusbell"
+    },
+    "skills": [
+      {
+        "category": "Languages",
+        "skills": "Go, Bash"
+      },
+      {
+        "category": "Infrastructure",
+        "skills": "AWS, Terraform, Prometheus, Grafana"
+      }
+    ],
+    "experience": [
+      {
+        "title": "Site Reliability Engineer",
+        "company": "Gridline Payments",
+        "startDate": "2019-04-15",
+        "isCurrentRole": true,
+        "highlights": "Maintained Prometheus alerts and Grafana dashboards\nAutomated failover with Go and Terraform, restoring service in under 2 minutes instead of 25\nReduced AWS bill by $18,000 per month by right-sizing instances"
+      }
+    ],
+    "projects": [],
+    "education": [
+      {
+        "institution": "State University",
+        "degree": "Bachelor of Science",
+        "field": "Information Technology",
+        "graduationDate": "2019-05-15"
+      }
+    ]
+  },
+  {
+    "personalInfo": {
+      "name": "Sara Lindqvist",
+      "email": "saralindqvist@gmail.com",
+      "github": "https://github.com/saralindqvist"
+    },
+    "skills": [
+      {
+        "category": "Languages",
+        "skills": "Python, Go"
+      },
+      {
+        "category": "Security",
+        "skills": "Burp Suite, Nmap, OWASP ZAP"
+      }
+    ],
+    "experience": [
+      {
+        "title": "Application Security Engineer",
+        "company": "Fortis Bank",
+        "startDate": "2020-07-15",
+        "isCurrentRole": true,
+        "highlights": "Ran Burp Suite scans on web applications\nFound and fixed 14 critical vulnerabilities before the 2023 audit\nWrote Python tooling that triages dependency alerts and closed the backlog of 600 tickets"
+      }
+    ],
+    "projects": [],
+    "education": [
+      {
+        "institution": "State University",
+        "degree": "Bachelor of Science",
+        "field": "Cybersecurity",
+        "graduationDate": "2020-05-15"
+      }
+    ]
+  },
+  {
+    "personalInfo": {
+      "name": "Ethan Park",
+      "email": "ethanpark@gmail.com",
+      "github": "https://github.com/ethanpark"
+    },
+    "skills": [
+      {
+        "category": "Languages",
+        "skills": "C#, C++"
+      },
+      {
+        "category": "Engines",
+        "skills": "Unity, Unreal Engine"
+      }
+    ],
+    "experience": [
+      {
+        "title": "Gameplay Programmer",
+        "company": "Moonlit Games",
+        "startDate": "2021-08-15",
+        "isCurrentRole": true,
+        "highlights": "Implemented combat system in Unity used across all 9 levels of the shipped title\nProfiled and optimized rendering code, lifting frame rate from 35 to 60 FPS on console\nHelped with bug fixes during crunch"
+      }
+    ],
+    "projects": [
+      {
+        "title": "Voxel Sandbox",
+        "technologies": "C++, OpenGL",
+        "highlights": "Created voxel engine that renders 16 million blocks at 90 FPS"
+      }
+    ],
+    "education": [
+      {
+        "institution": "State University",
+        "degree": "Bachelor of Science",
+        "field": "Computer Science",
+        "graduationDate": "2021-05-15"
+      }
+    ]
+  },
+  {
+    "personalInfo": {
+      "name": "Nina Petrova",
+      "email": "ninapetrova@gmail.com",
+      "github": "https://github.com/ninapetrova"
+    },
+    "skills": [
+      {
+        "category": "Languages",
+        "skills": "Python, JavaScript"
+      },
+      {
+        "category": "Testing",
+        "skills": "Selenium, Pytest, Jenkins"
+      }
+    ],
+    "experience": [
+      {
+        "title": "QA Automation Engineer",
+        "company": "Clearview Software",
+        "startDate": "2020-10-15",
+        "isCurrentRole": true,
+        "highlights": "Wrote Selenium tests for the web portal\nBuilt Pytest framework adopted by 5 teams, cutting regression testing from 3 days to 4 hours\nContributed to efforts to stabilize flaky Jenkins jobs"
+      }
+    ],
+    "projects": [],
+    "education": [
+      {
+        "institution": "State University",
+        "degree": "Bachelor of Science",
+        "field": "Computer Science",
+        "graduationDate": "2020-06-15"
+      }
+    ]
+  },
+  {
+    "personalInfo": {
+      "name": "Lucas Ferreira",
+      "email": "lucasferreira@gmail.com",
+      "github": "https://github.com/lucasferreira"
+    },
+    "skills": [
+      {
+        "category": "Languages",
+        "skills": "Python, C++, SQL"
+      },
+      {
+        "category": "Tools",
+        "skills": "Git, Linux"
+      }
+    ],
+    "experience": [],
+    "projects": [
+      {
+        "title": "Chess Engine",
+        "technologies": "C++",
+        "highlights": "Built alpha-beta chess engine rated 2100 on an online ladder"
+      },
+      {
+        "title": "Course Scheduler",
+        "technologies": "Python, SQLite",
+        "highlights": "Developed scheduling tool that generates conflict-free timetables for 500 students"
+      },
+      {
+        "title": "Todo List App",
+        "technologies": "JavaScript",
+        "highlights": "Made a todo list with add and delete buttons"
+      }
+    ],
+    "education": [
+      {
+        "institution": "State University",
+        "degree": "Bachelor of Science",
+        "field": "Computer Science",
+        "graduationDate": "2024-05-15"
+      }
+    ]
+  },
+  {
+    "personalInfo": {
+      "name": "Amara Eze",
+      "email": "amaraeze@gmail.com",
+      "github": "https://github.com/amaraeze"
+    },
+    "summary": "Returning to engineering after a 2 year career break to care for family",
+    "skills": [
+      {
+        "category": "Languages",
+        "skills": "Python, YAML"
+      },
+      {
+        "category": "Tools",
+        "skills": "GitLab CI, Docker, Ansible"
+      }
+    ],
+    "experience": [
+      {
+        "title": "DevOps Engineer",
+        "company": "Skyline Media",
+        "startDate": "2016-04-15",
+        "endDate": "2021-11-15",
+        "isCurrentRole": false,
+        "highlights": "Built GitLab CI pipelines that deploy 25 services with one click\nWrote Ansible roles that standardized 200 servers\nContainerized the legacy monolith with Docker, cutting onboarding from 2 days to 2 hours"
+      }
+    ],
+    "projects": [],
+    "education": [
+      {
+        "institution": "State University",
+        "degree": "Bachelor of Science",
+        "field": "Information Systems",
+        "graduationDate": "2016-05-15"
+      }
+    ]
+  },
+  {
+    "personalInfo": {
+      "name": "Victor Hugo",
+      "email": "victorhugo@gmail.com",
+      "github": "https://github.com/victorhugo"
+    },
+    "skills": [
+      {
+        "category": "Languages",
+        "skills": "typescript, css"
+      },
+      {
+        "category": "Frameworks",
+        "skills": "next.js, Tailwind"
+      }
+    ],
+    "experience": [
+      {
+        "title": "Frontend Engineer",
+        "company": "Bloom Commerce",
+        "startDate": "2022-03-15",
+        "isCurrentRole": true,
+        "highlights": "Rebuilt the product page in next.js, raising conversion by 8%\nIntroduced Tailwind design tokens shared by three teams\nFixed accessibility issues across the checkout"
+      }
+    ],
+    "projects": [],
+    "education": [
+      {
+        "institution": "State University",
+        "degree": "Bachelor of Science",
+        "field": "Computer Science",
+        "graduationDate": "2022-05-15"
+      }
+    ]
+  },
+  {
+    "personalInfo": {
+      "name": "Isabel Costa",
+      "email": "isabelcosta@gmail.com",
+      "github": "https://github.com/isabelcosta"
+    },
+    "skills": [
+      {
+        "category": "Languages",
+        "skills": "Swift, Objective-C"
+      },
+      {
+        "category": "Frameworks",
+        "skills": "SwiftUI, Combine"
+      }
+    ],
+    "experience": [
+      {
+        "title": "iOS Engineer",
+        "company": "Pocketwise",
+        "startDate": "2020-01-15",
+        "isCurrentRole": true,
+        "highlights": "Rewrote onboarding in SwiftUI, increasing day-1 retention from 41% to 52%\nMigrated 60,000 lines of Objective-C to Swift without a single production incident\nWorked on Combine pipelines for the sync layer"
+      }
+    ],
+    "projects": [],
+    "education": [
+      {
+        "institution": "State University",
+        "degree": "Bachelor of Science",
+        "field": "Computer Science",
+        "graduationDate": "2019-12-15"
+      }
+    ]
+  },
+  {
+    "personalInfo": {
+      "name": "Omar Haddad",
+      "email": "omarhaddad@gmail.com",
+      "github": "https://github.com/omarhaddad"
+    },
+    "summary": "Hardworking 28-year-old engineer who enjoys backend problems",
+    "skills": [
+      {
+        "category": "Languages",
+        "skills": "Go, SQL"
+      },
+      {
+        "category": "Tools",
+        "skills": "Docker"
+      }
+    ],
+    "experience": [
+      {
+        "title": "Backend Engineer",
+        "company": "Quarry Labs",
+        "startDate": "2019-09-15",
+        "isCurrentRole": true,
+        "highlights": "Built Go service that ingests 20,000 events per second into PostgreSQL\nWrote Docker images used by every service in the platform"
+      }
+    ],
+    "projects": [],
+    "education": [
+      {
+        "institution": "State University",
+        "degree": "Bachelor of Science",
+        "field": "Computer Science",
+        "graduationDate": "2019-05-15"
+      }
+    ]
+  },
+  {
+    "personalInfo": {
+      "name": "Grace Liu",
+      "email": "graceliu@gmail.com",
+      "github": "https://github.com/graceliu"
+    },
+    "skills": [
+      {
+        "category": "Languages",
+        "skills": "Python, MATLAB"
+      },
+      {
+        "category": "Libraries",
+        "skills": "TensorFlow, OpenCV"
+      }
+    ],
+    "experience": [
+      {
+        "title": "Graduate Research Assistant",
+        "company": "Vision Lab, State University (NSF funded)",
+        "startDate": "2021-09-15",
+        "endDate": "2023-05-15",
+        "isCurrentRole": false,
+        "highlights": "Developed TensorFlow model that segments tumors with a Dice score of 0.87\nProcessed 12,000 MRI scans with OpenCV pipelines\nPublished results at a peer-reviewed workshop"
+      }
+    ],
+    "projects": [],
+    "education": [
+      {
+        "institution": "State University",
+        "degree": "Master of Science",
+        "field": "Computer Science",
+        "graduationDate": "2023-05-15"
+      }
+    ]
+  },
+  {
+    "personalInfo": {
+      "name": "Yusuf Demir",
+      "email": "yusufdemir@gmail.com",
+      "github": "https://github.com/yusufdemir"
+    },
+    "skills": [
+      {
+        "category": "Languages",
+        "skills": "Python, R, SQL"
+      },
+      {
+        "category": "Visualization",
+        "skills": "Tableau, Matplotlib"
+      }
+    ],
+    "experience": [
+      {
+        "title": "Data Analyst",
+        "company": "Retail Metrics",
+        "startDate": "2021-02-15",
+        "isCurrentRole": true,
+        "highlights": "Analyzed customer churn data to find the top 3 drivers of cancellations\nBuilt Tableau dashboards used by 40 store managers each Monday\nResponsible for ad hoc SQL requests"
+      }
+    ],
+    "projects": [],
+    "education": [
+      {
+        "institution": "State University",
+        "degree": "Bachelor of Science",
+        "field": "Applied Mathematics",
+        "graduationDate": "2021-01-15"
+      }
+    ]
+  },
+  {
+    "personalInfo": {
+      "name": "Beatrice Novak",
+      "email": "beatricenovak@gmail.com",
+      "github": "https://github.com/beatricenovak"
+    },
+    "skills": [
+      {
+        "category": "Languages",
+        "skills": "Java, Kotlin"
+      },
+      {
+        "category": "Messaging",
+        "skills": "Kafka"
+      },
+      {
+        "category": "Cloud",
+        "skills": "AWS"
+      }
+    ],
+    "experience": [
+      {
+        "title": "Platform Engineer",
+        "company": "Atlas Freight",
+        "startDate": "2018-07-15",
+        "isCurrentRole": true,
+        "highlights": "Built Kafka event bus in Java that decoupled 14 services and enabled same-day releases for 6 teams\nMoved batch exports from cron to AWS Lambda, ending the weekly failures that cost 3 engineer-days\nMentored 4 engineers through their first production launches"
+      }
+    ],
+    "projects": [],
+    "education": [
+      {
+        "institution": "State University",
+        "degree": "Bachelor of Science",
+        "field": "Computer Science",
+        "graduationDate": "2018-05-15"
+      }
+    ]
+  },
+  {
+    "personalInfo": {
+      "name": "Jamal Wright",
+      "email": "jamalwright@gmail.com",
+      "github": "https://github.com/jamalwright"
+    },
+    "skills": [
+      {
+        "category": "Languages",
+        "skills": "C, Assembly"
+      },
+      {
+        "category": "Hardware",
+        "skills": "Oscilloscope, JTAG"
+      }
+    ],
+    "experience": [
+      {
+        "title": "Firmware Engineer",
+        "company": "Ardent Devices",
+        "startDate": "2017-05-15",
+        "isCurrentRole": true,
+        "highlights": "Used an oscilloscope and JTAG debugger to find timing bugs\nDeveloped C bootloader supporting secure updates for 50,000 field devices\nWrote Assembly routines for the interrupt handlers"
+      }
+    ],
+    "projects": [],
+    "education": [
+      {
+        "institution": "State University",
+        "degree": "Bachelor of Science",
+        "field": "Electrical Engineering",
+        "graduationDate": "2017-05-15"
+      }
+    ]
+  }
+]

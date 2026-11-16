@@ -1,10 +1,11 @@
 'use client';
 
 import { Dialog as SheetPrimitive } from '@base-ui/react/dialog';
-import { XIcon } from 'lucide-react';
+import { Cancel01Icon } from '@hugeicons/core-free-icons';
 import * as React from 'react';
 
 import { Button } from '@/components/ui/button';
+import { Icon } from '@/components/ui/icon';
 import { cn } from '@/lib/utils';
 
 function Sheet({ ...props }: SheetPrimitive.Root.Props) {
@@ -70,7 +71,7 @@ function SheetContent({
               />
             }
           >
-            <XIcon />
+            <Icon icon={Cancel01Icon} />
             <span className="sr-only">Close</span>
           </SheetPrimitive.Close>
         )}

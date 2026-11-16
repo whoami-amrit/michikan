@@ -1,10 +1,12 @@
-import { Loader2Icon } from 'lucide-react';
+import { Loading03Icon } from '@hugeicons/core-free-icons';
 
+import { Icon } from '@/components/ui/icon';
 import { cn } from '@/lib/utils';
 
 function Spinner({ className }: React.ComponentProps<'svg'>) {
   return (
-    <Loader2Icon
+    <Icon
+      icon={Loading03Icon}
       data-slot="spinner"
       role="status"
       aria-label="Loading"

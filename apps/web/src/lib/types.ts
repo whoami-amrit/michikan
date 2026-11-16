@@ -11,4 +11,5 @@ export interface ICrumb {
   label: string;
   isLoading?: boolean;
   pathname: string;
+  onLabelChange?: (label: string) => void;
 }

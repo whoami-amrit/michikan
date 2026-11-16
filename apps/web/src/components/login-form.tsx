@@ -1,13 +1,15 @@
 import { zodResolver } from '@hookform/resolvers/zod';
+import { Loading03Icon } from '@hugeicons/core-free-icons';
 import ky from 'ky';
-import { LoaderCircleIcon } from 'lucide-react';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import { NavLink, useNavigate } from 'react-router';
 import { ILoginDto, LoginSchema } from 'shared';
 
 import { Button } from '@/components/ui/button';
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
+import { Icon } from '@/components/ui/icon';
 import { Input } from '@/components/ui/input';
+import { PasswordInput } from '@/components/ui/password-input';
 import { toast } from '@/components/ui/toast';
 import { API_PREFIX, getErrorToastContent, resetCurrentUser } from '@/lib/utils';
 
@@ -69,12 +71,12 @@ export function LoginForm() {
               Forgot your password?
             </a>
           </div>
-          <Input {...register('password')} type="password" />
+          <PasswordInput {...register('password')} />
           <FieldError errors={[errors.password]} />
         </Field>
         <Field>
           <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting && <LoaderCircleIcon className="size-4 animate-spin" />}
+            {isSubmitting && <Icon icon={Loading03Icon} className="size-4 animate-spin" />}
             Login
           </Button>
           <FieldDescription className="text-center">

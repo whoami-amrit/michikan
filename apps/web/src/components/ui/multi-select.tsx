@@ -1,4 +1,4 @@
-import { PlusIcon } from 'lucide-react';
+import { Add01Icon } from '@hugeicons/core-free-icons';
 import { ComponentProps, Fragment, useState } from 'react';
 
 import {
@@ -13,6 +13,7 @@ import {
   ComboboxValue,
   useComboboxAnchor,
 } from '@/components/ui/combobox';
+import { Icon } from '@/components/ui/icon';
 
 import { Button } from './button';
 
@@ -88,7 +89,7 @@ function MultiSelect({
         {creatable && !!input.trim().length && (
           <div className="flex w-full p-2">
             <Button variant="outline" size="sm" className="w-full" onClick={addOption}>
-              <PlusIcon />
+              <Icon icon={Add01Icon} />
               Add <span className="truncate">&quot;{input}&quot;</span>
             </Button>
           </div>

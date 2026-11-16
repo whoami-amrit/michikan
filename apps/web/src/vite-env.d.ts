@@ -7,7 +7,6 @@ interface ViteTypeOptions {
 
 interface ImportMetaEnv {
   readonly API_PORT: string;
-  readonly VITE_DISABLE_ANALYSIS: string;
 }
 
 interface ImportMeta {
