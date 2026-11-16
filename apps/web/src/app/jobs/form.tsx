@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
+import { Add01Icon, FolderOpenIcon, Loading03Icon } from '@hugeicons/core-free-icons';
 import { Job, JobStatus, Resume } from 'db';
-import { FolderOpen, LoaderCircle, PlusIcon } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import {
   Controller,
@@ -46,6 +46,7 @@ import {
   FieldLegend,
   FieldSet,
 } from '@/components/ui/field';
+import { Icon } from '@/components/ui/icon';
 import { Input } from '@/components/ui/input';
 import { InputGroupAddon } from '@/components/ui/input-group';
 import {
@@ -129,7 +130,7 @@ function ResumesCombobox({
     >
       <ComboboxInput className="w-full" placeholder="Select a resume for analysis" showClear>
         <InputGroupAddon>
-          {isLoading && <LoaderCircle className="size-3 animate-spin" />}
+          {isLoading && <Icon icon={Loading03Icon} className="size-3 animate-spin" />}
         </InputGroupAddon>
       </ComboboxInput>
       <ComboboxContent>
@@ -138,14 +139,14 @@ function ResumesCombobox({
             <Empty>
               <EmptyHeader>
                 <EmptyMedia variant="icon">
-                  <FolderOpen />
+                  <Icon icon={FolderOpenIcon} />
                 </EmptyMedia>
                 <EmptyTitle className="text-foreground">No Resumes</EmptyTitle>
                 <EmptyDescription>Create a resume to get started.</EmptyDescription>
               </EmptyHeader>
               <EmptyContent>
                 <Button variant="outline" onClick={() => void navigate('/resumes/new')}>
-                  <PlusIcon data-icon="inline-start" />
+                  <Icon icon={Add01Icon} data-icon="inline-start" />
                   Create
                 </Button>
               </EmptyContent>
@@ -391,7 +392,7 @@ export function JobForm({ type, data, id, mutate }: JobFormProps) {
           }
           <div className="flex justify-end self-end sticky bottom-0 py-4 z-10 w-full before:content-[''] before:w-[calc(100%+24px)] before:bg-background before:absolute before:-left-3 before:border before:border-t-border before:border-transparent before:h-full before:top-0 before:z-[-1]">
             <div className="flex gap-2 items-center">
-              {isSubmitting && <LoaderCircle className="size-4 animate-spin" />}
+              {isSubmitting && <Icon icon={Loading03Icon} className="size-4 animate-spin" />}
               {type === 'new' && (
                 <Button
                   type="reset"

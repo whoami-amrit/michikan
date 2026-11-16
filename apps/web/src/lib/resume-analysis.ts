@@ -1,8 +1,18 @@
-import { type ICreateResumeDtoInput, type IFinding, type IResumeAnalysisSnapshot } from 'shared';
+import {
+  type FindingIssueCodeType,
+  type ICreateResumeDtoInput,
+  type IFinding,
+  type IResumeAnalysisSnapshot,
+  SCORE_WEIGHTS,
+} from 'shared';
 
 import { type IResolvedFinding, resolveFinding } from '@/lib/resume-lint';
 
 type ResumeJsonType = ICreateResumeDtoInput['json'];
+
+export type FindingSeverityType = 'high' | 'medium' | 'low';
+
+export type FindingFilterType = 'all' | FindingSeverityType | 'quick-fixes';
 
 export interface IGroupedFinding {
   finding: IFinding;
@@ -13,6 +23,64 @@ export interface IFindingGroup {
   sectionId: string;
   title: string;
   findings: IGroupedFinding[];
+}
+
+export function getFindingSeverity(issue: FindingIssueCodeType): FindingSeverityType {
+  const weight = SCORE_WEIGHTS[issue];
+  if (weight >= 10) {
+    return 'high';
+  }
+  if (weight >= 5) {
+    return 'medium';
+  }
+  return 'low';
+}
+
+export function matchesFindingFilter(finding: IFinding, filter: FindingFilterType): boolean {
+  if (filter === 'all') {
+    return true;
+  }
+  if (filter === 'quick-fixes') {
+    return finding.source === 'linter';
+  }
+  return getFindingSeverity(finding.issue) === filter;
+}
+
+export function countFindingsByFilter(
+  findings: readonly IFinding[],
+): Record<FindingFilterType, number> {
+  const counts: Record<FindingFilterType, number> = {
+    all: findings.length,
+    high: 0,
+    medium: 0,
+    low: 0,
+    'quick-fixes': 0,
+  };
+
+  for (const finding of findings) {
+    counts[getFindingSeverity(finding.issue)]++;
+    if (finding.source === 'linter') {
+      counts['quick-fixes']++;
+    }
+  }
+
+  return counts;
+}
+
+export function filterFindingGroups(
+  groups: readonly IFindingGroup[],
+  filter: FindingFilterType,
+): IFindingGroup[] {
+  if (filter === 'all') {
+    return [...groups];
+  }
+
+  return groups
+    .map((group) => ({
+      ...group,
+      findings: group.findings.filter(({ finding }) => matchesFindingFilter(finding, filter)),
+    }))
+    .filter((group) => group.findings.length > 0);
 }
 
 const SECTION_ORDER = ['PI', 'SUM', 'SK', 'E', 'P', 'ED'] as const;

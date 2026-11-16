@@ -82,20 +82,32 @@ export class AuthService {
     return user;
   }
 
-  async sendOtp(userId: User['id']): Promise<void> {
-    const otp = crypto.randomInt(100000, 1000000);
-
-    this.logger.debug(`Generated otp ${otp}`);
-
-    const user = await this.prisma.user.findUnique({
+  private async getUnverifiedLocalAccount(userId: User['id']) {
+    const account = await this.prisma.account.findUnique({
       where: {
-        id: userId,
+        provider_userId: {
+          provider: Provider.LOCAL,
+          userId,
+        },
+      },
+      include: {
+        user: true,
       },
     });
 
-    if (!user) {
-      throw new NotFoundException('User not found');
+    if (!account || account.emailVerified) {
+      throw new NotFoundException('No verification in progress for this user');
     }
+
+    return account;
+  }
+
+  async sendOtp(userId: User['id']): Promise<void> {
+    const account = await this.getUnverifiedLocalAccount(userId);
+
+    const otp = crypto.randomInt(100000, 1000000);
+
+    this.logger.debug(`Generated otp ${otp}`);
 
     const otpHash = this.hashOtp(otp);
     const expiresAt = new Date(Date.now() + OTP_VALIDITY_MS);
@@ -116,14 +128,25 @@ export class AuthService {
     });
 
     await this.emailQueue.add(OTP_EMAIL_JOB_NAME, {
-      to: user.email,
+      to: account.user.email,
       otp,
       expiryMinutes: OTP_VALIDITY_MS / (60 * 1000),
     });
   }
 
   async resendOtp(userId: User['id']): Promise<void> {
-    await this.registerOtpAttempt(userId);
+    await this.getUnverifiedLocalAccount(userId);
+
+    const record = await this.prisma.verifyOtp.findUnique({ where: { userId } });
+
+    if (record && record.expiresAt.getTime() > Date.now()) {
+      return;
+    }
+
+    if (record) {
+      await this.registerOtpAttempt(userId);
+    }
+
     await this.sendOtp(userId);
   }
 

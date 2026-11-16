@@ -283,46 +283,62 @@ function lintBullet(sectionId: SectionIdType, line: string, out: IFinding[]): vo
   const found = new LineFindings(sectionId, out);
 
   for (const word of pronouns(line)) {
-    found.add('PRONOUN', word, `Remove "${word}"`);
+    found.add('PRONOUN', word, `Omit personal pronoun "${word}" and lead with the action`);
   }
 
   if (hasTrailingPeriod(line)) {
-    found.add('TRAILING_PERIOD', '', 'Remove the trailing period');
+    found.add('TRAILING_PERIOD', '', 'Drop the ending period for cleaner bullet formatting');
   }
 
   for (const symbol of symbols(line)) {
-    found.add('SYMBOL', symbol, `Replace "${symbol}" with words`);
+    found.add(
+      'SYMBOL',
+      symbol,
+      `Write out "${symbol}" in words instead of using shorthand symbols`,
+    );
   }
 
   for (const word of spelledNumbers(line)) {
-    found.add('SPELLED_NUMBER', word, `Write "${word}" as digits`);
+    found.add('SPELLED_NUMBER', word, `Use digits instead of spelling out "${word}"`);
   }
 
   const weak = openingPhrase(line, WEAK_VERB_PHRASES);
   if (weak) {
-    found.add('WEAK_VERB', weak, `Replace "${weak}" with a stronger action verb`);
+    found.add('WEAK_VERB', weak, `Lead with a stronger, more specific action verb than "${weak}"`);
   }
 
   const overwrought = openingPhrase(line, OVERWROUGHT_VERB_PHRASES);
   if (overwrought) {
-    found.add('OVERWROUGHT_VERB', overwrought, `Replace "${overwrought}" with a plain action verb`);
+    found.add(
+      'OVERWROUGHT_VERB',
+      overwrought,
+      `Trade buzzword "${overwrought}" for a clear, direct action verb`,
+    );
   }
 
   for (const [verb] of line.matchAll(BANNED_VERB_REGEX)) {
-    found.add('BANNED_VERB', verb.slice(0, 5), `Drop "${verb}"; lead with what you built`);
+    found.add(
+      'BANNED_VERB',
+      verb.slice(0, 5),
+      `Replace filler verb "${verb}" with the concrete action you took`,
+    );
   }
 
   lintBWords(line, found);
 
   if (line.length > MAX_BULLET_CHARS) {
-    found.add('LONG_BULLET', '', `Shorten to under ${MAX_BULLET_CHARS} characters`);
+    found.add(
+      'LONG_BULLET',
+      '',
+      `Keep bullets under ${MAX_BULLET_CHARS} characters for quick scanning`,
+    );
   }
 }
 
 function lintBWords(line: string, found: LineFindings): void {
   for (const word of wordsOf(line)) {
     if (B_WORDS.has(word.toLowerCase())) {
-      found.add('B_WORD', word, `Delete "${word}"`);
+      found.add('B_WORD', word, `Remove subjective filler "${word}" and show the result instead`);
     }
   }
 }
@@ -331,7 +347,7 @@ function lintSummary(summary: string, out: IFinding[]): void {
   const found = new LineFindings('SUM', out);
 
   for (const word of pronouns(summary)) {
-    found.add('PRONOUN', word, `Remove "${word}"`);
+    found.add('PRONOUN', word, `Omit personal pronoun "${word}" and lead with the action`);
   }
 
   lintBWords(summary, found);
@@ -344,7 +360,7 @@ function lintEmail(email: string, out: IFinding[]): void {
       source: 'linter',
       section_id: 'PI',
       issue: 'LEGACY_EMAIL',
-      fix: 'Use a modern email provider',
+      fix: 'Update your contact email to a modern provider (e.g., Gmail or a custom domain)',
     });
   }
 }
@@ -368,9 +384,13 @@ function lintSkills(groups: SkillGroupsType, out: IFinding[]): void {
     for (const item of skills.split(/[,;\n]/)) {
       const token = item.trim();
       if (token.includes('|')) {
-        found.add('SKILL_AMALGAM', '|', 'List "|" as separate skills');
+        found.add('SKILL_AMALGAM', '|', 'Separate skills with commas instead of "|"');
       } else if (/\S\/\S/.test(token) && !SKILL_SLASH_ALLOWLIST.has(token.toLowerCase())) {
-        found.add('SKILL_AMALGAM', token, `List "${token}" as separate skills`);
+        found.add(
+          'SKILL_AMALGAM',
+          token,
+          `Split "${token}" into individual, comma-separated skills`,
+        );
       }
     }
   }
@@ -379,7 +399,11 @@ function lintSkills(groups: SkillGroupsType, out: IFinding[]): void {
     for (const matcher of PROFICIENCY_MATCHERS) {
       const phrase = matcher.exec(`${category} ${skills}`)?.[0];
       if (phrase) {
-        found.add('SKILL_PROFICIENCY', phrase, `Remove "${phrase}"`);
+        found.add(
+          'SKILL_PROFICIENCY',
+          phrase,
+          `Omit qualifiers like "${phrase}" and list the skill name directly`,
+        );
       }
     }
   }
@@ -393,18 +417,30 @@ function lintSkills(groups: SkillGroupsType, out: IFinding[]): void {
 
   for (const item of items) {
     if (SOFT_SKILL_SET.has(item.toLowerCase().replace(/-/g, ' '))) {
-      found.add('SOFT_SKILL', item, `Remove soft skill "${item}"`);
+      found.add(
+        'SOFT_SKILL',
+        item,
+        `Keep the Skills section technical; show "${item}" in your work experience`,
+      );
     }
   }
   for (const item of items) {
     if (BASIC_SKILL_SET.has(item.toLowerCase())) {
-      found.add('BASIC_SKILL', item, `Remove "${item}"`);
+      found.add(
+        'BASIC_SKILL',
+        item,
+        `Cut baseline tool "${item}" to keep the focus on specialized skills`,
+      );
     }
   }
 
   const lowered = new Set(items.map((item) => item.toLowerCase()));
   if (lowered.has('github') && !lowered.has('git')) {
-    found.add('GITHUB_AS_SKILL', '', 'List Git instead of GitHub');
+    found.add(
+      'GITHUB_AS_SKILL',
+      '',
+      'List Git (the version control tool) rather than GitHub (the platform)',
+    );
   }
 }
 
@@ -439,7 +475,7 @@ export function lintResume(json: ILintableResumeJson): IFinding[] {
         source: 'linter',
         section_id: `P${i + 1}`,
         issue: 'PROJECT_IN_TITLE',
-        fix: 'Remove "Project" from the title',
+        fix: 'Trim redundant "Project" from the project title',
       });
     }
 

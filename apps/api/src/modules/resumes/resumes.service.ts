@@ -52,7 +52,6 @@ export class ResumeService {
       data: {
         json: createResumeDto.json,
         name: createResumeDto.name,
-        description: createResumeDto.description,
         userId,
       },
     });

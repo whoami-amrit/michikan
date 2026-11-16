@@ -1,5 +1,6 @@
-import { TriangleAlert } from 'lucide-react';
+import { TriangleAlertIcon } from '@hugeicons/core-free-icons';
 
+import { Icon } from '@/components/ui/icon';
 import { useFieldLintFindings } from '@/lib/resume-lint';
 
 export function ResumeLintFindings({ fieldName }: { fieldName: string }) {
@@ -15,7 +16,7 @@ export function ResumeLintFindings({ fieldName }: { fieldName: string }) {
           key={`${finding.section_id}:${finding.issue}:${index}`}
           className="flex items-start gap-2 text-sm text-amber-600 dark:text-amber-400"
         >
-          <TriangleAlert className="mt-0.5 size-4 shrink-0" aria-hidden />
+          <Icon icon={TriangleAlertIcon} className="mt-0.5 size-4 shrink-0" aria-hidden />
           <span>
             {line !== undefined && <span className="font-medium">Line {line}: </span>}
             <span className="font-medium">{label}.</span> {finding.fix}

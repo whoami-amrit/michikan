@@ -1,3 +1,5 @@
+export const PAYMENTS_URL = 'https://www.michikan.dev/payments';
+
 export const HttpStatus = Object.freeze({
   OK: 200,
   CREATED: 201,

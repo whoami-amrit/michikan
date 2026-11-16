@@ -6,6 +6,7 @@ import type { ICrumb } from '@/lib/types';
 interface IMapping {
   label: string;
   isLoading?: boolean;
+  onLabelChange?: (label: string) => void;
 }
 
 export const useBreadcrumbs = (mappings: IMapping[]) => {
@@ -17,6 +18,7 @@ export const useBreadcrumbs = (mappings: IMapping[]) => {
     return path.map((segment, index) => ({
       label: mappings[index].label ?? segment,
       isLoading: mappings[index].isLoading,
+      onLabelChange: mappings[index].onLabelChange,
       pathname: `/${path.slice(0, index + 1).join('/')}`,
     }));
   }, [pathname, mappings]);

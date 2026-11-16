@@ -13,10 +13,6 @@ export const resourceNameSchema = z
   .min(1, 'Resume name is required')
   .max(50, 'Resume name must be less than 50 characters');
 
-export const resourceDescriptionSchema = zodSafeString.pipe(
-  z.string().max(200, 'Description must be less than 200 characters').optional(),
-);
-
 export const nameSchema = z
   .string()
   .trim()

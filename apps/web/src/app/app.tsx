@@ -1,4 +1,4 @@
-import { CircleAlert, RotateCwIcon } from 'lucide-react';
+import { AlertCircleIcon, RotateCwIcon } from '@hugeicons/core-free-icons';
 import { ErrorBoundary, getErrorMessage } from 'react-error-boundary';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router';
 import { useSWRConfig } from 'swr';
@@ -12,6 +12,7 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from '@/components/ui/empty';
+import { Icon } from '@/components/ui/icon';
 import { Toaster } from '@/components/ui/toast';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { MainContextProvider } from '@/lib/contexts/main/provider';
@@ -38,7 +39,7 @@ function App() {
           <Empty className="h-screen">
             <EmptyHeader>
               <EmptyMedia variant="icon">
-                <CircleAlert />
+                <Icon icon={AlertCircleIcon} />
               </EmptyMedia>
               <EmptyTitle>Something went wrong :/</EmptyTitle>
               <EmptyDescription>
@@ -56,7 +57,7 @@ function App() {
                 variant="outline"
                 size="sm"
               >
-                <RotateCwIcon />
+                <Icon icon={RotateCwIcon} />
                 Retry
               </Button>
             </EmptyContent>

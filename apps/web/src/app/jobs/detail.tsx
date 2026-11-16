@@ -1,5 +1,5 @@
+import { SearchRemoveIcon } from '@hugeicons/core-free-icons';
 import { Job } from 'db';
-import { SearchSlash } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router';
 import { IUpdateJobDto } from 'shared';
 import useSWR from 'swr';
@@ -14,6 +14,7 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from '@/components/ui/empty';
+import { Icon } from '@/components/ui/icon';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useBreadcrumbs } from '@/hooks/use-breadcrumbs';
 import { api } from '@/lib/utils';
@@ -48,7 +49,7 @@ export function JobDetailPage() {
         <Empty>
           <EmptyHeader>
             <EmptyMedia variant="icon">
-              <SearchSlash />
+              <Icon icon={SearchRemoveIcon} />
             </EmptyMedia>
             <EmptyTitle>404 Not Found</EmptyTitle>
             <EmptyDescription>No Job found with the specified ID</EmptyDescription>

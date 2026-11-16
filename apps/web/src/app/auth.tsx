@@ -1,5 +1,5 @@
+import { RefreshIcon } from '@hugeicons/core-free-icons';
 import { REGEXP_ONLY_DIGITS } from 'input-otp';
-import { RefreshCwIcon } from 'lucide-react';
 import { SubmitEventHandler, useEffect, useRef, useState } from 'react';
 import { Navigate, useNavigate } from 'react-router';
 import { IUserResponse } from 'shared';
@@ -21,6 +21,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Field, FieldLabel } from '@/components/ui/field';
+import { Icon } from '@/components/ui/icon';
 import {
   InputOTP,
   InputOTPGroup,
@@ -38,6 +39,7 @@ export const VerifyEmailPage = () => {
   const [otpValue, setOtpValue] = useState<string>('');
   const [resendTime, setResendTime] = useState(RESEND_OTP_COOLDOWN);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const hasRequestedInitialOtpRef = useRef(false);
   // note: can't use useUserContext here, out of scope
   const { isLoading: isUserDetailLoading, data: user } = useSWR<IUserResponse, Error>(
     CURRENT_USER_KEY,
@@ -71,6 +73,20 @@ export const VerifyEmailPage = () => {
       clearInterval(intervalRef.current!);
     };
   }, []);
+
+  useEffect(() => {
+    if (isUserDetailLoading || !user || user.verified || hasRequestedInitialOtpRef.current) {
+      return;
+    }
+
+    hasRequestedInitialOtpRef.current = true;
+    api.post('/auth/resend-otp').catch((error) => {
+      toast.add({
+        type: 'error',
+        ...getErrorToastContent(error),
+      });
+    });
+  }, [isUserDetailLoading, user]);
 
   const { isMutating, trigger } = useSWRMutation('/auth/verify-otp', async (url: string) => {
     await api.post(url, { json: { otp: otpValue } });
@@ -147,7 +163,7 @@ export const VerifyEmailPage = () => {
                           });
                         }}
                       >
-                        <RefreshCwIcon />
+                        <Icon icon={RefreshIcon} />
                         Resend {resendTime > 0 ? `in ${resendTime}` : 'code'}
                       </Button>
                     </div>

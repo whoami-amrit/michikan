@@ -1,7 +1,8 @@
-import { ChevronLeftIcon } from 'lucide-react';
+import { ArrowLeft01Icon } from '@hugeicons/core-free-icons';
 import * as React from 'react';
 
 import { Button } from '@/components/ui/button';
+import { Icon } from '@/components/ui/icon';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 
@@ -118,7 +119,7 @@ function MonthPicker({
               aria-label="Back to years"
               onClick={() => setView('year')}
             >
-              <ChevronLeftIcon />
+              <Icon icon={ArrowLeft01Icon} />
             </Button>
           )}
           <span className="px-1 font-medium">{view === 'year' ? 'Select year' : pendingYear}</span>

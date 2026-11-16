@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
+import { Add01Icon, AlertCircleIcon, Cancel01Icon } from '@hugeicons/core-free-icons';
 import { Resume } from 'db';
-import { AlertCircle, PlusIcon, XIcon } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Controller,
   FormProvider,
@@ -26,6 +26,7 @@ import {
   FieldSeparator,
   FieldSet,
 } from '@/components/ui/field';
+import { Icon } from '@/components/ui/icon';
 import { Input } from '@/components/ui/input';
 import { MonthPicker } from '@/components/ui/month-picker';
 import { Spinner } from '@/components/ui/spinner';
@@ -33,13 +34,18 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/components/ui/toast';
 import {
+  DEFAULT_RESUME_NAME,
+  getDefaultNewResumeFormValues,
+  NEW_RESUME_STORAGE_KEY,
+} from '@/lib/resume-form';
+import {
   type IResumeJumpTarget,
   resumeFieldId,
   resumeLintContext,
   selectTextareaLine,
   useResumeLint,
 } from '@/lib/resume-lint';
-import { api, convertNullsToUndefined, getErrorToastContent } from '@/lib/utils';
+import { api, cn, convertNullsToUndefined, getErrorToastContent } from '@/lib/utils';
 
 type ResumeFormProps =
   | {
@@ -48,6 +54,8 @@ type ResumeFormProps =
       data: ICreateResumeDto;
       mutate: () => void;
       jumpTo?: IResumeJumpTarget;
+      name?: never;
+      onNameChange?: never;
     }
   | {
       type: 'new';
@@ -55,6 +63,8 @@ type ResumeFormProps =
       data?: never;
       mutate?: never;
       jumpTo?: never;
+      name?: string;
+      onNameChange?: (name: string) => void;
     };
 
 const useFormContext = () => useRHFFormContext<ICreateResumeDtoInput, unknown, ICreateResumeDto>();
@@ -165,7 +175,7 @@ function SkillsTab() {
         </FieldDescription>
         <div className="flex justify-end">
           <Button variant="secondary" onClick={() => append({ category: '', skills: '' })}>
-            <PlusIcon />
+            <Icon icon={Add01Icon} />
             Add Category
           </Button>
         </div>
@@ -193,7 +203,7 @@ function SkillsTab() {
               <FieldError errors={[errors.json?.skills?.[index]?.skills]} />
             </Field>
             <Button className="w-8" variant="destructive" onClick={() => remove(index)}>
-              <XIcon />
+              <Icon icon={Cancel01Icon} />
             </Button>
           </FieldGroup>
         ))}
@@ -307,7 +317,7 @@ function ExperienceTab() {
               })
             }
           >
-            <PlusIcon />
+            <Icon icon={Add01Icon} />
             Add Experience
           </Button>
         </div>
@@ -332,7 +342,7 @@ function ExperienceTab() {
                   onClick={() => remove(index)}
                   tabIndex={1}
                 >
-                  <XIcon />
+                  <Icon icon={Cancel01Icon} />
                 </Button>
               </CardAction>
             </CardHeader>
@@ -441,7 +451,7 @@ function EducationTab() {
               })
             }
           >
-            <PlusIcon />
+            <Icon icon={Add01Icon} />
             Add Qualification
           </Button>
         </div>
@@ -472,7 +482,7 @@ function EducationTab() {
                   onClick={() => remove(index)}
                   tabIndex={1}
                 >
-                  <XIcon />
+                  <Icon icon={Cancel01Icon} />
                 </Button>
               </CardAction>
             </CardHeader>
@@ -565,7 +575,7 @@ function ProjectsTab() {
               })
             }
           >
-            <PlusIcon />
+            <Icon icon={Add01Icon} />
             Add Project
           </Button>
         </div>
@@ -586,7 +596,7 @@ function ProjectsTab() {
               </CardTitle>
               <CardAction>
                 <Button variant="destructive" size="icon-sm" onClick={() => remove(index)}>
-                  <XIcon />
+                  <Icon icon={Cancel01Icon} />
                 </Button>
               </CardAction>
             </CardHeader>
@@ -663,43 +673,58 @@ function SummaryTab() {
 
 const GRADUATION_END_MONTH = new Date(new Date().getFullYear() + 8, 11);
 
-const LOCAL_STORAGE_KEY = 'new-resume-form';
-
-const getDefaultNewFormValues = (): ICreateResumeDtoInput => {
-  const unsavedFormState = localStorage.getItem(LOCAL_STORAGE_KEY);
-
-  try {
-    return JSON.parse(unsavedFormState!) as ICreateResumeDtoInput;
-  } catch (error) {
-    if (unsavedFormState) {
-      console.log(error);
-    }
-
-    return {
-      name: '',
-      description: '',
-      json: {
-        personalInfo: {
-          name: '',
-          email: '',
-          github: '',
-          phone: '',
-          portfolio: '',
-        },
-        skills: [],
-        experience: [],
-        projects: [],
-        education: [],
-        summary: '',
-      },
-    };
-  }
-};
-
-export function ResumeForm({ type, data, id, mutate, jumpTo }: ResumeFormProps) {
+export function ResumeForm({
+  type,
+  data,
+  id,
+  mutate,
+  jumpTo,
+  name,
+  onNameChange,
+}: ResumeFormProps) {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<string>(jumpTo?.tab ?? TabKeys.PersonalInfo);
   const [handledJump, setHandledJump] = useState(jumpTo);
+  const [isScrolled, setIsScrolled] = useState(false);
+  const tabsScrollRef = useRef<HTMLDivElement>(null);
+  const [tabsScrollEdges, setTabsScrollEdges] = useState({ left: false, right: false });
+
+  const updateTabsScrollEdges = useCallback(() => {
+    const el = tabsScrollRef.current;
+    if (!el) {
+      return;
+    }
+
+    const left = el.scrollLeft > 1;
+    const right = el.scrollLeft + el.clientWidth < el.scrollWidth - 1;
+    setTabsScrollEdges((prev) =>
+      prev.left === left && prev.right === right ? prev : { left, right },
+    );
+  }, []);
+
+  useEffect(() => {
+    const onScroll = () => setIsScrolled(window.scrollY > 0);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  useEffect(() => {
+    const el = tabsScrollRef.current;
+    if (!el) {
+      return;
+    }
+
+    updateTabsScrollEdges();
+
+    const observer = new ResizeObserver(updateTabsScrollEdges);
+    observer.observe(el);
+    if (el.firstElementChild) {
+      observer.observe(el.firstElementChild);
+    }
+
+    return () => observer.disconnect();
+  }, [updateTabsScrollEdges]);
 
   if (jumpTo && jumpTo !== handledJump) {
     setHandledJump(jumpTo);
@@ -739,7 +764,7 @@ export function ResumeForm({ type, data, id, mutate, jumpTo }: ResumeFormProps) 
   const methods = useForm<ICreateResumeDtoInput, unknown, ICreateResumeDto>({
     defaultValues:
       type === 'new'
-        ? getDefaultNewFormValues()
+        ? getDefaultNewResumeFormValues()
         : (convertNullsToUndefined(data) as ICreateResumeDtoInput),
     mode: 'onBlur',
     resolver: zodResolver(CreateResumeSchema),
@@ -762,7 +787,7 @@ export function ResumeForm({ type, data, id, mutate, jumpTo }: ResumeFormProps) 
         values: true,
       },
       callback: ({ values }) => {
-        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(values));
+        localStorage.setItem(NEW_RESUME_STORAGE_KEY, JSON.stringify(values));
       },
     });
 
@@ -770,6 +795,12 @@ export function ResumeForm({ type, data, id, mutate, jumpTo }: ResumeFormProps) 
       callback();
     };
   }, [subscribe, type]);
+
+  useEffect(() => {
+    if (type === 'new' && name !== undefined) {
+      methods.setValue('name', name, { shouldValidate: true });
+    }
+  }, [methods, name, type]);
 
   const onSubmit: SubmitHandler<ICreateResumeDto> = async (formData, event) => {
     event?.preventDefault();
@@ -807,36 +838,54 @@ export function ResumeForm({ type, data, id, mutate, jumpTo }: ResumeFormProps) 
           onSubmit={handleSubmit(onSubmit)}
           className="flex flex-col gap-6 grow"
         >
-          <FieldGroup className="sm:grid-cols-3 grid gap-4">
-            <Field>
-              <FieldLabel required>Name</FieldLabel>
-              <Input
-                disabled={type === 'edit'}
-                {...methods.register('name')}
-                placeholder="Enter resume name"
-              />
-              <FieldError errors={[errors.name]} />
-            </Field>
-            <Field className="sm:col-span-2">
-              <FieldLabel>Description</FieldLabel>
-              <Input {...methods.register('description')} placeholder="Enter resume description" />
-              <FieldError errors={[errors.description]} />
-            </Field>
-          </FieldGroup>
           <Tabs
             className="gap-8 grow"
             value={activeTab}
             onValueChange={(value) => setActiveTab(String(value))}
           >
-            <div className="overflow-auto w-full">
-              <TabsList variant={'line'}>
-                {tabs.map(([tabKey, tabLabel]) => (
-                  <TabsTrigger key={tabKey} value={tabKey}>
-                    {errors.json?.[tabKey] && <AlertCircle className="text-red-400" />}
-                    {tabLabel}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
+            <div
+              className={cn(
+                "sticky z-[9] w-full before:content-[''] before:w-[calc(100%+24px)] before:bg-background before:border-b before:absolute before:-left-3 before:bottom-0 before:z-[-1] before:transition-[border-color,box-shadow]",
+                type === 'edit'
+                  ? 'top-36 md:top-32 before:-top-36 md:before:-top-32'
+                  : 'top-24 md:top-20 before:-top-24 md:before:-top-20',
+                isScrolled
+                  ? 'before:border-border before:shadow-xl before:shadow-black/15 dark:before:shadow-black/50'
+                  : 'before:border-transparent before:shadow-none',
+              )}
+            >
+              <div className="relative w-full">
+                <div
+                  ref={tabsScrollRef}
+                  onScroll={updateTabsScrollEdges}
+                  className="overflow-x-auto w-full"
+                >
+                  <TabsList variant={'line'}>
+                    {tabs.map(([tabKey, tabLabel]) => (
+                      <TabsTrigger key={tabKey} value={tabKey}>
+                        {errors.json?.[tabKey] && (
+                          <Icon icon={AlertCircleIcon} className="text-red-400" />
+                        )}
+                        {tabLabel}
+                      </TabsTrigger>
+                    ))}
+                  </TabsList>
+                </div>
+                <div
+                  aria-hidden
+                  className={cn(
+                    'pointer-events-none absolute inset-y-0 left-0 w-12 bg-gradient-to-r from-background via-background/75 to-transparent shadow-[inset_18px_0_14px_-14px_rgb(0_0_0/0.25)] dark:shadow-[inset_18px_0_14px_-14px_rgb(0_0_0/0.75)] transition-opacity',
+                    tabsScrollEdges.left ? 'opacity-100' : 'opacity-0',
+                  )}
+                />
+                <div
+                  aria-hidden
+                  className={cn(
+                    'pointer-events-none absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-background via-background/75 to-transparent shadow-[inset_-18px_0_14px_-14px_rgb(0_0_0/0.25)] dark:shadow-[inset_-18px_0_14px_-14px_rgb(0_0_0/0.75)] transition-opacity',
+                    tabsScrollEdges.right ? 'opacity-100' : 'opacity-0',
+                  )}
+                />
+              </div>
             </div>
             <TabsContent value={TabKeys.PersonalInfo}>
               <PersonalInfoTab />
@@ -866,18 +915,15 @@ export function ResumeForm({ type, data, id, mutate, jumpTo }: ResumeFormProps) 
                   type="reset"
                   onClick={() => {
                     reset();
-                    localStorage.removeItem(LOCAL_STORAGE_KEY);
+                    onNameChange?.(DEFAULT_RESUME_NAME);
+                    localStorage.removeItem(NEW_RESUME_STORAGE_KEY);
                   }}
                   variant="secondary"
                 >
                   Reset
                 </Button>
               )}
-              <Button
-                variant={type !== 'new' ? 'outline' : 'default'}
-                type="submit"
-                disabled={isSubmitting}
-              >
+              <Button variant="default" type="submit" disabled={isSubmitting}>
                 {type === 'new' ? 'Save' : 'Update'}
               </Button>
             </div>
