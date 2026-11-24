@@ -11,18 +11,21 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  Query,
 } from '@nestjs/common';
 import { createZodDto } from 'nestjs-zod';
 import {
   CreateResumeSchema,
   IGetResumesResponse,
   IQueueAnalysisResponse,
+  ListResumesQuerySchema,
   UpdateResumeSchema,
 } from 'shared';
 
 import { ResumeService } from './resumes.service';
 
 class CreateResumeDto extends createZodDto(CreateResumeSchema) {}
+class ListResumesQueryDto extends createZodDto(ListResumesQuerySchema) {}
 class UpdateResumeDto extends createZodDto(UpdateResumeSchema) {}
 
 @Controller('resumes')
@@ -56,8 +59,11 @@ export class ResumeController {
   }
 
   @Get()
-  getAll(@CurrentUser() user: IJwtAccessPayload): Promise<IGetResumesResponse[]> {
-    return this.resumeService.getAll(user.sub);
+  getAll(
+    @CurrentUser() user: IJwtAccessPayload,
+    @Query() query: ListResumesQueryDto,
+  ): Promise<IGetResumesResponse[]> {
+    return this.resumeService.getAll(user.sub, query);
   }
 
   @Get(':id')

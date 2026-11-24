@@ -1,9 +1,15 @@
 import { Add01Icon, FilePlusCornerIcon } from '@hugeicons/core-free-icons';
 import { useNavigate } from 'react-router';
-import { IGetResumesResponse } from 'shared';
+import {
+  type IGetResumesResponse,
+  ListResumesQuerySchema,
+  type ResumeSortByType,
+  type SortOrderType,
+} from 'shared';
 import useSWR from 'swr';
 
 import AppHeader from '@/components/app-header';
+import { SortableTableHead } from '@/components/sortable-table-head';
 import { Button } from '@/components/ui/button';
 import {
   Empty,
@@ -15,17 +21,16 @@ import {
 } from '@/components/ui/empty';
 import { Icon } from '@/components/ui/icon';
 import { Skeleton } from '@/components/ui/skeleton';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { Table, TableBody, TableCell, TableHeader, TableRow } from '@/components/ui/table';
 import { useBreadcrumbs } from '@/hooks/use-breadcrumbs';
+import { useSortParams } from '@/hooks/use-sort-params';
 import { api } from '@/lib/utils';
+
+const INITIAL_RESUME_SORT_ORDER: Record<ResumeSortByType, SortOrderType> = {
+  name: 'asc',
+  jobs: 'desc',
+  updatedAt: 'desc',
+};
 
 function NewResumeButton({ onClick }: { onClick: () => void }) {
   return (
@@ -37,11 +42,22 @@ function NewResumeButton({ onClick }: { onClick: () => void }) {
 }
 
 export default function ResumesPage() {
+  const { sortBy, order, onSort } = useSortParams<ResumeSortByType>({
+    schema: ListResumesQuerySchema,
+    defaultSortBy: 'updatedAt',
+    defaultOrder: 'desc',
+    initialOrderByField: INITIAL_RESUME_SORT_ORDER,
+  });
+
   const { data, isLoading } = useSWR(
-    'resumes',
-    async () => api.get('/resumes').json<IGetResumesResponse[]>(),
+    ['resumes', sortBy, order] as const,
+    async ([, currentSortBy, currentOrder]) =>
+      api
+        .get('/resumes', { searchParams: { sortBy: currentSortBy, order: currentOrder } })
+        .json<IGetResumesResponse[]>(),
     {
       shouldRetryOnError: false,
+      keepPreviousData: true,
     },
   );
 
@@ -63,7 +79,7 @@ export default function ResumesPage() {
 
       <main className="flex w-full px-6 lg:px-0 flex-col grow items-center">
         <div className="flex max-w-xl w-full flex-col gap-4 grow">
-          {!isLoading && (data?.length ?? 0) > 0 && (
+          {!!data?.length && (
             <div className="flex">
               <div className="grow" />
               <NewResumeButton onClick={onNewResumeClick} />
@@ -89,7 +105,7 @@ export default function ResumesPage() {
             </Empty>
           )}
 
-          {isLoading && (
+          {isLoading && !data && (
             <div className="flex flex-col gap-6 items-center">
               <div className="flex w-full">
                 <div className="grow" />
@@ -108,24 +124,43 @@ export default function ResumesPage() {
             </div>
           )}
 
-          {!isLoading && !!data?.length && (
+          {!!data?.length && (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="grow">Name</TableHead>
-                  <TableHead className="text-right w-15">
-                    <Tooltip>
-                      <TooltipTrigger>Jobs</TooltipTrigger>
-                      <TooltipContent>
-                        Number of job applications where this resume has been submitted
-                      </TooltipContent>
-                    </Tooltip>
-                  </TableHead>
-                  <TableHead className="text-right w-30">Last Updated</TableHead>
+                  <SortableTableHead
+                    label="Name"
+                    field="name"
+                    activeSortBy={sortBy}
+                    activeOrder={order}
+                    onSort={onSort}
+                    className="grow"
+                  />
+                  <SortableTableHead
+                    label="Jobs"
+                    field="jobs"
+                    activeSortBy={sortBy}
+                    activeOrder={order}
+                    onSort={onSort}
+                    align="right"
+                    tooltip="Number of job applications where this resume has been submitted"
+                    className="w-20"
+                  />
+                  <SortableTableHead
+                    label="Last Updated"
+                    field="updatedAt"
+                    activeSortBy={sortBy}
+                    activeOrder={order}
+                    onSort={onSort}
+                    align="right"
+                    className="w-36"
+                  />
                 </TableRow>
               </TableHeader>
-              <TableBody>
-                {data?.map((resume) => (
+              <TableBody
+                className={isLoading ? 'opacity-60 transition-opacity' : 'transition-opacity'}
+              >
+                {data.map((resume) => (
                   <TableRow
                     className="hover:cursor-pointer"
                     onClick={() => {

@@ -11,13 +11,21 @@ import appConfig, { type IAppConfig } from '@config/app.config';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { JobsOptions, Queue } from 'bullmq';
-import { AiRunKind, AiRunStatus, Resume, ResumeAnalysisError, ResumeAnalysisStatus } from 'db';
+import {
+  AiRunKind,
+  AiRunStatus,
+  Prisma,
+  Resume,
+  ResumeAnalysisError,
+  ResumeAnalysisStatus,
+} from 'db';
 import hash from 'object-hash';
 import {
   ICreateRenderWorkerResponse,
   ICreateResumeDto,
   IGetResumeResponse,
   IGetResumesResponse,
+  IListResumesQueryDto,
   IQueueAnalysisResponse,
   IRenderStatusResponse,
   IUpdateResumeDto,
@@ -32,6 +40,10 @@ import { IAnalysisReservation, IAnalyzerJobData } from './analysis/types';
 import { IRenderPdfWorker } from './types';
 
 const AUTO_ANALYSE_DEBOUNCE_MS = 60_000;
+const DEFAULT_RESUMES_QUERY: IListResumesQueryDto = {
+  sortBy: 'updatedAt',
+  order: 'desc',
+};
 
 @Injectable()
 export class ResumeService {
@@ -263,9 +275,13 @@ export class ResumeService {
     return { ...resume, analysisReport, isAnalysisStale };
   }
 
-  getAll(userId: number): Promise<IGetResumesResponse[]> {
+  getAll(
+    userId: number,
+    query: IListResumesQueryDto = DEFAULT_RESUMES_QUERY,
+  ): Promise<IGetResumesResponse[]> {
     return this.prisma.resume.findMany({
       where: { userId },
+      orderBy: this.buildOrderBy(query),
       include: {
         jobs: { select: { id: true } },
       },
@@ -273,6 +289,19 @@ export class ResumeService {
         json: true,
       },
     });
+  }
+
+  private buildOrderBy(query: IListResumesQueryDto): Prisma.ResumeOrderByWithRelationInput[] {
+    const { sortBy, order } = query;
+
+    switch (sortBy) {
+      case 'name':
+        return [{ name: order }, { id: 'desc' }];
+      case 'jobs':
+        return [{ jobs: { _count: order } }, { id: 'desc' }];
+      case 'updatedAt':
+        return [{ updatedAt: order }, { id: 'desc' }];
+    }
   }
 
   async renderPdf(resumeId: number, userId: number): Promise<ICreateRenderWorkerResponse> {

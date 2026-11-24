@@ -1,8 +1,13 @@
 import { Injectable } from '@nestjs/common';
-import { Job, JobStatus, User } from 'db';
-import { ICreateJobDto, IUpdateJobDto } from 'shared';
+import { Job, JobStatus, Prisma, User } from 'db';
+import { ICreateJobDto, IListJobsQueryDto, IUpdateJobDto } from 'shared';
 
 import { PrismaService } from '@/infra/database/prisma.service';
+
+const DEFAULT_JOBS_QUERY: IListJobsQueryDto = {
+  sortBy: 'updatedAt',
+  order: 'desc',
+};
 
 @Injectable()
 export class JobsService {
@@ -59,12 +64,26 @@ export class JobsService {
     });
   }
 
-  async getAll(userId: User['id']) {
+  async getAll(userId: User['id'], query: IListJobsQueryDto = DEFAULT_JOBS_QUERY) {
     return this.prismaService.job.findMany({
       where: { userId },
+      orderBy: this.buildOrderBy(query),
       omit: {
         jobDescription: true,
       },
     });
+  }
+
+  private buildOrderBy(query: IListJobsQueryDto): Prisma.JobOrderByWithRelationInput[] {
+    const { sortBy, order } = query;
+
+    switch (sortBy) {
+      case 'name':
+        return [{ role: order }, { company: order }, { id: 'desc' }];
+      case 'status':
+        return [{ status: order }, { id: 'desc' }];
+      case 'updatedAt':
+        return [{ updatedAt: order }, { id: 'desc' }];
+    }
   }
 }

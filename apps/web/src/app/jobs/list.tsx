@@ -1,10 +1,12 @@
 import { Add01Icon, FolderAddIcon } from '@hugeicons/core-free-icons';
 import { Job } from 'db';
 import { useNavigate } from 'react-router';
+import { type JobSortByType, ListJobsQuerySchema, type SortOrderType } from 'shared';
 import useSWR from 'swr';
 
 import AppHeader from '@/components/app-header';
 import { JobStatusBadge } from '@/components/job-status-badge';
+import { SortableTableHead } from '@/components/sortable-table-head';
 import { Button } from '@/components/ui/button';
 import {
   Empty,
@@ -16,16 +18,16 @@ import {
 } from '@/components/ui/empty';
 import { Icon } from '@/components/ui/icon';
 import { Skeleton } from '@/components/ui/skeleton';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+import { Table, TableBody, TableCell, TableHeader, TableRow } from '@/components/ui/table';
 import { useBreadcrumbs } from '@/hooks/use-breadcrumbs';
+import { useSortParams } from '@/hooks/use-sort-params';
 import { api } from '@/lib/utils';
+
+const INITIAL_JOB_SORT_ORDER: Record<JobSortByType, SortOrderType> = {
+  name: 'asc',
+  status: 'asc',
+  updatedAt: 'desc',
+};
 
 function NewJobButton({ onClick }: { onClick: () => void }) {
   return (
@@ -37,8 +39,22 @@ function NewJobButton({ onClick }: { onClick: () => void }) {
 }
 
 export default function JobsPage() {
-  const { data, isLoading } = useSWR('job-applications', async () =>
-    api.get('/jobs').json<Job[]>(),
+  const { sortBy, order, onSort } = useSortParams<JobSortByType>({
+    schema: ListJobsQuerySchema,
+    defaultSortBy: 'updatedAt',
+    defaultOrder: 'desc',
+    initialOrderByField: INITIAL_JOB_SORT_ORDER,
+  });
+
+  const { data, isLoading } = useSWR(
+    ['job-applications', sortBy, order] as const,
+    async ([, currentSortBy, currentOrder]) =>
+      api
+        .get('/jobs', { searchParams: { sortBy: currentSortBy, order: currentOrder } })
+        .json<Job[]>(),
+    {
+      keepPreviousData: true,
+    },
   );
 
   const navigate = useNavigate();
@@ -85,7 +101,7 @@ export default function JobsPage() {
             </Empty>
           )}
 
-          {isLoading && (
+          {isLoading && !data && (
             <div className="flex flex-col gap-6 items-center">
               <div className="flex w-full">
                 <div className="grow" />
@@ -108,14 +124,39 @@ export default function JobsPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead className="text-right w-20">Status</TableHead>
-                  <TableHead className="text-right w-30">Last Updated</TableHead>
+                  <SortableTableHead
+                    label="Name"
+                    field="name"
+                    activeSortBy={sortBy}
+                    activeOrder={order}
+                    onSort={onSort}
+                  />
+                  <SortableTableHead
+                    label="Status"
+                    field="status"
+                    activeSortBy={sortBy}
+                    activeOrder={order}
+                    onSort={onSort}
+                    align="right"
+                    className="w-24"
+                  />
+                  <SortableTableHead
+                    label="Last Updated"
+                    field="updatedAt"
+                    activeSortBy={sortBy}
+                    activeOrder={order}
+                    onSort={onSort}
+                    align="right"
+                    className="w-36"
+                  />
                 </TableRow>
               </TableHeader>
-              <TableBody>
-                {data?.map((job) => (
+              <TableBody
+                className={isLoading ? 'opacity-60 transition-opacity' : 'transition-opacity'}
+              >
+                {data.map((job) => (
                   <TableRow
+                    className="hover:cursor-pointer"
                     onClick={() => {
                       void navigate(`/jobs/${job.id}`);
                     }}

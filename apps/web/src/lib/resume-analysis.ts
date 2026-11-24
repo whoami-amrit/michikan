@@ -16,7 +16,7 @@ export type FindingFilterType = 'all' | FindingSeverityType | 'quick-fixes';
 
 export interface IGroupedFinding {
   finding: IFinding;
-  resolved?: IResolvedFinding;
+  resolved: IResolvedFinding;
 }
 
 export interface IFindingGroup {
@@ -146,6 +146,11 @@ export function groupFindings(
     .sort((a, b) => compareRank(a.rank, b.rank) || a.position - b.position);
 
   for (const { finding } of ordered) {
+    const resolved = resolveFinding(finding, snapshot.idMap, json);
+    if (!resolved) {
+      continue;
+    }
+
     const groupId = finding.section_id.split('.')[0] ?? finding.section_id;
     let group = findingGroupByIdMap.get(groupId);
 
@@ -154,7 +159,7 @@ export function groupFindings(
       findingGroupByIdMap.set(groupId, group);
     }
 
-    group.findings.push({ finding, resolved: resolveFinding(finding, snapshot.idMap, json) });
+    group.findings.push({ finding, resolved });
   }
 
   return [...findingGroupByIdMap.values()];

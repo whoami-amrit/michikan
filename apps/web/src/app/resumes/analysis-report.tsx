@@ -1,6 +1,6 @@
 import { ArrowUpRight01Icon } from '@hugeicons/core-free-icons';
 import { useState } from 'react';
-import { type IFinding, type IResumeAnalysisSnapshot, ISSUE_LABELS } from 'shared';
+import { type IResumeAnalysisSnapshot } from 'shared';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -22,7 +22,6 @@ interface IFindingFilterChip {
 
 interface IFindingProps {
   resolved: Pick<IResolvedFinding, 'label' | 'line'>;
-  source: IFinding['source'];
   severity: FindingSeverityType;
   fix: string;
 }
@@ -54,14 +53,20 @@ function FindingBody({ resolved, severity, fix }: IFindingProps) {
 
   return (
     <>
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="font-medium">{resolved.label}</span>
-        {resolved.line !== undefined && (
-          <span className="text-sm text-muted-foreground">Line {resolved.line}</span>
-        )}
-        <Badge variant="secondary" className={severityBadge.className}>
-          {severityBadge.label}
-        </Badge>
+      <div className="flex items-start justify-between gap-2 w-full">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="font-medium">{resolved.label}</span>
+          {resolved.line !== undefined && (
+            <span className="text-sm text-muted-foreground">Line {resolved.line}</span>
+          )}
+          <Badge variant="secondary" className={severityBadge.className}>
+            {severityBadge.label}
+          </Badge>
+        </div>
+        <span className="ml-auto flex shrink-0 items-center gap-1 pt-0.5 text-xs text-muted-foreground opacity-100 transition-opacity group-hover:text-foreground sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-visible:opacity-100">
+          <span className="hidden sm:inline">Edit</span>
+          <Icon icon={ArrowUpRight01Icon} className="size-3.5 sm:size-3" />
+        </span>
       </div>
       <span className="text-sm text-muted-foreground">{fix}</span>
     </>
@@ -82,7 +87,8 @@ export function AnalysisReport({
   const [selectedFilter, setSelectedFilter] = useState<FindingFilterType>('all');
 
   const groups = groupFindings(report, resumeJson);
-  const counts = countFindingsByFilter(report.findings);
+  const resolvedFindings = groups.flatMap((group) => group.findings.map(({ finding }) => finding));
+  const counts = countFindingsByFilter(resolvedFindings);
   const activeFilter = counts[selectedFilter] > 0 ? selectedFilter : 'all';
   const filteredGroups = filterFindingGroups(groups, activeFilter);
 
@@ -144,19 +150,6 @@ export function AnalysisReport({
                 const key = `${finding.source}-${finding.section_id}-${finding.issue}-${index}`;
                 const severity = getFindingSeverity(finding.issue);
 
-                if (!resolved) {
-                  return (
-                    <div key={key} className="flex flex-col gap-1 rounded-lg border p-4">
-                      <FindingBody
-                        resolved={{ label: ISSUE_LABELS[finding.issue], line: undefined }}
-                        source={finding.source}
-                        severity={severity}
-                        fix={finding.fix}
-                      />
-                    </div>
-                  );
-                }
-
                 return (
                   <button
                     key={key}
@@ -164,15 +157,7 @@ export function AnalysisReport({
                     onClick={() => onOpenField(resolved)}
                     className="group flex flex-col gap-1 rounded-lg border p-4 text-left transition-colors hover:bg-muted/50 focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
                   >
-                    <FindingBody
-                      resolved={resolved}
-                      source={finding.source}
-                      severity={severity}
-                      fix={finding.fix}
-                    />
-                    <span className="flex items-center gap-1 text-xs text-muted-foreground group-hover:text-foreground">
-                      Edit in resume <Icon icon={ArrowUpRight01Icon} className="size-3" />
-                    </span>
+                    <FindingBody resolved={resolved} severity={severity} fix={finding.fix} />
                   </button>
                 );
               })}

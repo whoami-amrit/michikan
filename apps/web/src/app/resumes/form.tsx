@@ -329,6 +329,7 @@ function ExperienceTab() {
                   <FieldLabel required>Company</FieldLabel>
                   <Input
                     {...register(`json.experience.${index}.company`)}
+                    id={resumeFieldId(`json.experience.${index}.company`)}
                     placeholder="Ex. Google"
                     tabIndex={0}
                   />
@@ -512,6 +513,7 @@ function EducationTab() {
                     <FieldLabel required>Institution</FieldLabel>
                     <Input
                       {...register(`json.education.${index}.institution`)}
+                      id={resumeFieldId(`json.education.${index}.institution`)}
                       placeholder="Ex. Stanford University"
                     />
                     <FieldError errors={[errors.json?.education?.[index]?.institution]} />

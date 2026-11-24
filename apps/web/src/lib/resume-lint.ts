@@ -46,6 +46,10 @@ export function resolveFinding(
 
   if (base === 'personalInfo') {
     fieldName += '.email';
+  } else if (/^experience\[\d+\]$/.test(base)) {
+    fieldName += '.company';
+  } else if (/^education\[\d+\]$/.test(base)) {
+    fieldName += '.institution';
   } else if (/^projects\[\d+\]$/.test(base)) {
     fieldName += '.title';
   }

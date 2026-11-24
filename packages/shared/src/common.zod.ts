@@ -163,4 +163,8 @@ const ResumeJsonSchema = z.object({
   ),
 });
 
+export const SORT_ORDERS = ['asc', 'desc'] as const;
+export const SortOrderSchema = z.enum(SORT_ORDERS);
+export type SortOrderType = z.infer<typeof SortOrderSchema>;
+
 export { ResumeJsonSchema };

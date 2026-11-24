@@ -11,13 +11,15 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  Query,
 } from '@nestjs/common';
 import { createZodDto } from 'nestjs-zod';
-import { CreateJobSchema, UpdateJobSchema } from 'shared';
+import { CreateJobSchema, ListJobsQuerySchema, UpdateJobSchema } from 'shared';
 
 import { JobsService } from './jobs.service';
 
 class CreateJobDto extends createZodDto(CreateJobSchema) {}
+class ListJobsQueryDto extends createZodDto(ListJobsQuerySchema) {}
 class UpdateJobStatusDto extends createZodDto(UpdateJobSchema) {}
 
 @Controller('jobs')
@@ -25,8 +27,8 @@ export class JobsController {
   constructor(private readonly service: JobsService) {}
 
   @Get()
-  getAll(@CurrentUser() user: IJwtAccessPayload) {
-    return this.service.getAll(user.sub);
+  getAll(@CurrentUser() user: IJwtAccessPayload, @Query() query: ListJobsQueryDto) {
+    return this.service.getAll(user.sub, query);
   }
 
   @Get(':id')

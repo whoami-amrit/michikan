@@ -1,5 +1,5 @@
 export * from './analysis';
-export { ResumeJsonSchema } from './common.zod';
+export { ResumeJsonSchema, SORT_ORDERS, SortOrderSchema, type SortOrderType } from './common.zod';
 export * from './dto';
 export * from './responses';
 export * from './types';
