@@ -2,12 +2,12 @@ import { z } from 'zod';
 
 import { SortOrderSchema } from '../../common.zod';
 
-export const RESUME_SORT_FIELDS = ['name', 'jobs', 'updatedAt'] as const;
+export const RESUME_SORT_FIELDS = ['name', 'jobs', 'lastInteraction'] as const;
 
 export const ResumeSortBySchema = z.enum(RESUME_SORT_FIELDS);
 
 const schema = z.object({
-  sortBy: ResumeSortBySchema.default('updatedAt'),
+  sortBy: ResumeSortBySchema.default('lastInteraction'),
   order: SortOrderSchema.default('desc'),
 });
 

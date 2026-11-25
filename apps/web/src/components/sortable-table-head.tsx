@@ -4,7 +4,6 @@ import { type SortOrderType } from 'shared';
 
 import { Icon } from '@/components/ui/icon';
 import { TableHead } from '@/components/ui/table';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 
 interface ISortableTableHeadProps<TSortBy extends string> {
@@ -14,7 +13,6 @@ interface ISortableTableHeadProps<TSortBy extends string> {
   activeOrder: SortOrderType;
   onSort: (field: TSortBy) => void;
   align?: 'left' | 'right';
-  tooltip?: ReactNode;
   className?: string;
 }
 
@@ -25,7 +23,6 @@ export function SortableTableHead<TSortBy extends string>({
   activeOrder,
   onSort,
   align = 'left',
-  tooltip,
   className,
 }: ISortableTableHeadProps<TSortBy>) {
   const isActive = activeSortBy === field;
@@ -59,14 +56,7 @@ export function SortableTableHead<TSortBy extends string>({
 
   return (
     <TableHead aria-sort={ariaSort} className={cn(align === 'right' && 'text-right', className)}>
-      {tooltip ? (
-        <Tooltip>
-          <TooltipTrigger render={trigger} />
-          <TooltipContent>{tooltip}</TooltipContent>
-        </Tooltip>
-      ) : (
-        trigger
-      )}
+      {trigger}
     </TableHead>
   );
 }

@@ -28,6 +28,7 @@ import {
   IListResumesQueryDto,
   IQueueAnalysisResponse,
   IRenderStatusResponse,
+  IResumeLastInteraction,
   IUpdateResumeDto,
   resumeAnalysisSnapshotSchema,
 } from 'shared';
@@ -41,7 +42,7 @@ import { IRenderPdfWorker } from './types';
 
 const AUTO_ANALYSE_DEBOUNCE_MS = 60_000;
 const DEFAULT_RESUMES_QUERY: IListResumesQueryDto = {
-  sortBy: 'updatedAt',
+  sortBy: 'lastInteraction',
   order: 'desc',
 };
 
@@ -275,23 +276,113 @@ export class ResumeService {
     return { ...resume, analysisReport, isAnalysisStale };
   }
 
-  getAll(
+  async getAll(
     userId: number,
     query: IListResumesQueryDto = DEFAULT_RESUMES_QUERY,
   ): Promise<IGetResumesResponse[]> {
-    return this.prisma.resume.findMany({
+    const resumes = await this.prisma.resume.findMany({
       where: { userId },
       orderBy: this.buildOrderBy(query),
       include: {
-        jobs: { select: { id: true } },
+        jobs: {
+          select: {
+            id: true,
+            role: true,
+            company: true,
+            submittedResumeLinkedAt: true,
+          },
+        },
       },
       omit: {
         json: true,
       },
     });
+
+    const results: IGetResumesResponse[] = resumes.map((resume) => ({
+      ...resume,
+      jobs: resume.jobs.map((job) => ({ id: job.id })),
+      lastInteraction: this.computeLastInteraction(resume),
+    }));
+
+    if (query.sortBy === 'lastInteraction') {
+      results.sort((a, b) => {
+        const diff = a.lastInteraction.at.getTime() - b.lastInteraction.at.getTime();
+        if (diff !== 0) {
+          return query.order === 'asc' ? diff : -diff;
+        }
+        return b.id - a.id;
+      });
+    }
+
+    return results;
   }
 
-  private buildOrderBy(query: IListResumesQueryDto): Prisma.ResumeOrderByWithRelationInput[] {
+  private computeLastInteraction(resume: {
+    createdAt: Date;
+    jsonUpdatedAt: Date;
+    jobs: {
+      id: number;
+      role: string;
+      company: string;
+      submittedResumeLinkedAt: Date | null;
+    }[];
+  }): IResumeLastInteraction {
+    let latestJob:
+      | {
+          id: number;
+          role: string;
+          company: string;
+          submittedResumeLinkedAt: Date;
+        }
+      | undefined;
+
+    for (const job of resume.jobs) {
+      if (!job.submittedResumeLinkedAt) {
+        continue;
+      }
+
+      if (
+        !latestJob ||
+        job.submittedResumeLinkedAt.getTime() > latestJob.submittedResumeLinkedAt.getTime() ||
+        (job.submittedResumeLinkedAt.getTime() === latestJob.submittedResumeLinkedAt.getTime() &&
+          job.id > latestJob.id)
+      ) {
+        latestJob = {
+          id: job.id,
+          role: job.role,
+          company: job.company,
+          submittedResumeLinkedAt: job.submittedResumeLinkedAt,
+        };
+      }
+    }
+
+    if (
+      latestJob &&
+      latestJob.submittedResumeLinkedAt.getTime() >= resume.jsonUpdatedAt.getTime()
+    ) {
+      return {
+        type: 'JOB_LINKED',
+        at: latestJob.submittedResumeLinkedAt,
+        job: {
+          id: latestJob.id,
+          role: latestJob.role,
+          company: latestJob.company,
+        },
+      };
+    }
+
+    return {
+      type:
+        resume.jsonUpdatedAt.getTime() === resume.createdAt.getTime()
+          ? 'RESUME_CREATED'
+          : 'RESUME_UPDATED',
+      at: resume.jsonUpdatedAt,
+    };
+  }
+
+  private buildOrderBy(
+    query: IListResumesQueryDto,
+  ): Prisma.ResumeOrderByWithRelationInput[] | undefined {
     const { sortBy, order } = query;
 
     switch (sortBy) {
@@ -299,8 +390,8 @@ export class ResumeService {
         return [{ name: order }, { id: 'desc' }];
       case 'jobs':
         return [{ jobs: { _count: order } }, { id: 'desc' }];
-      case 'updatedAt':
-        return [{ updatedAt: order }, { id: 'desc' }];
+      case 'lastInteraction':
+        return undefined;
     }
   }
 

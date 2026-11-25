@@ -89,11 +89,20 @@ function MonthPicker({
     }
   };
 
-  // Scroll the selected (or current, clamped to range) year into view when the year grid shows.
+  // Scroll the selected (or current, clamped to range) year into view within the year grid only.
+  // Using scrollTop avoids Element.scrollIntoView(), which also scrolls the page to the
+  // unpositioned portal at (0, 0) on mount.
+  const initialYearRef = React.useRef<HTMLButtonElement | null>(null);
   const initialYear =
     selected?.year ?? Math.min(Math.max(now.getFullYear(), minMonth.year), maxMonth.year);
   const scrollIntoViewRef = React.useCallback((node: HTMLButtonElement | null) => {
-    node?.scrollIntoView({ block: 'center' });
+    initialYearRef.current = node;
+    const container = node?.parentElement;
+    if (!node || !container) {
+      return;
+    }
+
+    container.scrollTop = node.offsetTop - (container.clientHeight - node.offsetHeight) / 2;
   }, []);
 
   return (
@@ -110,7 +119,14 @@ function MonthPicker({
           </Button>
         }
       />
-      <PopoverContent className="w-64 gap-2 p-3" align="start">
+      <PopoverContent
+        className="w-64 gap-2 p-3"
+        align="start"
+        initialFocus={() => {
+          initialYearRef.current?.focus({ preventScroll: true });
+          return false;
+        }}
+      >
         <div className="flex h-8 items-center gap-1">
           {view === 'month' && (
             <Button
@@ -125,7 +141,7 @@ function MonthPicker({
           <span className="px-1 font-medium">{view === 'year' ? 'Select year' : pendingYear}</span>
         </div>
         {/* 3 columns x 3 visible rows (h-9 + gap-2), scrollable */}
-        <div className="grid max-h-[7.75rem] grid-cols-3 gap-2 overflow-y-auto">
+        <div className="relative grid max-h-[7.75rem] grid-cols-3 gap-2 overflow-y-auto">
           {view === 'year'
             ? years.map((year) => (
                 <Button

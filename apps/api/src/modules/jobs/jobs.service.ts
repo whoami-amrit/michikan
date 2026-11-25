@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { Job, JobStatus, Prisma, User } from 'db';
 import { ICreateJobDto, IListJobsQueryDto, IUpdateJobDto } from 'shared';
 
@@ -15,6 +15,9 @@ export class JobsService {
 
   async create(body: ICreateJobDto, userId: User['id']): Promise<Job> {
     // todo: should I limit the number of jobs?
+    const submittedResumeId =
+      body.status !== JobStatus.NOT_APPLIED ? body.submittedResumeId : undefined;
+
     return this.prismaService.job.create({
       data: {
         company: body.company,
@@ -23,13 +26,14 @@ export class JobsService {
         applyLink: body.applyLink,
         status: body.status,
         source: body.source,
-        ...(body.submittedResumeId
+        ...(submittedResumeId !== undefined && submittedResumeId !== null
           ? {
               submittedResume: {
                 connect: {
-                  id: body.submittedResumeId,
+                  id: submittedResumeId,
                 },
               },
+              submittedResumeLinkedAt: new Date(),
             }
           : {}),
         user: {
@@ -48,13 +52,29 @@ export class JobsService {
   }
 
   async update(jobId: number, userId: User['id'], body: IUpdateJobDto): Promise<void> {
-    if (body.status === JobStatus.NOT_APPLIED) {
-      body.submittedResumeId = null;
+    const existingJob = await this.prismaService.job.findUnique({
+      where: { id: jobId, userId },
+    });
+
+    if (!existingJob) {
+      throw new NotFoundException('Job not found');
     }
+
+    const nextSubmittedResumeId =
+      body.status === JobStatus.NOT_APPLIED ? null : body.submittedResumeId;
+    const submittedResumeChanged =
+      nextSubmittedResumeId !== undefined &&
+      nextSubmittedResumeId !== existingJob.submittedResumeId;
 
     await this.prismaService.job.update({
       where: { id: jobId, userId },
-      data: body,
+      data: {
+        ...body,
+        ...(body.status === JobStatus.NOT_APPLIED ? { submittedResumeId: null } : {}),
+        ...(submittedResumeChanged
+          ? { submittedResumeLinkedAt: nextSubmittedResumeId !== null ? new Date() : null }
+          : {}),
+      },
     });
   }
 

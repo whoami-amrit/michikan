@@ -219,8 +219,9 @@ model Job {
   // Notes or Interview logs of the job
   notes String?
 
-  submittedResumeId Int?
-  submittedResume   Resume? @relation(fields: [submittedResumeId], references: [id], onDelete: SetNull)
+  submittedResumeId       Int?
+  submittedResume         Resume?   @relation(fields: [submittedResumeId], references: [id], onDelete: SetNull)
+  submittedResumeLinkedAt DateTime?
 
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt

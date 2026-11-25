@@ -1,5 +1,10 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Add01Icon, AlertCircleIcon, Cancel01Icon } from '@hugeicons/core-free-icons';
+import {
+  Add01Icon,
+  AlertCircleIcon,
+  Cancel01Icon,
+  InformationCircleIcon,
+} from '@hugeicons/core-free-icons';
 import { Resume } from 'db';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
@@ -29,6 +34,14 @@ import {
 import { Icon } from '@/components/ui/icon';
 import { Input } from '@/components/ui/input';
 import { MonthPicker } from '@/components/ui/month-picker';
+import {
+  Popover,
+  PopoverContent,
+  PopoverDescription,
+  PopoverHeader,
+  PopoverTitle,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 import { Spinner } from '@/components/ui/spinner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
@@ -165,23 +178,10 @@ function SkillsTab() {
   return (
     <FieldGroup>
       <FieldSet id={resumeFieldId('json.skills')}>
-        <FieldLegend>Skills</FieldLegend>
-        <FieldDescription>
-          Organize your technical skills by category
-          <br /> Ex - Category: <code className="inline">Frontend</code> → Skills:{' '}
-          <code className="inline">React, TypeScript, Tailwind CSS, Next.js</code>
-          <br /> Or - Category: <code className="inline">Backend</code> → Skills:{' '}
-          <code className="inline">Node.js, NestJS, PostgreSQL, Redis</code>
-        </FieldDescription>
-        <div className="flex justify-end">
-          <Button variant="secondary" onClick={() => append({ category: '', skills: '' })}>
-            <Icon icon={Add01Icon} />
-            Add Category
-          </Button>
-        </div>
+        <ResumeLintFindings fieldName="json.skills" />
         {!!fields.length && (
-          <FieldGroup className="flex-row gap-4">
-            <Field className="w-30 sm:w-50 shrink-0">
+          <FieldGroup className="hidden sm:flex flex-row gap-4">
+            <Field className="w-50 shrink-0">
               <FieldLabel required>Category</FieldLabel>
             </Field>
             <Field className="grow">
@@ -189,27 +189,148 @@ function SkillsTab() {
             </Field>
           </FieldGroup>
         )}
-        {fields.map((_, index) => (
-          <FieldGroup key={index} className="flex-row gap-4">
-            <Field className="w-30 sm:w-50 shrink-0">
-              <Input {...register(`json.skills.${index}.category`)} placeholder="Ex. Frontend" />
-              <FieldError errors={[errors.json?.skills?.[index]?.category]} />
-            </Field>
-            <Field className="grow">
-              <Input
-                {...register(`json.skills.${index}.skills`)}
-                placeholder="React.js, Vite, Javascript, HTML, CSS"
-              />
-              <FieldError errors={[errors.json?.skills?.[index]?.skills]} />
-            </Field>
-            <Button className="w-8" variant="destructive" onClick={() => remove(index)}>
-              <Icon icon={Cancel01Icon} />
-            </Button>
-          </FieldGroup>
+        {fields.map((field, index) => (
+          <Card
+            key={field.id}
+            size="sm"
+            className="px-(--card-spacing) sm:overflow-visible sm:rounded-none sm:bg-transparent sm:p-0 sm:shadow-none sm:ring-0"
+          >
+            <FieldGroup className="flex-col gap-3 sm:flex-row sm:gap-4">
+              <div className="flex items-start justify-between gap-2 sm:contents">
+                <Field className="max-w-60 min-w-0 flex-1 sm:w-50 sm:flex-none">
+                  <Input
+                    {...register(`json.skills.${index}.category`)}
+                    placeholder="Category (Ex. Frontend)"
+                  />
+                  <FieldError errors={[errors.json?.skills?.[index]?.category]} />
+                </Field>
+                <Button
+                  className="w-8 shrink-0 sm:order-last"
+                  variant="destructive"
+                  onClick={() => remove(index)}
+                >
+                  <Icon icon={Cancel01Icon} />
+                </Button>
+              </div>
+              <Field className="grow">
+                <Input
+                  {...register(`json.skills.${index}.skills`)}
+                  placeholder="Skills (e.g. React.js, Vite, ...)"
+                />
+                <FieldError errors={[errors.json?.skills?.[index]?.skills]} />
+              </Field>
+            </FieldGroup>
+          </Card>
         ))}
-        <ResumeLintFindings fieldName="json.skills" />
+        <div className="flex justify-end">
+          <Button variant="secondary" onClick={() => append({ category: '', skills: '' })}>
+            <Icon icon={Add01Icon} />
+            Add Category
+          </Button>
+        </div>
       </FieldSet>
     </FieldGroup>
+  );
+}
+
+const HIGHLIGHT_FRAMEWORKS = [
+  {
+    name: 'STAR',
+    summary: 'Situation, Task, Action, Result',
+    links: [
+      {
+        label: 'levels.fyi guide',
+        href: 'https://www.levels.fyi/blog/applying-star-method-resumes.html',
+      },
+      {
+        label: 'Resume Genius guide',
+        href: 'https://resumegenius.com/blog/resume-help/star-method-resume',
+      },
+    ],
+  },
+  {
+    name: 'XYZ',
+    summary: '"Accomplished [X] as measured by [Y], by doing [Z]"',
+    links: [
+      {
+        label: "Google's recruiting team on the X-Y-Z formula",
+        href: 'https://www.inc.com/bill-murphy-jr/google-recruiters-say-these-5-resume-tips-including-x-y-z-formula-will-improve-your-odds-of-getting-hired-at-google.html',
+      },
+      {
+        label: 'Eleven Recruiting guide',
+        href: 'https://elevenrecruiting.com/create-an-effective-resume-xyz-resume-format/',
+      },
+    ],
+  },
+  {
+    name: 'CAR',
+    summary: 'Challenge, Action, Result',
+    links: [
+      {
+        label: 'Indeed guide',
+        href: 'https://ca.indeed.com/career-advice/resumes-cover-letters/challenge-action-result-resume',
+      },
+      {
+        label: 'Top Resume guide',
+        href: 'https://www.topresume.com/career-advice/how-to-get-more-results-with-a-car-resume',
+      },
+    ],
+  },
+] as const;
+
+function HighlightsTipsPopover() {
+  return (
+    <Popover>
+      <PopoverTrigger
+        render={
+          <button
+            type="button"
+            aria-label="How to write effective highlights"
+            className="inline-flex items-center justify-center rounded-sm p-1 -m-1 text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+          >
+            <Icon icon={InformationCircleIcon} className="size-4 shrink-0" />
+          </button>
+        }
+      />
+      <PopoverContent align="start" className="w-96 max-w-[calc(100vw-2rem)] gap-3">
+        <PopoverHeader>
+          <PopoverTitle className="text-sm font-semibold">
+            How to write effective highlights
+          </PopoverTitle>
+          <PopoverDescription className="text-xs leading-relaxed">
+            Show what you did, how you did it, and the measurable outcome — ideally placing the
+            metric early in the sentence for maximum impact.
+          </PopoverDescription>
+        </PopoverHeader>
+        <ul className="flex flex-col gap-2.5 text-xs leading-relaxed text-muted-foreground">
+          {HIGHLIGHT_FRAMEWORKS.map((framework) => (
+            <li key={framework.name}>
+              <span className="font-semibold text-foreground">{framework.name}</span> (
+              {framework.summary}):{' '}
+              {framework.links.map((link, index) => (
+                <span key={link.href}>
+                  {index > 0 && ', '}
+                  <a
+                    href={link.href}
+                    className="text-blue-500 dark:text-blue-400 hover:underline-offset-4 hover:underline"
+                    referrerPolicy="no-referrer"
+                    rel="noreferrer"
+                    target="_blank"
+                  >
+                    {link.label}
+                  </a>
+                </span>
+              ))}
+            </li>
+          ))}
+        </ul>
+        <p className="border-t pt-2.5 text-xs leading-relaxed text-muted-foreground">
+          Once you&apos;ve drafted your bullets, run them through Quillbot to paraphrase and tighten
+          the wording — great for cutting a bullet down to one clean sentence without losing the
+          substance.
+        </p>
+      </PopoverContent>
+    </Popover>
   );
 }
 
@@ -226,101 +347,6 @@ function ExperienceTab() {
   return (
     <FieldGroup>
       <FieldSet>
-        <FieldLegend>Experience</FieldLegend>
-        <FieldDescription>
-          List your roles in reverse chronological order, and write each highlight using one of
-          three tried-and-tested formats: STAR (Situation, Task, Action, Result), XYZ ("Accomplished
-          [X] as measured by [Y], by doing [Z]"), or CAR (Challenge, Action, Result). Whichever you
-          use, the goal is the same — show what you did, how you did it, and the measurable outcome,
-          ideally with the metric placed early in the sentence for maximum impact. New to these
-          formats? Here's where to start: <br />
-          <br />
-          <ul className="list-disc list-inside">
-            <li>
-              STAR method:&nbsp;
-              <a
-                href="https://www.levels.fyi/blog/applying-star-method-resumes.html"
-                className="text-blue-500 dark:text-blue-400 hover:underline-offset-4 hover:underline"
-                referrerPolicy="no-referrer"
-                target="_blank"
-              >
-                levels.fyi guide
-              </a>
-              ,&nbsp;
-              <a
-                href="https://resumegenius.com/blog/resume-help/star-method-resume"
-                className="text-blue-500 dark:text-blue-400 hover:underline-offset-4 hover:underline"
-                referrerPolicy="no-referrer"
-                target="_blank"
-              >
-                Resume Genius guide
-              </a>
-            </li>
-            <li>
-              XYZ method:&nbsp;
-              <a
-                href="https://www.inc.com/bill-murphy-jr/google-recruiters-say-these-5-resume-tips-including-x-y-z-formula-will-improve-your-odds-of-getting-hired-at-google.html"
-                className="text-blue-500 dark:text-blue-400 hover:underline-offset-4 hover:underline"
-                referrerPolicy="no-referrer"
-                target="_blank"
-              >
-                Google's recruiting team on the X-Y-Z formula
-              </a>
-              , &nbsp;
-              <a
-                href="https://elevenrecruiting.com/create-an-effective-resume-xyz-resume-format/"
-                className="text-blue-500 dark:text-blue-400 hover:underline-offset-4 hover:underline"
-                referrerPolicy="no-referrer"
-                target="_blank"
-              >
-                Eleven Recruiting guide
-              </a>
-            </li>
-            <li>
-              CAR method:&nbsp;
-              <a
-                href="https://ca.indeed.com/career-advice/resumes-cover-letters/challenge-action-result-resume"
-                className="text-blue-500 dark:text-blue-400 hover:underline-offset-4 hover:underline"
-                referrerPolicy="no-referrer"
-                target="_blank"
-              >
-                Indeed guide
-              </a>
-              , &nbsp;
-              <a
-                href="https://www.topresume.com/career-advice/how-to-get-more-results-with-a-car-resume"
-                className="text-blue-500 dark:text-blue-400 hover:underline-offset-4 hover:underline"
-                referrerPolicy="no-referrer"
-                target="_blank"
-              >
-                Top Resume guide
-              </a>
-            </li>
-          </ul>
-          <br />
-          Once you've drafted your bullets, run them through Quillbot to paraphrase and tighten the
-          wording — great for cutting a bullet down to one clean sentence without losing the
-          substance
-        </FieldDescription>
-        <div className="flex justify-end">
-          <Button
-            variant="secondary"
-            onClick={() =>
-              append({
-                title: '',
-                company: '',
-                highlights: '',
-                isCurrentRole: false,
-                startDate: '',
-                endDate: '',
-                location: '',
-              })
-            }
-          >
-            <Icon icon={Add01Icon} />
-            Add Experience
-          </Button>
-        </div>
         {fields.map((_, index) => (
           <Card key={index}>
             <CardHeader>
@@ -368,7 +394,10 @@ function ExperienceTab() {
                   </Field>
                 </div>
                 <Field className="col-span-2">
-                  <FieldLabel required>Highlights</FieldLabel>
+                  <div className="flex items-center gap-1.5">
+                    <FieldLabel required>Highlights</FieldLabel>
+                    <HighlightsTipsPopover />
+                  </div>
                   <Textarea
                     className="max-h-80"
                     {...register(`json.experience.${index}.highlights`)}
@@ -415,6 +444,25 @@ function ExperienceTab() {
             </CardContent>
           </Card>
         ))}
+        <div className="flex justify-end">
+          <Button
+            variant="secondary"
+            onClick={() =>
+              append({
+                title: '',
+                company: '',
+                highlights: '',
+                isCurrentRole: false,
+                startDate: '',
+                endDate: '',
+                location: '',
+              })
+            }
+          >
+            <Icon icon={Add01Icon} />
+            Add Experience
+          </Button>
+        </div>
       </FieldSet>
     </FieldGroup>
   );
@@ -433,29 +481,6 @@ function EducationTab() {
   return (
     <FieldGroup>
       <FieldSet>
-        <FieldLegend>Education</FieldLegend>
-        <FieldDescription>
-          List degrees in reverse chronological order, most recent or highest first. Skip high
-          school once you have a completed degree, and leave out coursework unless it's unusual or
-          highly specialized for the role you're targeting.
-        </FieldDescription>
-        <div className="flex justify-end">
-          <Button
-            variant="secondary"
-            onClick={() =>
-              append({
-                degree: '',
-                field: '',
-                institution: '',
-                graduationDate: '',
-                specialRemark: undefined,
-              })
-            }
-          >
-            <Icon icon={Add01Icon} />
-            Add Qualification
-          </Button>
-        </div>
         {fields.map((_, index) => (
           <Card key={index}>
             <CardHeader>
@@ -535,6 +560,23 @@ function EducationTab() {
             </CardContent>
           </Card>
         ))}
+        <div className="flex justify-end">
+          <Button
+            variant="secondary"
+            onClick={() =>
+              append({
+                degree: '',
+                field: '',
+                institution: '',
+                graduationDate: '',
+                specialRemark: undefined,
+              })
+            }
+          >
+            <Icon icon={Add01Icon} />
+            Add Qualification
+          </Button>
+        </div>
       </FieldSet>
     </FieldGroup>
   );
@@ -552,35 +594,6 @@ function ProjectsTab() {
   return (
     <FieldGroup>
       <FieldSet>
-        <FieldLegend>Projects</FieldLegend>
-        <FieldDescription>
-          This section is for real, self-directed work — personal projects, student teams,
-          open-source contributions — not assignments or projects from a job (those belong in
-          Experience). Only include something here if it actually solves a problem and has real
-          usage, even if that "user" is just you using it regularly; skip tutorial walkthroughs or
-          one-off class exercises you haven't touched since submitting them.
-          <br />
-          <br />
-          Write each highlight the same way you would for Experience — one accomplishment per line,
-          action verb first, with a measurable result. This is your chance to show initiative the
-          rest of your resume might not capture.
-        </FieldDescription>
-        <div className="flex justify-end">
-          <Button
-            variant="secondary"
-            onClick={() =>
-              append({
-                title: '',
-                url: '',
-                highlights: '',
-                technologies: '',
-              })
-            }
-          >
-            <Icon icon={Add01Icon} />
-            Add Project
-          </Button>
-        </div>
         {fields.map((_, index) => (
           <Card key={index}>
             <CardHeader>
@@ -605,7 +618,10 @@ function ProjectsTab() {
             <CardContent>
               <FieldGroup className="grid sm:grid-cols-2 gap-4">
                 <Field className="sm:col-span-2">
-                  <FieldLabel required>Highlights</FieldLabel>
+                  <div className="flex items-center gap-1.5">
+                    <FieldLabel required>Highlights</FieldLabel>
+                    <HighlightsTipsPopover />
+                  </div>
                   <Textarea
                     className="max-h-44"
                     {...register(`json.projects.${index}.highlights`)}
@@ -636,6 +652,22 @@ function ProjectsTab() {
             </CardContent>
           </Card>
         ))}
+        <div className="flex justify-end">
+          <Button
+            variant="secondary"
+            onClick={() =>
+              append({
+                title: '',
+                url: '',
+                highlights: '',
+                technologies: '',
+              })
+            }
+          >
+            <Icon icon={Add01Icon} />
+            Add Project
+          </Button>
+        </div>
       </FieldSet>
     </FieldGroup>
   );
@@ -652,16 +684,10 @@ function SummaryTab() {
   return (
     <FieldGroup>
       <FieldSet>
-        <FieldLegend>Summary</FieldLegend>
-        <FieldDescription>
-          Only for senior/staff candidates, career changers, or explaining a gap — skip otherwise.
-          Keep to 1–2 sentences focused on scope of impact, the pivot, or the gap — not generic
-          traits like "hardworking" or "team player".
-        </FieldDescription>
-
         <Field>
           <Textarea
             className="min-h-44 max-h-64"
+            placeholder="Only for senior/staff candidates, career changers, or explaining a gap — skip otherwise. Keep to 1–2 sentences focused on scope of impact, the pivot, or the gap."
             {...register('json.summary')}
             id={resumeFieldId('json.summary')}
           />

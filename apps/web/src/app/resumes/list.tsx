@@ -1,7 +1,16 @@
-import { Add01Icon, FilePlusCornerIcon } from '@hugeicons/core-free-icons';
+import {
+  Add01Icon,
+  AlertCircleIcon,
+  Briefcase01Icon,
+  Edit03Icon,
+  FilePlusCornerIcon,
+  RefreshIcon,
+} from '@hugeicons/core-free-icons';
+import { useSyncExternalStore } from 'react';
 import { useNavigate } from 'react-router';
 import {
   type IGetResumesResponse,
+  type IResumeLastInteraction,
   ListResumesQuerySchema,
   type ResumeSortByType,
   type SortOrderType,
@@ -20,17 +29,118 @@ import {
   EmptyTitle,
 } from '@/components/ui/empty';
 import { Icon } from '@/components/ui/icon';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Spinner } from '@/components/ui/spinner';
 import { Table, TableBody, TableCell, TableHeader, TableRow } from '@/components/ui/table';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useBreadcrumbs } from '@/hooks/use-breadcrumbs';
 import { useSortParams } from '@/hooks/use-sort-params';
 import { api } from '@/lib/utils';
 
+const HOVER_MEDIA_QUERY = '(hover: hover) and (pointer: fine)';
+
 const INITIAL_RESUME_SORT_ORDER: Record<ResumeSortByType, SortOrderType> = {
   name: 'asc',
   jobs: 'desc',
-  updatedAt: 'desc',
+  lastInteraction: 'desc',
 };
+
+function subscribeHoverMediaQuery(onStoreChange: () => void) {
+  const mql = window.matchMedia(HOVER_MEDIA_QUERY);
+  mql.addEventListener('change', onStoreChange);
+  return () => {
+    mql.removeEventListener('change', onStoreChange);
+  };
+}
+
+function getHoverMediaQuerySnapshot() {
+  return window.matchMedia(HOVER_MEDIA_QUERY).matches;
+}
+
+function getHoverMediaQueryServerSnapshot() {
+  return true;
+}
+
+function useSupportsHover() {
+  return useSyncExternalStore(
+    subscribeHoverMediaQuery,
+    getHoverMediaQuerySnapshot,
+    getHoverMediaQueryServerSnapshot,
+  );
+}
+
+function getInteractionDetails(lastInteraction: IResumeLastInteraction) {
+  switch (lastInteraction.type) {
+    case 'JOB_LINKED':
+      return {
+        icon: Briefcase01Icon,
+        description: `Linked to ${lastInteraction.job.role} - ${lastInteraction.job.company}`,
+      };
+    case 'RESUME_UPDATED':
+      return {
+        icon: Edit03Icon,
+        description: 'Resume edited',
+      };
+    case 'RESUME_CREATED':
+      return {
+        icon: Edit03Icon,
+        description: 'Resume created',
+      };
+  }
+}
+
+function LastInteractionCell({ lastInteraction }: { lastInteraction: IResumeLastInteraction }) {
+  const supportsHover = useSupportsHover();
+  const { icon, description } = getInteractionDetails(lastInteraction);
+
+  return (
+    <div className="inline-flex items-center justify-end gap-2 whitespace-nowrap">
+      <span>{new Date(lastInteraction.at).toLocaleDateString()}</span>
+      {supportsHover ? (
+        <Tooltip>
+          <TooltipTrigger
+            render={
+              <span
+                aria-label={description}
+                className="inline-flex items-center text-muted-foreground"
+              >
+                <Icon icon={icon} className="size-3.5 shrink-0" />
+              </span>
+            }
+          />
+          <TooltipContent>{description}</TooltipContent>
+        </Tooltip>
+      ) : (
+        <Popover>
+          <PopoverTrigger
+            render={
+              <button
+                type="button"
+                aria-label={description}
+                onClick={(event) => {
+                  event.stopPropagation();
+                }}
+                className="inline-flex items-center justify-center rounded-sm p-1 -m-1 text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+              >
+                <Icon icon={icon} className="size-3.5 shrink-0" />
+              </button>
+            }
+          />
+          <PopoverContent
+            align="end"
+            className="w-fit max-w-64 rounded-xl px-3 py-1.5 text-xs"
+            onClick={(event) => {
+              event.stopPropagation();
+            }}
+          >
+            {description}
+          </PopoverContent>
+        </Popover>
+      )}
+    </div>
+  );
+}
 
 function NewResumeButton({ onClick }: { onClick: () => void }) {
   return (
@@ -44,13 +154,18 @@ function NewResumeButton({ onClick }: { onClick: () => void }) {
 export default function ResumesPage() {
   const { sortBy, order, onSort } = useSortParams<ResumeSortByType>({
     schema: ListResumesQuerySchema,
-    defaultSortBy: 'updatedAt',
+    defaultSortBy: 'lastInteraction',
     defaultOrder: 'desc',
     initialOrderByField: INITIAL_RESUME_SORT_ORDER,
   });
 
-  const { data, isLoading } = useSWR(
-    ['resumes', sortBy, order] as const,
+  const resumesKey = ['resumes', sortBy, order] as const;
+  const { data, error, isLoading, isValidating, mutate } = useSWR<
+    IGetResumesResponse[],
+    Error,
+    typeof resumesKey
+  >(
+    resumesKey,
     async ([, currentSortBy, currentOrder]) =>
       api
         .get('/resumes', { searchParams: { sortBy: currentSortBy, order: currentOrder } })
@@ -79,14 +194,14 @@ export default function ResumesPage() {
 
       <main className="flex w-full px-6 lg:px-0 flex-col grow items-center">
         <div className="flex max-w-xl w-full flex-col gap-4 grow">
-          {!!data?.length && (
+          {!error && !!data?.length && (
             <div className="flex">
               <div className="grow" />
               <NewResumeButton onClick={onNewResumeClick} />
             </div>
           )}
 
-          {!isLoading && data?.length === 0 && (
+          {!error && !isLoading && data?.length === 0 && (
             <Empty>
               <EmptyHeader>
                 <EmptyMedia variant="icon">
@@ -105,7 +220,34 @@ export default function ResumesPage() {
             </Empty>
           )}
 
-          {isLoading && !data && (
+          {!!error && (
+            <Empty>
+              <EmptyHeader>
+                <EmptyMedia variant="icon">
+                  <Icon icon={AlertCircleIcon} />
+                </EmptyMedia>
+                <EmptyTitle>Failed to Load Resumes</EmptyTitle>
+                <EmptyDescription>
+                  Something went wrong while loading your resumes.
+                  <br />
+                  Please try again.
+                </EmptyDescription>
+              </EmptyHeader>
+              <EmptyContent>
+                <Button
+                  disabled={isValidating}
+                  onClick={() => {
+                    void mutate();
+                  }}
+                >
+                  {isValidating ? <Spinner /> : <Icon icon={RefreshIcon} />}
+                  Try again
+                </Button>
+              </EmptyContent>
+            </Empty>
+          )}
+
+          {!error && isLoading && !data && (
             <div className="flex flex-col gap-6 items-center">
               <div className="flex w-full">
                 <div className="grow" />
@@ -124,7 +266,7 @@ export default function ResumesPage() {
             </div>
           )}
 
-          {!!data?.length && (
+          {!error && !!data?.length && (
             <Table>
               <TableHeader>
                 <TableRow>
@@ -143,17 +285,16 @@ export default function ResumesPage() {
                     activeOrder={order}
                     onSort={onSort}
                     align="right"
-                    tooltip="Number of job applications where this resume has been submitted"
                     className="w-20"
                   />
                   <SortableTableHead
-                    label="Last Updated"
-                    field="updatedAt"
+                    label="Last Interaction"
+                    field="lastInteraction"
                     activeSortBy={sortBy}
                     activeOrder={order}
                     onSort={onSort}
                     align="right"
-                    className="w-36"
+                    className="w-44"
                   />
                 </TableRow>
               </TableHeader>
@@ -175,7 +316,7 @@ export default function ResumesPage() {
                       {!!resume.jobs.length ? resume.jobs.length : '-'}
                     </TableCell>
                     <TableCell className="text-right">
-                      {new Date(resume.updatedAt).toLocaleDateString()}
+                      <LastInteractionCell lastInteraction={resume.lastInteraction} />
                     </TableCell>
                   </TableRow>
                 ))}

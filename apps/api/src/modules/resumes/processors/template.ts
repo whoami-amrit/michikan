@@ -25,7 +25,60 @@ const formatHighlights = (highlights: string) => {
   return highlights.split('\n').filter((highlight) => !!highlight);
 };
 
-export const getResumeTex = (data: IResumeJson) => String.raw`
+type ExperienceEntry = NonNullable<IResumeJson['experience']>[number];
+type EducationEntry = NonNullable<IResumeJson['education']>[number];
+
+const parseDateTimestamp = (date?: string): number => {
+  if (!date) {
+    return -Infinity;
+  }
+
+  const parsed = Date.parse(date);
+  return Number.isNaN(parsed) ? -Infinity : parsed;
+};
+
+const compareTimestampsDesc = (a: number, b: number): number => {
+  if (a === b) {
+    return 0;
+  }
+
+  return b > a ? 1 : -1;
+};
+
+const isCurrentExperience = (entry: ExperienceEntry): boolean =>
+  entry.isCurrentRole === true || !entry.endDate?.trim();
+
+const compareExperienceDesc = (a: ExperienceEntry, b: ExperienceEntry): number => {
+  const aCurrent = isCurrentExperience(a);
+  const bCurrent = isCurrentExperience(b);
+
+  if (aCurrent !== bCurrent) {
+    return aCurrent ? -1 : 1;
+  }
+
+  if (aCurrent && bCurrent) {
+    return compareTimestampsDesc(parseDateTimestamp(a.startDate), parseDateTimestamp(b.startDate));
+  }
+
+  const endDateDiff = compareTimestampsDesc(
+    parseDateTimestamp(a.endDate),
+    parseDateTimestamp(b.endDate),
+  );
+  if (endDateDiff !== 0) {
+    return endDateDiff;
+  }
+
+  return compareTimestampsDesc(parseDateTimestamp(a.startDate), parseDateTimestamp(b.startDate));
+};
+
+const compareEducationDesc = (a: EducationEntry, b: EducationEntry): number =>
+  compareTimestampsDesc(parseDateTimestamp(a.graduationDate), parseDateTimestamp(b.graduationDate));
+
+export const getResumeTex = (data: IResumeJson) => {
+  const sortedExperience = data.experience ? [...data.experience].sort(compareExperienceDesc) : [];
+  const sortedEducation = data.education ? [...data.education].sort(compareEducationDesc) : [];
+
+  return String.raw`
 \documentclass[11pt]{article}       % set main text size
 \usepackage[letterpaper,                % set paper size to letterpaper. change to a4paper for resumes outside of North America
 top=0.5in,                          % specify top page margin
@@ -92,10 +145,10 @@ ${data.skills.map((skill) => String.raw`\textbf{${escapeLatex(skill.category)}:}
 
 % experience section
 ${
-  data.experience?.length
+  sortedExperience.length
     ? String.raw`
 \section*{Experience}
-${data.experience
+${sortedExperience
   .map(
     (exp) => String.raw`
 \textbf{${escapeLatex(exp.title)},} {${escapeLatex(exp.company)}} ${exp.location ? `-- ${escapeLatex(exp.location)}` : ''} \hfill ${formatDate(exp.startDate)} -- ${exp.endDate ? formatDate(exp.endDate) : 'Present'} \\
@@ -138,10 +191,10 @@ ${data.projects
 
 % education section
 ${
-  data.education?.length
+  sortedEducation.length
     ? String.raw`
 \section*{Education}
-${data.education
+${sortedEducation
   .map(
     (edu) => String.raw`
 \textbf{${escapeLatex(edu.institution)}} \hfill ${formatDate(edu.graduationDate)} \\
@@ -156,3 +209,4 @@ ${escapeLatex(edu.degree)} in ${escapeLatex(edu.field)} \hfill \textcolor{.!50}{
 
 \end{document}
 `;
+};
